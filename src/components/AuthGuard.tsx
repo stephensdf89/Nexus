@@ -10,31 +10,30 @@ type AuthGuardProps = {
 
 export default function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
-  const [status, setStatus] = useState<"loading" | "ready" | "error">(
-    "loading"
-  );
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let isMounted = true;
-    let supabase;
-
+  const [{ client: supabase, initialError }] = useState(() => {
     try {
-      supabase = getSupabaseClient();
+      return { client: getSupabaseClient(), initialError: "" };
     } catch (clientError) {
-      if (isMounted) {
-        setError(
+      return {
+        client: null,
+        initialError:
           clientError instanceof Error
             ? clientError.message
-            : "Supabase configuration is missing."
-        );
-        setStatus("error");
-      }
-
-      return () => {
-        isMounted = false;
+            : "Supabase configuration is missing.",
       };
     }
+  });
+  const [status, setStatus] = useState<"loading" | "ready" | "error">(
+    initialError ? "error" : "loading"
+  );
+  const [error, setError] = useState(initialError);
+
+  useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
+    let isMounted = true;
 
     const checkSession = async () => {
       const { data, error: sessionError } = await supabase.auth.getSession();
@@ -78,7 +77,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, supabase]);
 
   if (status === "loading") {
     return (

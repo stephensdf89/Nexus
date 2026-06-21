@@ -24,9 +24,9 @@ export default function DashboardPage() {
           <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-5 shadow-lg">
             <h2 className="text-lg font-semibold">Recent Posts</h2>
             <ul className="mt-4 space-y-3 text-sm text-zinc-300">
-              <li className="rounded-lg bg-zinc-900 p-3">YouTube: "Creator System Setup" scheduled for tomorrow</li>
-              <li className="rounded-lg bg-zinc-900 p-3">Instagram Reel: "Workflow in 30s" published 2h ago</li>
-              <li className="rounded-lg bg-zinc-900 p-3">Newsletter: "Weekly Creator Ops" in drafting</li>
+              <li className="rounded-lg bg-zinc-900 p-3">YouTube: &quot;Creator System Setup&quot; scheduled for tomorrow</li>
+              <li className="rounded-lg bg-zinc-900 p-3">Instagram Reel: &quot;Workflow in 30s&quot; published 2h ago</li>
+              <li className="rounded-lg bg-zinc-900 p-3">Newsletter: &quot;Weekly Creator Ops&quot; in drafting</li>
             </ul>
           </article>
 
