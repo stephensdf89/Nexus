@@ -11,10 +11,7 @@ type SessionState = {
 
 export default function Topbar() {
   const router = useRouter();
-  const [sessionState, setSessionState] = useState<SessionState>({
-    email: "",
-    initial: "?",
-  });
+  const [session, setSession] = useState<SessionState>({ email: "", initial: "?" });
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
@@ -29,16 +26,16 @@ export default function Topbar() {
 
     const loadSession = async () => {
       const {
-        data: { session },
+        data: { session: authSession },
       } = await supabase.auth.getSession();
 
-      if (!isMounted || !session?.user.email) {
+      if (!isMounted || !authSession?.user?.email) {
         return;
       }
 
-      setSessionState({
-        email: session.user.email,
-        initial: session.user.email.charAt(0).toUpperCase(),
+      setSession({
+        email: authSession.user.email,
+        initial: authSession.user.email.slice(0, 1).toUpperCase(),
       });
     };
 
@@ -46,19 +43,19 @@ export default function Topbar() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, authSession) => {
       if (!isMounted) {
         return;
       }
 
-      if (!session?.user.email) {
-        setSessionState({ email: "", initial: "?" });
+      if (!authSession?.user?.email) {
+        setSession({ email: "", initial: "?" });
         return;
       }
 
-      setSessionState({
-        email: session.user.email,
-        initial: session.user.email.charAt(0).toUpperCase(),
+      setSession({
+        email: authSession.user.email,
+        initial: authSession.user.email.slice(0, 1).toUpperCase(),
       });
     });
 
@@ -84,33 +81,38 @@ export default function Topbar() {
   };
 
   return (
-    <div className="flex h-16 w-full items-center justify-between border-b border-[#222] bg-[#0f0f0f] px-6">
+    <header className="flex h-16 items-center justify-between border-b border-zinc-800 bg-zinc-950 px-6">
       <div>
-        <p className="text-sm text-neutral-500">Creator Workspace</p>
-        <h2 className="text-lg font-semibold text-white">Welcome back</h2>
+        <p className="text-sm text-zinc-400">Creator Dashboard</p>
+        <h2 className="text-lg font-semibold">Welcome back</h2>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-300 transition hover:border-zinc-500"
+        >
+          Notifications
+        </button>
+
         <div className="hidden text-right md:block">
-          <p className="text-sm text-white">
-            {sessionState.email || "Signed in creator"}
-          </p>
-          <p className="text-xs text-neutral-500">Authenticated session</p>
+          <p className="text-sm">{session.email || "Creator account"}</p>
+          <p className="text-xs text-zinc-500">Active session</p>
         </div>
 
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-600 font-bold text-white">
-          {sessionState.initial}
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ff0033] text-sm font-bold">
+          {session.initial}
         </div>
 
         <button
           type="button"
           onClick={handleSignOut}
           disabled={isSigningOut}
-          className="rounded-md border border-red-500 px-4 py-2 text-sm text-red-300 transition hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg border border-[#ff0033] px-4 py-2 text-sm font-medium text-[#ff6680] transition hover:bg-[#ff0033] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSigningOut ? "Signing Out..." : "Logout"}
         </button>
       </div>
-    </div>
+    </header>
   );
 }

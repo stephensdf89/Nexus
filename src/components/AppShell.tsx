@@ -1,21 +1,16 @@
-import AuthGuard from "@/components/AuthGuard";
+import type { ReactNode } from "react";
+
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 
-type AppShellProps = {
-  children: React.ReactNode;
-};
-
-export default function AppShell({ children }: AppShellProps) {
+export default function AppShell({ children }: { children: ReactNode }) {
   return (
-    <AuthGuard>
-      <div className="flex min-h-screen bg-black text-white">
-        <Sidebar />
-        <div className="flex min-h-screen flex-1 flex-col">
-          <Topbar />
-          <main className="flex-1 p-8">{children}</main>
-        </div>
+    <div className="flex min-h-screen bg-[#0d0d0d] text-white">
+      <Sidebar />
+      <div className="flex min-h-screen flex-1 flex-col">
+        <Topbar />
+        <main className="flex-1 p-6 md:p-8">{children}</main>
       </div>
-    </AuthGuard>
+    </div>
   );
 }

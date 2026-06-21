@@ -1,168 +1,153 @@
 "use client";
-export const dynamic = "force-dynamic";
 
-import React, { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default function SignupPage() {
   const router = useRouter();
-  const emailRedirectTo =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/login`
-      : "https://content-creator-nexus-website-521i3vs3g.vercel.app/login";
-
-  // Autofill from login page if values were passed
-  const searchParams =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search)
-      : null;
-  const preEmail = searchParams?.get("email") || "";
-  const prePassword = searchParams?.get("password") || "";
 
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState(preEmail);
-  const [password, setPassword] = useState(prePassword);
-  const [confirmPassword, setConfirmPassword] = useState(prePassword);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSignup(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+    setMessage("");
+    setIsLoading(true);
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      setIsLoading(false);
+      return;
+    }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
       setError("Supabase configuration is missing.");
+      setIsLoading(false);
       return;
     }
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
+    const emailRedirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/login`
+        : "https://content-creator-nexus-website-521i3vs3g.vercel.app/login";
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error: signupError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo,
-        data: {
-          name,
-          username,
-        },
+        data: { name, username },
       },
     });
 
-    if (error) {
-      setError(error.message);
+    if (signupError) {
+      setError(signupError.message);
+      setIsLoading(false);
       return;
     }
 
-    router.push("/login?verify=true");
+    if (data.session) {
+      router.push("/dashboard");
+      return;
+    }
+
+    setMessage("Account created. Check your email to verify your account before signing in.");
+    setIsLoading(false);
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
-      <div className="w-full max-w-lg bg-neutral-900 p-8 rounded-xl shadow-xl border border-neutral-700">
-        <h1 className="text-3xl font-bold mb-6 text-center">Create Account</h1>
+    <div className="flex min-h-screen items-center justify-center bg-[#0d0d0d] px-6 text-white">
+      <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-950 p-8 shadow-2xl">
+        <h1 className="text-center text-3xl font-bold">Create Account</h1>
+        <p className="mt-2 text-center text-sm text-zinc-400">Start building your creator workflow</p>
 
-        {/* Subscription Tier Breakdown */}
-        <div className="mb-6 p-4 bg-neutral-800 rounded-lg border border-neutral-700">
-          <h2 className="text-xl font-semibold mb-2">Choose Your Plan</h2>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <span className="text-red-400 font-semibold">Free Tier:</span>  
-              Basic dashboard, limited analytics, 1 pipeline.
-            </li>
-            <li>
-              <span className="text-red-400 font-semibold">Creator Tier:</span>  
-              Full analytics, unlimited pipelines, community access.
-            </li>
-            <li>
-              <span className="text-red-400 font-semibold">Pro Tier:</span>  
-              Team access, advanced insights, automation tools.
-            </li>
-          </ul>
-        </div>
-
-        <form onSubmit={handleSignup} className="space-y-4">
+        <form onSubmit={handleSignup} className="mt-7 space-y-4">
           <div>
-            <label className="block mb-1 text-sm">Name</label>
+            <label className="mb-1 block text-sm">Name</label>
             <input
               type="text"
-              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-sm outline-none transition focus:border-[#ff0033]"
               required
             />
           </div>
 
           <div>
-            <label className="block mb-1 text-sm">Username</label>
+            <label className="mb-1 block text-sm">Username</label>
             <input
               type="text"
-              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-sm outline-none transition focus:border-[#ff0033]"
               required
             />
           </div>
 
           <div>
-            <label className="block mb-1 text-sm">Email</label>
+            <label className="mb-1 block text-sm">Email</label>
             <input
               type="email"
-              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-sm outline-none transition focus:border-[#ff0033]"
               required
             />
           </div>
 
           <div>
-            <label className="block mb-1 text-sm">Password</label>
+            <label className="mb-1 block text-sm">Password</label>
             <input
               type="password"
-              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-sm outline-none transition focus:border-[#ff0033]"
               required
+              minLength={6}
             />
           </div>
 
           <div>
-            <label className="block mb-1 text-sm">Confirm Password</label>
+            <label className="mb-1 block text-sm">Confirm Password</label>
             <input
               type="password"
-              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-sm outline-none transition focus:border-[#ff0033]"
               required
+              minLength={6}
             />
           </div>
 
-          {error && (
-            <p className="text-red-400 text-sm text-center">{error}</p>
-          )}
+          {error ? <p className="text-sm text-red-400">{error}</p> : null}
+          {message ? <p className="text-sm text-emerald-400">{message}</p> : null}
 
           <button
             type="submit"
-            className="w-full bg-red-600 hover:bg-red-700 transition p-3 rounded font-semibold"
+            disabled={isLoading}
+            className="w-full rounded-lg bg-[#ff0033] p-3 font-semibold transition hover:brightness-110 disabled:opacity-60"
           >
-            Create Account
+            {isLoading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
-        <p className="text-center text-sm mt-4">
-          Already have an account?{" "}
-          <a href="/login" className="text-red-400 hover:underline">
-            Sign in
-          </a>
+        <p className="mt-5 text-center text-sm text-zinc-400">
+          Already have an account? <a href="/login" className="text-[#ff6680] hover:underline">Sign in</a>
         </p>
       </div>
     </div>
