@@ -4,6 +4,10 @@ import DiscordProvider from "next-auth/providers/discord";
 import TwitchProvider from "next-auth/providers/twitch";
 import type { NextAuthOptions } from "next-auth";
 
+function isDefined<T>(value: T | null): value is T {
+  return value !== null;
+}
+
 const TikTokProvider = (options: {
   clientId: string;
   clientSecret: string;
@@ -51,30 +55,66 @@ const InstagramProvider = (options: {
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID!,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-    }),
-    TwitterProvider({
-      clientId: process.env.TWITTER_CLIENT_ID!,
-      clientSecret: process.env.TWITTER_CLIENT_SECRET!,
-      version: "2.0",
-    }),
-    DiscordProvider({
-      clientId: process.env.DISCORD_CLIENT_ID!,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
-    }),
-    TwitchProvider({
-      clientId: process.env.TWITCH_CLIENT_ID!,
-      clientSecret: process.env.TWITCH_CLIENT_SECRET!,
-    }),
-    TikTokProvider({
-      clientId: process.env.TIKTOK_CLIENT_ID!,
-      clientSecret: process.env.TIKTOK_CLIENT_SECRET!,
-    }),
-    InstagramProvider({
-      clientId: process.env.INSTAGRAM_CLIENT_ID!,
-      clientSecret: process.env.INSTAGRAM_CLIENT_SECRET!,
-    }),
-  ],
+    (() => {
+      if (!process.env.FACEBOOK_CLIENT_ID || !process.env.FACEBOOK_CLIENT_SECRET) {
+        return null;
+      }
+
+      return FacebookProvider({
+        clientId: process.env.FACEBOOK_CLIENT_ID,
+        clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+      });
+    })(),
+    (() => {
+      if (!process.env.TWITTER_CLIENT_ID || !process.env.TWITTER_CLIENT_SECRET) {
+        return null;
+      }
+
+      return TwitterProvider({
+        clientId: process.env.TWITTER_CLIENT_ID,
+        clientSecret: process.env.TWITTER_CLIENT_SECRET,
+        version: "2.0",
+      });
+    })(),
+    (() => {
+      if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
+        return null;
+      }
+
+      return DiscordProvider({
+        clientId: process.env.DISCORD_CLIENT_ID,
+        clientSecret: process.env.DISCORD_CLIENT_SECRET,
+      });
+    })(),
+    (() => {
+      if (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET) {
+        return null;
+      }
+
+      return TwitchProvider({
+        clientId: process.env.TWITCH_CLIENT_ID,
+        clientSecret: process.env.TWITCH_CLIENT_SECRET,
+      });
+    })(),
+    (() => {
+      if (!process.env.TIKTOK_CLIENT_ID || !process.env.TIKTOK_CLIENT_SECRET) {
+        return null;
+      }
+
+      return TikTokProvider({
+        clientId: process.env.TIKTOK_CLIENT_ID,
+        clientSecret: process.env.TIKTOK_CLIENT_SECRET,
+      });
+    })(),
+    (() => {
+      if (!process.env.INSTAGRAM_CLIENT_ID || !process.env.INSTAGRAM_CLIENT_SECRET) {
+        return null;
+      }
+
+      return InstagramProvider({
+        clientId: process.env.INSTAGRAM_CLIENT_ID,
+        clientSecret: process.env.INSTAGRAM_CLIENT_SECRET,
+      });
+    })(),
+  ].filter(isDefined),
 };
