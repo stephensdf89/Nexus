@@ -7,10 +7,10 @@ export default function Sidebar() {
 
       <nav className="flex flex-col gap-4">
         <Link href="/dashboard">Dashboard</Link>
-        <Link href="/dashboard/pipelines">Pipelines</Link>
-        <Link href="/dashboard/analytics">Analytics</Link>
-        <Link href="/dashboard/community">Community</Link>
-        <Link href="/dashboard/settings">Settings</Link>
+        <Link href="/pipelines">Pipelines</Link>
+        <Link href="/analytics">Analytics</Link>
+        <Link href="/community">Community</Link>
+        <Link href="/settings">Settings</Link>
       </nav>
     </div>
   );
