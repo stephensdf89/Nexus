@@ -1,11 +1,11 @@
-import AuthGuard from "@/components/AuthGuard";
+import AppShell from "@/components/AppShell";
 
 export default function Dashboard() {
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-black p-8 text-white">
+    <AppShell>
+      <div>
         <h1 className="text-3xl font-bold">Content Creator Nexus Dashboard</h1>
       </div>
-    </AuthGuard>
+    </AppShell>
   );
 }
