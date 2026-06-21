@@ -3,16 +3,11 @@ export const dynamic = "force-dynamic";
 
 import React from "react";
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { getSupabaseClient } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,6 +16,19 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+
+    let supabase;
+
+    try {
+      supabase = getSupabaseClient();
+    } catch (clientError) {
+      setError(
+        clientError instanceof Error
+          ? clientError.message
+          : "Supabase configuration is missing."
+      );
+      return;
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
