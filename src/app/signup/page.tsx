@@ -1,64 +1,111 @@
 "use client";
+export const dynamic = "force-dynamic";
 
-import React from "react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { getSupabaseClient } from "@/lib/supabase";
+import React, { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const params = useSearchParams();
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  // Autofill from login page if values were passed
+  const preEmail = params.get("email") || "";
+  const prePassword = params.get("password") || "";
+
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState(preEmail);
+  const [password, setPassword] = useState(prePassword);
+  const [confirmPassword, setConfirmPassword] = useState(prePassword);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
 
   async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
-    setMessage("");
 
-    let supabase;
-
-    try {
-      supabase = getSupabaseClient();
-    } catch (clientError) {
-      setError(
-        clientError instanceof Error
-          ? clientError.message
-          : "Supabase configuration is missing."
-      );
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
 
-    const { data, error: signupError } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: "https://nexus-xm6n.vercel.app/login",
+        data: {
+          name,
+          username,
+        },
+      },
     });
 
-    if (signupError) {
-      setError(signupError.message);
+    if (error) {
+      setError(error.message);
       return;
     }
 
-    if (data.session) {
-      router.push("/dashboard");
-      return;
-    }
-
-    setMessage("Account created. Check your email to confirm your signup.");
+    router.push("/login?verify=true");
   }
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-neutral-900 p-8 rounded-xl shadow-xl border border-neutral-700">
-        <h1 className="text-3xl font-bold mb-6 text-center">Sign Up</h1>
+      <div className="w-full max-w-lg bg-neutral-900 p-8 rounded-xl shadow-xl border border-neutral-700">
+        <h1 className="text-3xl font-bold mb-6 text-center">Create Account</h1>
+
+        {/* Subscription Tier Breakdown */}
+        <div className="mb-6 p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+          <h2 className="text-xl font-semibold mb-2">Choose Your Plan</h2>
+          <ul className="space-y-2 text-sm">
+            <li>
+              <span className="text-red-400 font-semibold">Free Tier:</span>  
+              Basic dashboard, limited analytics, 1 pipeline.
+            </li>
+            <li>
+              <span className="text-red-400 font-semibold">Creator Tier:</span>  
+              Full analytics, unlimited pipelines, community access.
+            </li>
+            <li>
+              <span className="text-red-400 font-semibold">Pro Tier:</span>  
+              Team access, advanced insights, automation tools.
+            </li>
+          </ul>
+        </div>
 
         <form onSubmit={handleSignup} className="space-y-4">
+          <div>
+            <label className="block mb-1 text-sm">Name</label>
+            <input
+              type="text"
+              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm">Username</label>
+            <input
+              type="text"
+              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+
           <div>
             <label className="block mb-1 text-sm">Email</label>
             <input
               type="email"
-              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700 focus:outline-none"
+              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -69,20 +116,26 @@ export default function SignupPage() {
             <label className="block mb-1 text-sm">Password</label>
             <input
               type="password"
-              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700 focus:outline-none"
+              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm">Confirm Password</label>
+            <input
+              type="password"
+              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
             />
           </div>
 
           {error && (
             <p className="text-red-400 text-sm text-center">{error}</p>
-          )}
-
-          {message && (
-            <p className="text-green-400 text-sm text-center">{message}</p>
           )}
 
           <button

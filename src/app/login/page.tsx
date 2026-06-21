@@ -11,6 +11,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
@@ -74,6 +75,19 @@ export default function LoginPage() {
           {error && (
             <p className="text-red-400 text-sm text-center">{error}</p>
           )}
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="remember"
+              checked={remember}
+              onChange={() => setRemember(!remember)}
+              className="w-4 h-4"
+            />
+            <label htmlFor="remember" className="text-sm">
+              Remember Me
+            </label>
+          </div>
 
           <button
             type="submit"
