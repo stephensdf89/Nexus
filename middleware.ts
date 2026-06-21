@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const supabaseToken = req.cookies.get("sb-access-token")?.value;
+  const access = req.cookies.get("sb-access-token")?.value;
+  const refresh = req.cookies.get("sb-refresh-token")?.value;
 
-  const isLoggedIn = Boolean(supabaseToken);
+  const isLoggedIn = Boolean(access || refresh);
 
   const protectedRoutes = [
     "/dashboard",
