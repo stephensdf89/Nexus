@@ -74,6 +74,8 @@ export default function Topbar() {
     try {
       const supabase = getSupabaseClient();
       await supabase.auth.signOut();
+      document.cookie = "sb-access-token=; path=/; max-age=0; samesite=lax";
+      document.cookie = "sb-refresh-token=; path=/; max-age=0; samesite=lax";
       router.replace("/login");
       router.refresh();
     } finally {

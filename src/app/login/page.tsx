@@ -30,7 +30,7 @@ export default function LoginPage() {
       },
     });
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -38,6 +38,18 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
       return;
+    }
+
+    if (data.session) {
+      const cookieBase = "path=/; samesite=lax";
+      const persistent = remember ? "; max-age=2592000" : "";
+
+      document.cookie = `sb-access-token=${encodeURIComponent(
+        data.session.access_token
+      )}; ${cookieBase}${persistent}`;
+      document.cookie = `sb-refresh-token=${encodeURIComponent(
+        data.session.refresh_token
+      )}; ${cookieBase}${persistent}`;
     }
 
     router.push("/dashboard");
