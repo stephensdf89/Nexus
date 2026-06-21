@@ -1,22 +1,24 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const router = useRouter();
-  const params = useSearchParams();
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const emailRedirectTo =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/login`
+      : "https://content-creator-nexus-website-521i3vs3g.vercel.app/login";
 
   // Autofill from login page if values were passed
-  const preEmail = params.get("email") || "";
-  const prePassword = params.get("password") || "";
+  const searchParams =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : null;
+  const preEmail = searchParams?.get("email") || "";
+  const prePassword = searchParams?.get("password") || "";
 
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -29,6 +31,16 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      setError("Supabase configuration is missing.");
+      return;
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -38,7 +50,7 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        emailRedirectTo: "https://nexus-xm6n.vercel.app/login",
+        emailRedirectTo,
         data: {
           name,
           username,

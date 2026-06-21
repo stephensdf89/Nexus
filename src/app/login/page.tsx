@@ -1,35 +1,34 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-import { getSupabaseClient } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
-    let supabase;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    try {
-      supabase = getSupabaseClient();
-    } catch (clientError) {
-      setError(
-        clientError instanceof Error
-          ? clientError.message
-          : "Supabase configuration is missing."
-      );
+    if (!supabaseUrl || !supabaseAnonKey) {
+      setError("Supabase configuration is missing.");
       return;
     }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: remember,
+      },
+    });
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -54,7 +53,7 @@ export default function LoginPage() {
             <label className="block mb-1 text-sm">Email</label>
             <input
               type="email"
-              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700 focus:outline-none"
+              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -65,16 +64,12 @@ export default function LoginPage() {
             <label className="block mb-1 text-sm">Password</label>
             <input
               type="password"
-              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700 focus:outline-none"
+              className="w-full p-3 rounded bg-neutral-800 border border-neutral-700"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-
-          {error && (
-            <p className="text-red-400 text-sm text-center">{error}</p>
-          )}
 
           <div className="flex items-center gap-2">
             <input
@@ -88,6 +83,10 @@ export default function LoginPage() {
               Remember Me
             </label>
           </div>
+
+          {error && (
+            <p className="text-red-400 text-sm text-center">{error}</p>
+          )}
 
           <button
             type="submit"
