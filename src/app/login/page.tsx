@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { setAuthCookies } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -50,10 +51,13 @@ export default function LoginPage() {
     }
 
     if (data.session) {
-      const cookieBase = "path=/; samesite=lax";
-      const persistent = remember ? "; max-age=2592000" : "";
-      document.cookie = `sb-access-token=${encodeURIComponent(data.session.access_token)}; ${cookieBase}${persistent}`;
-      document.cookie = `sb-refresh-token=${encodeURIComponent(data.session.refresh_token)}; ${cookieBase}${persistent}`;
+      setAuthCookies(
+        {
+          accessToken: data.session.access_token,
+          refreshToken: data.session.refresh_token,
+        },
+        remember
+      );
     }
 
     router.push(redirectedFrom);

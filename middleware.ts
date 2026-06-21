@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from "@/lib/auth";
 
 export function middleware(req: NextRequest) {
-  const access = req.cookies.get("sb-access-token")?.value;
-  const refresh = req.cookies.get("sb-refresh-token")?.value;
+  const access = req.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  const refresh = req.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
 
   const isLoggedIn = Boolean(access || refresh);
 
