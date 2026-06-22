@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useA11yStore } from "@/lib/accessibilityStore";
+import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function Dashboard() {
-  const a11y = useA11yStore();
+  const a11y = useSettingsStore();
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {

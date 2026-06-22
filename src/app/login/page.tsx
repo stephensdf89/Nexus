@@ -4,11 +4,11 @@ import { useState, useEffect, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useA11yStore } from "@/lib/accessibilityStore";
+import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function LoginPage() {
   const router = useRouter();
-  const a11y = useA11yStore();
+  const a11y = useSettingsStore();
   const [showMenu, setShowMenu] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

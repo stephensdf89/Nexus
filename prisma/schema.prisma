@@ -1,0 +1,14 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model UserSettings {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  settings  Json
+  updatedAt DateTime @updatedAt
+}
