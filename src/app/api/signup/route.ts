@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
-// TEMP USER STORE (same as NextAuth)
-import { tempUsers as users } from "@/lib/auth-options";
+import { users } from "@/lib/userStore";
 
 export async function POST(req: Request) {
   const body = await req.json();

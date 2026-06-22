@@ -81,7 +81,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-[#050a1f] via-[#0b1c4d] to-[#2a0d5c] text-white flex items-center justify-center p-6">
         <p className="text-sm text-neutral-400">Checking your session...</p>
       </div>
     );
@@ -89,10 +89,10 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   if (status === "error") {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
-        <div className="w-full max-w-md rounded-xl border border-red-900 bg-neutral-900 p-8 text-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#050a1f] via-[#0b1c4d] to-[#2a0d5c] text-white flex items-center justify-center p-6">
+        <div className="w-full max-w-md rounded-xl border border-cyan-400/50 bg-slate-900/90 p-8 text-center">
           <h1 className="mb-3 text-2xl font-bold">Authentication Unavailable</h1>
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-violet-200">{error}</p>
         </div>
       </div>
     );

@@ -1,27 +1,48 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useA11yStore } from "@/lib/accessibilityStore";
 
 export default function LoginPage() {
   const router = useRouter();
+  const a11y = useA11yStore();
+  const [showMenu, setShowMenu] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    a11y.load();
+
+    const savedEmail = localStorage.getItem("loginEmail");
+    const savedPassword = localStorage.getItem("loginPassword");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setPassword(savedPassword || "");
+      setRememberMe(true);
+    }
+  }, []);
+
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
-    const result = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
+    if (rememberMe) {
+      localStorage.setItem("loginEmail", email);
+      localStorage.setItem("loginPassword", password);
+    } else {
+      localStorage.removeItem("loginEmail");
+      localStorage.removeItem("loginPassword");
+    }
+
+    const result = await signIn("credentials", { redirect: false, email, password });
 
     if (result?.error) {
       setError("Invalid email or password");
@@ -33,69 +54,86 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen fade-in flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6">
-      <div className="bg-black/60 backdrop-blur-md p-8 rounded-xl shadow-xl w-full max-w-md border border-cyan-500/30 slide-up">
-        <h1 className="text-3xl font-bold text-center text-white mb-6">Sign In</h1>
+    <div className={`min-h-screen fade-in flex flex-col items-center justify-center p-6 transition-colors duration-300 ${a11y.highContrast ? "bg-white" : "bg-gradient-to-br from-[#050a1f] via-[#0b1c4d] to-[#2a0d5c]"} relative`}>
+      <a href="#login-form" className="absolute top-2 left-2 bg-cyan-500 text-slate-950 px-3 py-1 rounded focus:outline-white z-40 sr-only focus:not-sr-only" aria-label="Skip to login form">Skip to login form</a>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="text-white block mb-1">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full p-3 rounded bg-black/40 border border-red-700 text-white input-glow"
-            />
+      <button onClick={() => setShowMenu(!showMenu)} aria-label="Open Accessibility Menu" aria-expanded={showMenu} className={`absolute top-4 right-4 px-3 py-2 rounded focus:outline-2 focus:outline-offset-2 ${a11y.highContrast ? "bg-black text-white border-2 border-black focus:outline-black" : "bg-cyan-500 text-slate-950 focus:outline-cyan-400"}`}>
+        ♿ A11y
+      </button>
+
+      {showMenu && (
+        <div className={`absolute top-16 right-4 p-4 rounded w-72 z-50 border-2 ${a11y.highContrast ? "bg-white text-black border-black" : "bg-slate-900/95 border-cyan-400/70 text-white"}`}>
+          <h2 className="font-bold mb-4 text-lg">Accessibility Options</h2>
+          <div className="space-y-3">
+            <label className="flex items-center cursor-pointer">
+              <input type="checkbox" checked={a11y.highContrast} onChange={() => a11y.update('highContrast', !a11y.highContrast)} className="mr-2 w-4 h-4 cursor-pointer" />
+              <span>High Contrast Mode</span>
+            </label>
+            <label className="flex items-center justify-between">
+              <span>Text Size:</span>
+              <select value={a11y.textSize} onChange={(e) => a11y.update('textSize', e.target.value)} className={`ml-2 px-2 py-1 rounded border ${a11y.highContrast ? "bg-white text-black border-black" : "bg-slate-950 border-cyan-400/70 text-white"}`}>
+                <option value="small">Small</option>
+                <option value="medium">Default</option>
+                <option value="large">Large</option>
+              </select>
+            </label>
+            <label className="flex items-center justify-between">
+              <span>Color Blind Mode:</span>
+              <select value={a11y.colorBlindMode} onChange={(e) => a11y.update('colorBlindMode', e.target.value)} className={`ml-2 px-2 py-1 rounded border ${a11y.highContrast ? "bg-white text-black border-black" : "bg-slate-950 border-cyan-400/70 text-white"}`}>
+                <option value="none">None</option>
+                <option value="protanopia">Protanopia (Red-Blind)</option>
+                <option value="deuteranopia">Deuteranopia (Green-Blind)</option>
+                <option value="tritanopia">Tritanopia (Blue-Yellow)</option>
+              </select>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input type="checkbox" checked={a11y.disableNeon} onChange={() => a11y.update('disableNeon', !a11y.disableNeon)} className="mr-2 w-4 h-4 cursor-pointer" />
+              <span>Disable Neon Effects</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input type="checkbox" checked={a11y.safeMode} onChange={() => a11y.update('safeMode', !a11y.safeMode)} className="mr-2 w-4 h-4 cursor-pointer" />
+              <span>Seizure-Safe Mode</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input type="checkbox" checked={a11y.reducedMotion} onChange={() => a11y.update('reducedMotion', !a11y.reducedMotion)} className="mr-2 w-4 h-4 cursor-pointer" />
+              <span>Reduced Motion</span>
+            </label>
           </div>
+          <button onClick={() => setShowMenu(false)} className={`w-full mt-4 px-3 py-2 rounded border ${a11y.highContrast ? "bg-black text-white border-black hover:bg-gray-800" : "bg-violet-600 text-white border-violet-400/70 hover:bg-violet-700"}`}>Close</button>
+        </div>
+      )}
 
+      <form id="login-form" onSubmit={handleLogin} className={`${a11y.highContrast ? "bg-white text-black border-4 border-black" : "bg-slate-950/60 text-white border border-cyan-300/35"} backdrop-blur-md p-8 rounded-xl shadow-xl w-full max-w-md ${!a11y.reducedMotion && !a11y.safeMode ? "slide-up" : ""}`}>
+        <img src="/logo.png" alt="Nexus logo" width="88" height="88" className="mx-auto mb-4 h-20 w-20 rounded-md ring-1 ring-cyan-300/40" />
+        <h1 className="text-3xl font-bold mb-6">Sign In</h1>
+        {error && <p className="text-violet-200 mb-4 p-3 rounded bg-violet-900/35 border border-violet-400/50 error-shake" role="alert">{error}</p>}
+        <div className="space-y-4">
           <div>
-            <label htmlFor="password" className="text-white block mb-1">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full p-3 rounded bg-black/40 border border-red-700 text-white input-glow"
-            />
+            <label htmlFor="email" className="block mb-2 font-semibold">Email</label>
+            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required aria-required="true" aria-label="Email address" className={`w-full p-3 rounded transition-all duration-200 ${a11y.highContrast ? "bg-white border-2 border-black text-black" : "bg-slate-950/40 border border-cyan-400/60 text-white input-glow"} ${a11y.textSize === "large" ? "text-lg" : a11y.textSize === "small" ? "text-sm" : ""} focus:outline-none focus:ring-2 focus:ring-offset-2 ${a11y.highContrast ? "focus:ring-black" : "focus:ring-cyan-400"}`} autoComplete="email" />
           </div>
-
-          {error && <p className="text-red-400 text-sm error-shake">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-red-700 hover:bg-red-800 text-white py-3 rounded font-semibold transition btn-pulse disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {isLoading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
-
+          <div>
+            <label htmlFor="password" className="block mb-2 font-semibold">Password</label>
+            <div className="relative">
+              <input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required aria-required="true" aria-label="Password" className={`w-full p-3 rounded transition-all duration-200 ${a11y.highContrast ? "bg-white border-2 border-black text-black" : "bg-slate-950/40 border border-cyan-400/60 text-white input-glow"} pr-12 ${a11y.textSize === "large" ? "text-lg" : a11y.textSize === "small" ? "text-sm" : ""} focus:outline-none focus:ring-2 focus:ring-offset-2 ${a11y.highContrast ? "focus:ring-black" : "focus:ring-cyan-400"}`} autoComplete="current-password" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"} className={`absolute right-3 top-1/2 -translate-y-1/2 ${a11y.highContrast ? "text-black" : "text-gray-300 hover:text-white"}`}>{showPassword ? "🙈" : "👁️"}</button>
+            </div>
+          </div>
+          <div className="flex items-center">
+            <input id="rememberMe" type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 rounded cursor-pointer" aria-label="Remember me on this device" />
+            <label htmlFor="rememberMe" className="ml-2 cursor-pointer text-sm">Remember me</label>
+          </div>
+          <button type="submit" disabled={isLoading} className={`w-full py-3 rounded font-semibold transition-all duration-200 ${a11y.highContrast ? "bg-black text-white border-2 border-black hover:bg-gray-900" : "bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950"} disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 ${a11y.highContrast ? "focus:ring-black" : "focus:ring-cyan-400"} ${!a11y.reducedMotion && !a11y.safeMode ? "btn-pulse" : ""}`} aria-busy={isLoading}>{isLoading ? "Signing in..." : "Sign In"}</button>
+        </div>
         <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-700" />
-          </div>
+          <div className={`absolute inset-0 flex items-center ${a11y.highContrast ? "border-t-2 border-black" : "border-t border-gray-700"}`} />
           <div className="relative flex justify-center text-sm">
-            <span className="bg-black/60 px-3 text-gray-400">or</span>
+            <span className={`px-3 ${a11y.highContrast ? "bg-white text-black" : "bg-slate-950/60 text-cyan-100/80"}`}>or</span>
           </div>
         </div>
-
-        <button
-          onClick={() => signIn("facebook", { callbackUrl: "/dashboard" })}
-          className="w-full py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition font-semibold"
-        >
-          Continue with Facebook
-        </button>
-
-        <p className="text-center text-gray-300 mt-4">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-cyan-400 hover:text-orange-400 transition">
-            Sign up
-          </Link>
-        </p>
-      </div>
+        <button type="button" onClick={() => signIn("facebook", { callbackUrl: "/dashboard" })} className={`w-full py-3 rounded font-semibold transition-all duration-200 ${a11y.highContrast ? "bg-black text-white border-2 border-black hover:bg-gray-800" : "bg-violet-600 hover:bg-violet-700 text-white"} focus:outline-none focus:ring-2 focus:ring-offset-2 ${a11y.highContrast ? "focus:ring-black" : "focus:ring-violet-500"}`}>Continue with Facebook</button>
+        <p className="text-center mt-4 text-sm">Don&apos;t have an account? <Link href="/signup" className={`font-semibold underline transition-colors ${a11y.highContrast ? "text-black hover:text-gray-700" : "text-cyan-300 hover:text-violet-300"}`}>Sign up</Link></p>
+      </form>
     </div>
   );
 }

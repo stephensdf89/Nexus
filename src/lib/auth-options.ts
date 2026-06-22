@@ -2,17 +2,7 @@ import FacebookProvider from "next-auth/providers/facebook";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import type { NextAuthOptions } from "next-auth";
-
-// TEMP USER STORE (replace with DB later)
-interface TempUser {
-  id: string;
-  name: string;
-  email: string;
-  username: string;
-  password: string;
-}
-
-export const tempUsers: TempUser[] = [];
+import { users } from "@/lib/userStore";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -29,7 +19,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const user = tempUsers.find((u) => u.email === credentials.email);
+        const user = users.find((u) => u.email === credentials.email);
         if (!user) return null;
 
         const isValid = await bcrypt.compare(credentials.password, user.password);

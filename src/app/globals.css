@@ -2,6 +2,15 @@
 
 :root {
   color-scheme: dark;
+  --brand-bg-start: #050a1f;
+  --brand-bg-mid: #0b1c4d;
+  --brand-bg-end: #2a0d5c;
+  --brand-surface: rgba(7, 16, 48, 0.72);
+  --brand-surface-soft: rgba(10, 20, 58, 0.45);
+  --brand-border: rgba(0, 194, 255, 0.45);
+  --brand-primary: #00c2ff;
+  --brand-secondary: #a64dff;
+  --brand-text: #eaf1ff;
 }
 
 * {
@@ -9,14 +18,16 @@
 }
 
 html {
-  background: #0d0d0d;
+  background: radial-gradient(circle at 20% 15%, #132b79 0%, var(--brand-bg-start) 45%),
+    linear-gradient(145deg, var(--brand-bg-start) 0%, var(--brand-bg-mid) 55%, var(--brand-bg-end) 100%);
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: #0d0d0d;
-  color: #ffffff;
+  background: radial-gradient(circle at 20% 15%, #132b79 0%, var(--brand-bg-start) 45%),
+    linear-gradient(145deg, var(--brand-bg-start) 0%, var(--brand-bg-mid) 55%, var(--brand-bg-end) 100%);
+  color: var(--brand-text);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -63,10 +74,10 @@ a {
   }
 }
 
-/* Neon red focus glow */
+/* Neon brand focus glow */
 .input-glow:focus {
-  box-shadow: 0 0 12px rgba(255, 0, 0, 0.7);
-  border-color: #ff0000;
+  box-shadow: 0 0 14px rgba(0, 194, 255, 0.65), 0 0 24px rgba(166, 77, 255, 0.35);
+  border-color: var(--brand-primary);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
@@ -91,7 +102,7 @@ a {
 /* Button hover pulse */
 .btn-pulse:hover {
   transform: scale(1.03);
-  box-shadow: 0 0 12px rgba(255, 0, 0, 0.6);
+  box-shadow: 0 0 14px rgba(0, 194, 255, 0.55), 0 0 28px rgba(166, 77, 255, 0.35);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -104,4 +115,72 @@ a {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ============================================
+   ACCESSIBILITY FEATURES
+   ============================================ */
+
+/* High Contrast Mode */
+.hc-mode {
+  filter: contrast(150%);
+}
+
+/* Text Sizes */
+.text-lg {
+  font-size: 1.25rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+/* Color Blind Modes - SVG filters would be ideal, but we use opacity adjustments */
+.cb-protanopia {
+  filter: saturate(0) sepia(0.3);
+}
+
+.cb-deuteranopia {
+  filter: saturate(0) sepia(0.3);
+}
+
+.cb-tritanopia {
+  filter: saturate(0) sepia(0.3) hue-rotate(90deg);
+}
+
+/* Disable Neon Effects */
+.no-neon * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.no-neon .input-glow:focus {
+  box-shadow: 0 0 2px rgba(0, 194, 255, 0.35) !important;
+}
+
+.no-neon .btn-pulse:hover {
+  box-shadow: none !important;
+}
+
+/* Safe Mode (Seizure-Safe) */
+.safe-mode * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Reduced Motion Class (for manual override) */
+.reduced-motion * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Ensure links are still visible in accessibility modes */
+.hc-mode a {
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.hc-mode button {
+  text-decoration: underline;
+  font-weight: 600;
 }

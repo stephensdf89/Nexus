@@ -5,11 +5,21 @@ import Link from "next/link";
 
 export default function SignUpPage() {
   const getPasswordStrength = (password: string): number => {
+    if (password.length === 0) return 0;
+    
     let strength = 0;
 
+    // Length requirement (minimum 8 characters)
     if (password.length >= 8) strength += 1;
+    else return 0; // Too short, can't be strong
+
+    // Has uppercase
     if (/[A-Z]/.test(password)) strength += 1;
+    
+    // Has number
     if (/\d/.test(password)) strength += 1;
+    
+    // Has special character
     if (/[^A-Za-z0-9]/.test(password)) strength += 1;
 
     return strength;
@@ -103,7 +113,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen fade-in flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6">
+    <div className="min-h-screen fade-in flex flex-col items-center justify-center bg-gradient-to-br from-[#050a1f] via-[#0b1c4d] to-[#2a0d5c] p-6">
       
       {/* Logo */}
       <div className="mb-6">
@@ -116,7 +126,7 @@ export default function SignUpPage() {
         />
       </div>
 
-      <div className="bg-black/60 backdrop-blur-md p-8 rounded-xl shadow-xl w-full max-w-md border border-cyan-500/30 slide-up">
+      <div className="bg-slate-950/60 backdrop-blur-md p-8 rounded-xl shadow-xl w-full max-w-md border border-cyan-300/35 slide-up">
         <h1 className="text-3xl font-bold text-center text-white mb-6">
           Create Your Account
         </h1>
@@ -139,11 +149,11 @@ export default function SignUpPage() {
               name="name"
               aria-label="Full Name"
               aria-required="true"
-              className="w-full p-3 rounded bg-black/40 border border-red-700 text-white input-glow"
+              className="w-full p-3 rounded bg-slate-950/40 border border-cyan-400/60 text-white input-glow"
               value={form.name}
               onChange={handleChange}
             />
-            {errors.name && <p className="text-red-400 text-sm error-shake">{errors.name}</p>}
+            {errors.name && <p className="text-violet-300 text-sm error-shake">{errors.name}</p>}
           </div>
 
           {/* Username */}
@@ -156,7 +166,7 @@ export default function SignUpPage() {
               name="username"
               aria-label="Username"
               aria-required="true"
-              className="w-full p-3 rounded bg-black/40 border border-red-700 text-white input-glow"
+              className="w-full p-3 rounded bg-slate-950/40 border border-cyan-400/60 text-white input-glow"
               value={form.username}
               onChange={handleChange}
             />
@@ -176,7 +186,7 @@ export default function SignUpPage() {
               type="email"
               aria-label="Email Address"
               aria-required="true"
-              className="w-full p-3 rounded bg-black/40 border border-red-700 text-white input-glow"
+              className="w-full p-3 rounded bg-slate-950/40 border border-cyan-400/60 text-white input-glow"
               value={form.email}
               onChange={handleChange}
             />
@@ -195,7 +205,7 @@ export default function SignUpPage() {
                 type={showPassword ? "text" : "password"}
                 aria-label="Password"
                 aria-required="true"
-                className="w-full p-3 rounded bg-black/40 border border-red-700 text-white input-glow pr-12"
+                className="w-full p-3 rounded bg-slate-950/40 border border-cyan-400/60 text-white input-glow pr-12"
                 value={form.password}
                 onChange={handleChange}
               />
@@ -219,23 +229,29 @@ export default function SignUpPage() {
                       className={`h-2 flex-1 rounded strength-animate ${
                         strength >= level
                           ? level === 1
-                            ? "bg-red-600"
+                            ? "bg-cyan-500"
                             : level === 2
-                            ? "bg-orange-500"
+                            ? "bg-blue-500"
                             : level === 3
-                            ? "bg-yellow-400"
-                            : "bg-green-500"
+                            ? "bg-violet-500"
+                            : "bg-cyan-300"
                           : "bg-gray-700"
                       }`}
                     />
                   ))}
                 </div>
-                <p className="text-sm mt-1 text-gray-300">
-                  {strength === 0 && "Too weak"}
-                  {strength === 1 && "Weak"}
-                  {strength === 2 && "Moderate"}
-                  {strength === 3 && "Strong"}
-                  {strength === 4 && "Very strong"}
+                <p className={`text-xs font-semibold mt-1 ${
+                  strength === 0 ? "text-gray-400" :
+                  strength === 1 ? "text-cyan-400" :
+                  strength === 2 ? "text-blue-400" :
+                  strength === 3 ? "text-violet-400" :
+                  "text-cyan-200"
+                }`}>
+                  {strength === 0 && "Password too short (min 8 characters)"}
+                  {strength === 1 && "Weak - Add uppercase, numbers, and symbols"}
+                  {strength === 2 && "Moderate - Add numbers and special characters"}
+                  {strength === 3 && "Strong - Consider adding more variety"}
+                  {strength === 4 && "✓ Very Strong"}
                 </p>
               </div>
             )}
@@ -256,7 +272,7 @@ export default function SignUpPage() {
                 type={showConfirmPassword ? "text" : "password"}
                 aria-label="Confirm Password"
                 aria-required="true"
-                className="w-full p-3 rounded bg-black/40 border border-red-700 text-white input-glow pr-12"
+                className="w-full p-3 rounded bg-slate-950/40 border border-cyan-400/60 text-white input-glow pr-12"
                 value={form.confirmPassword}
                 onChange={handleChange}
               />
@@ -272,7 +288,7 @@ export default function SignUpPage() {
               </button>
             </div>
             {errors.confirmPassword && (
-              <p className="text-red-400 text-sm">{errors.confirmPassword}</p>
+              <p className="text-violet-300 text-sm">{errors.confirmPassword}</p>
             )}
           </div>
 
@@ -285,42 +301,42 @@ export default function SignUpPage() {
               onChange={(e) => setAcceptedTerms(e.target.checked)}
               aria-required="true"
               aria-label="Accept Terms and Privacy Policy"
-              className="mt-1 h-5 w-5 accent-red-700 cursor-pointer"
+              className="mt-1 h-5 w-5 accent-cyan-500 cursor-pointer"
             />
 
             <label htmlFor="terms" className="text-gray-300 text-sm leading-tight cursor-pointer">
               I agree to the{" "}
-              <a href="/terms" className="text-red-400 underline hover:text-red-300">
+              <a href="/terms" className="text-cyan-300 underline hover:text-violet-300">
                 Terms & Conditions
               </a>{" "}
               and{" "}
-              <a href="/privacy" className="text-red-400 underline hover:text-red-300">
+              <a href="/privacy" className="text-cyan-300 underline hover:text-violet-300">
                 Privacy Policy
               </a>.
             </label>
           </div>
 
           {errors.acceptedTerms && (
-            <p className="text-red-400 text-sm mt-1">{errors.acceptedTerms}</p>
+            <p className="text-violet-300 text-sm mt-1">{errors.acceptedTerms}</p>
           )}
 
           {/* Submit */}
           <button
             type="submit"
             disabled={!acceptedTerms}
-            className="w-full bg-red-700 hover:bg-red-800 text-white py-3 rounded font-semibold transition btn-pulse"
+            className="w-full bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 py-3 rounded font-semibold transition btn-pulse"
           >
             Create Account
           </button>
         </form>
 
         {errors.api && (
-          <p className="text-red-400 text-sm error-shake">{errors.api}</p>
+          <p className="text-violet-300 text-sm error-shake">{errors.api}</p>
         )}
 
         <p className="text-center text-gray-300 mt-4">
           Already have an account?{" "}
-          <Link href="/login" className="text-cyan-400 hover:text-orange-400 transition">
+          <Link href="/login" className="text-cyan-300 hover:text-violet-300 transition">
             Sign in
           </Link>
         </p>
