@@ -1,153 +1,204 @@
 "use client";
+import { useState, type FormEvent, type ChangeEvent } from "react";
+import Image from "next/image";
+import Link from "next/link";
 
-import { useState, type FormEvent } from "react";
-import { createClient } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
+export default function SignUpPage() {
+  const [form, setForm] = useState(() => {
+    if (typeof window !== "undefined") {
+      const savedEmail = sessionStorage.getItem("pendingEmail") || "";
+      const savedPassword = sessionStorage.getItem("pendingPassword") || "";
+      if (savedEmail || savedPassword) {
+        sessionStorage.removeItem("pendingEmail");
+        sessionStorage.removeItem("pendingPassword");
+      }
+      return {
+        name: "",
+        username: "",
+        email: savedEmail,
+        password: savedPassword,
+        confirmPassword: "",
+      };
+    }
+    return {
+      name: "",
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
+  });
 
-export const dynamic = "force-dynamic";
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState(false);
 
-export default function SignupPage() {
-  const router = useRouter();
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const validate = (): Record<string, string> => {
+    const newErrors: Record<string, string> = {};
 
-  async function handleSignup(e: FormEvent<HTMLFormElement>) {
+    if (!form.name.trim()) newErrors.name = "Name is required.";
+    if (!form.username.trim()) newErrors.username = "Username is required.";
+    if (!form.email.trim()) newErrors.email = "Email is required.";
+    if (!form.password.trim()) newErrors.password = "Password is required.";
+    if (form.password !== form.confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match.";
+
+    return newErrors;
+  };
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
-    setMessage("");
-    setIsLoading(true);
+    const validation = validate();
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      setIsLoading(false);
+    if (Object.keys(validation).length > 0) {
+      setErrors(validation);
       return;
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    setErrors({});
+    setSubmitted(true);
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setError("Supabase configuration is missing.");
-      setIsLoading(false);
-      return;
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-    const emailRedirectTo =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/login`
-        : "https://content-creator-nexus-website-521i3vs3g.vercel.app/login";
-
-    const { data, error: signupError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo,
-        data: { name, username },
-      },
-    });
-
-    if (signupError) {
-      setError(signupError.message);
-      setIsLoading(false);
-      return;
-    }
-
-    if (data.session) {
-      router.push("/dashboard");
-      return;
-    }
-
-    setMessage("Account created. Check your email to verify your account before signing in.");
-    setIsLoading(false);
-  }
+    // TODO: Hook into your backend or NextAuth credentials provider
+  };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0d0d0d] px-6 text-white">
-      <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-950 p-8 shadow-2xl">
-        <h1 className="text-center text-3xl font-bold">Create Account</h1>
-        <p className="mt-2 text-center text-sm text-zinc-400">Start building your creator workflow</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6">
+      
+      {/* Logo */}
+      <div className="mb-6">
+        <Image
+          src="/logo.png"
+          alt="Content Creator Nexus Logo"
+          width={140}
+          height={140}
+          className="rounded-lg shadow-2xl"
+        />
+      </div>
 
-        <form onSubmit={handleSignup} className="mt-7 space-y-4">
+      <div className="bg-slate-900/60 backdrop-blur-md p-8 rounded-xl shadow-xl w-full max-w-md border border-cyan-500/30">
+        <h1 className="text-3xl font-bold text-center text-white mb-6">
+          Create Your Account
+        </h1>
+
+        {submitted && (
+          <p className="text-emerald-400 text-center mb-4">
+            Account created successfully!
+          </p>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* Name */}
           <div>
-            <label className="mb-1 block text-sm">Name</label>
+            <label htmlFor="name" className="text-white block mb-1">
+              Name
+            </label>
             <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-sm outline-none transition focus:border-[#ff0033]"
-              required
+              id="name"
+              name="name"
+              aria-label="Full Name"
+              aria-required="true"
+              className="w-full p-3 rounded bg-slate-800/60 border border-cyan-500/50 text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none transition"
+              value={form.name}
+              onChange={handleChange}
             />
+            {errors.name && <p className="text-orange-400 text-sm">{errors.name}</p>}
           </div>
 
+          {/* Username */}
           <div>
-            <label className="mb-1 block text-sm">Username</label>
+            <label htmlFor="username" className="text-white block mb-1">
+              Username
+            </label>
             <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-sm outline-none transition focus:border-[#ff0033]"
-              required
+              id="username"
+              name="username"
+              aria-label="Username"
+              aria-required="true"
+              className="w-full p-3 rounded bg-slate-800/60 border border-cyan-500/50 text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none transition"
+              value={form.username}
+              onChange={handleChange}
             />
+            {errors.username && (
+              <p className="text-orange-400 text-sm">{errors.username}</p>
+            )}
           </div>
 
+          {/* Email */}
           <div>
-            <label className="mb-1 block text-sm">Email</label>
+            <label htmlFor="email" className="text-white block mb-1">
+              Email
+            </label>
             <input
+              id="email"
+              name="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-sm outline-none transition focus:border-[#ff0033]"
-              required
+              aria-label="Email Address"
+              aria-required="true"
+              className="w-full p-3 rounded bg-slate-800/60 border border-cyan-500/50 text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none transition"
+              value={form.email}
+              onChange={handleChange}
             />
+            {errors.email && <p className="text-orange-400 text-sm">{errors.email}</p>}
           </div>
 
+          {/* Password */}
           <div>
-            <label className="mb-1 block text-sm">Password</label>
+            <label htmlFor="password" className="text-white block mb-1">
+              Password
+            </label>
             <input
+              id="password"
+              name="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-sm outline-none transition focus:border-[#ff0033]"
-              required
-              minLength={6}
+              aria-label="Password"
+              aria-required="true"
+              className="w-full p-3 rounded bg-slate-800/60 border border-cyan-500/50 text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none transition"
+              value={form.password}
+              onChange={handleChange}
             />
+            {errors.password && (
+              <p className="text-orange-400 text-sm">{errors.password}</p>
+            )}
           </div>
 
+          {/* Confirm Password */}
           <div>
-            <label className="mb-1 block text-sm">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="text-white block mb-1">
+              Confirm Password
+            </label>
             <input
+              id="confirmPassword"
+              name="confirmPassword"
               type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-sm outline-none transition focus:border-[#ff0033]"
-              required
-              minLength={6}
+              aria-label="Confirm Password"
+              aria-required="true"
+              className="w-full p-3 rounded bg-slate-800/60 border border-cyan-500/50 text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none transition"
+              value={form.confirmPassword}
+              onChange={handleChange}
             />
+            {errors.confirmPassword && (
+              <p className="text-orange-400 text-sm">{errors.confirmPassword}</p>
+            )}
           </div>
 
-          {error ? <p className="text-sm text-red-400">{error}</p> : null}
-          {message ? <p className="text-sm text-emerald-400">{message}</p> : null}
-
+          {/* Submit */}
           <button
             type="submit"
-            disabled={isLoading}
-            className="w-full rounded-lg bg-[#ff0033] p-3 font-semibold transition hover:brightness-110 disabled:opacity-60"
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white py-3 rounded font-semibold transition shadow-lg"
           >
-            {isLoading ? "Creating Account..." : "Create Account"}
+            Create Account
           </button>
         </form>
 
-        <p className="mt-5 text-center text-sm text-zinc-400">
-          Already have an account? <a href="/login" className="text-[#ff6680] hover:underline">Sign in</a>
+        <p className="text-center text-gray-300 mt-4">
+          Already have an account?{" "}
+          <Link href="/login" className="text-cyan-400 hover:text-orange-400 transition">
+            Sign in
+          </Link>
         </p>
       </div>
     </div>
