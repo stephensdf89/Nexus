@@ -6,13 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push"
+    "lint": "eslint"
   },
   "dependencies": {
-    "@prisma/client": "^7.8.0",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/supabase-js": "^2.108.2",
     "bcryptjs": "^3.0.3",
@@ -36,7 +32,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "postcss": "^8.5.15",
-    "prisma": "^7.8.0",
     "tailwindcss": "^4.3.1",
     "typescript": "^5"
   }
