@@ -3,7 +3,7 @@ export default function PrivacyPolicy() {
     <main className="p-8 max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold mb-4">Privacy Policy</h1>
       <p className="mb-4">
-        Content Creator Nexus ("we", "our", or "us") operates this website and
+        Content Creator Nexus (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) operates this website and
         provides tools for creators to manage and analyze their social media
         presence. This Privacy Policy explains how we collect, use, and protect
         your information.
