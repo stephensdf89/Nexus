@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSettingsStore } from "@/lib/settingsStore";
 import ConfirmModal from "@/components/ConfirmModal";
+import AppShell from "@/components/AppShell";
 
 export default function SettingsPage() {
   const {
@@ -49,18 +50,19 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <ConfirmModal
-        open={modalOpen}
-        message={modalMessage}
-        onCancel={() => setModalOpen(false)}
-        onConfirm={() => {
-          modalAction();
-          setModalOpen(false);
-        }}
-      />
+    <AppShell>
+      <div className="bg-black text-white">
+        <ConfirmModal
+          open={modalOpen}
+          message={modalMessage}
+          onCancel={() => setModalOpen(false)}
+          onConfirm={() => {
+            modalAction();
+            setModalOpen(false);
+          }}
+        />
 
-      <h1 className="text-4xl font-bold mb-8">Settings</h1>
+        <h1 className="text-4xl font-bold mb-8">Settings</h1>
 
       {/* THEME SETTINGS */}
       <section className="mb-10 bg-gray-900 p-6 rounded border border-red-600">
@@ -356,6 +358,7 @@ export default function SettingsPage() {
 
       {/* Spacer for fixed footer */}
       <div className="h-24" />
-    </div>
+      </div>
+    </AppShell>
   );
 }

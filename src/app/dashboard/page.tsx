@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSettingsStore } from "@/lib/settingsStore";
+import AppShell from "@/components/AppShell";
 
 export default function Dashboard() {
   const a11y = useSettingsStore();
@@ -12,12 +13,13 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 p-8 relative ${a11y.highContrast ? "bg-white text-black" : "bg-gradient-to-br from-[#050a1f] via-[#0b1c4d] to-[#2a0d5c] text-white"}`}>
-      <a href="#main-dashboard" className="absolute top-2 left-2 bg-cyan-500 text-slate-950 px-3 py-1 rounded focus:outline-white z-40 sr-only focus:not-sr-only" aria-label="Skip to main dashboard content">Skip to content</a>
+    <AppShell>
+      <div className={`transition-colors duration-300 relative ${a11y.highContrast ? "bg-white text-black" : "text-white"}`}>
+        <a href="#main-dashboard" className="absolute top-2 left-2 bg-cyan-500 text-slate-950 px-3 py-1 rounded focus:outline-white z-40 sr-only focus:not-sr-only" aria-label="Skip to main dashboard content">Skip to content</a>
 
-      <button onClick={() => setShowMenu(!showMenu)} aria-label="Open Accessibility Menu" aria-expanded={showMenu} className={`absolute top-4 right-4 px-3 py-2 rounded focus:outline-2 focus:outline-offset-2 ${a11y.highContrast ? "bg-black text-white border-2 border-black focus:outline-black" : "bg-cyan-500 text-slate-950 focus:outline-cyan-400"}`}>
-        ♿ A11y
-      </button>
+        <button onClick={() => setShowMenu(!showMenu)} aria-label="Open Accessibility Menu" aria-expanded={showMenu} className={`absolute top-4 right-4 px-3 py-2 rounded focus:outline-2 focus:outline-offset-2 ${a11y.highContrast ? "bg-black text-white border-2 border-black focus:outline-black" : "bg-cyan-500 text-slate-950 focus:outline-cyan-400"}`}>
+          ♿ A11y
+        </button>
 
       {showMenu && (
         <div className={`absolute top-16 right-4 p-4 rounded w-72 z-50 border-2 ${a11y.highContrast ? "bg-white text-black border-black" : "bg-slate-900/95 border-cyan-400/70 text-white"}`}>
@@ -112,6 +114,7 @@ export default function Dashboard() {
           </article>
         </div>
       </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
