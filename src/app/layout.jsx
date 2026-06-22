@@ -1,14 +1,17 @@
-export const dynamic = "force-dynamic";
+"use client";
 
 import "./globals.css";
+import { SessionProvider } from "next-auth/react";
 import SettingsLoader from "@/components/SettingsLoader";
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children, session }) {
   return (
     <html lang="en">
       <body>
-        <SettingsLoader />
-        {children}
+        <SessionProvider session={session}>
+          <SettingsLoader />
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );
