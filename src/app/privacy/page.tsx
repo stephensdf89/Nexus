@@ -33,12 +33,6 @@ export default function PrivacyPolicy() {
       <h2 className="text-xl font-semibold mt-6 mb-2">Contact</h2>
       <p>
         If you have questions about this Privacy Policy, contact us at:
-        <a
-          href="mailto:privacy@contentcreatornexus.com"
-          className="ml-1 text-indigo-600 hover:underline"
-        >
-          privacy@contentcreatornexus.com
-        </a>
       </p>
     </main>
   );
