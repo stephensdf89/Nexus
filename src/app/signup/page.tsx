@@ -4,6 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 
 export default function SignUpPage() {
+  const getPasswordStrength = (password: string): number => {
+    let strength = 0;
+
+    if (password.length >= 8) strength += 1;
+    if (/[A-Z]/.test(password)) strength += 1;
+    if (/\d/.test(password)) strength += 1;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+
+    return strength;
+  };
+
   const [form, setForm] = useState(() => {
     if (typeof window !== "undefined") {
       const savedEmail = sessionStorage.getItem("pendingEmail") || "";
@@ -31,9 +42,16 @@ export default function SignUpPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [strength, setStrength] = useState(0);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setForm({ ...form, [name]: value });
+
+    if (name === "password") {
+      setStrength(getPasswordStrength(value));
+    }
   };
 
   const validate = (): Record<string, string> => {
@@ -160,6 +178,35 @@ export default function SignUpPage() {
               value={form.password}
               onChange={handleChange}
             />
+            {form.password && (
+              <div className="mt-2">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4].map((level) => (
+                    <div
+                      key={level}
+                      className={`h-2 flex-1 rounded transition-all ${
+                        strength >= level
+                          ? level === 1
+                            ? "bg-red-600"
+                            : level === 2
+                            ? "bg-orange-500"
+                            : level === 3
+                            ? "bg-yellow-400"
+                            : "bg-green-500"
+                          : "bg-gray-700"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-sm mt-1 text-gray-300">
+                  {strength === 0 && "Too weak"}
+                  {strength === 1 && "Weak"}
+                  {strength === 2 && "Moderate"}
+                  {strength === 3 && "Strong"}
+                  {strength === 4 && "Very strong"}
+                </p>
+              </div>
+            )}
             {errors.password && (
               <p className="text-orange-400 text-sm">{errors.password}</p>
             )}
