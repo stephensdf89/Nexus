@@ -1,17 +1,20 @@
-"use client";
-
 import "./globals.css";
-import { SessionProvider } from "next-auth/react";
+import Providers from "@/components/Providers";
 import SettingsLoader from "@/components/SettingsLoader";
 
-export default function RootLayout({ children, session }) {
+export const metadata = {
+  title: "Content Creator Nexus",
+  description: "Creator productivity platform for planning, publishing, and growth.",
+};
+
+export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <SessionProvider session={session}>
+        <Providers>
           <SettingsLoader />
           {children}
-        </SessionProvider>
+        </Providers>
       </body>
     </html>
   );
