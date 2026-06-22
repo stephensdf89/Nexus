@@ -53,7 +53,7 @@ export default function TermsOfService() {
               To access certain features of the Platform, you must register for an account. When registering, you agree to provide accurate, current, and complete information. You are solely responsible for maintaining the confidentiality of your account credentials.
             </p>
             <p className="mb-4">
-              You agree to notify us immediately at <a href="mailto:legal@contentcreatornexus.com" className="text-cyan-300 hover:text-orange-400 transition">legal@contentcreatornexus.com</a> of any unauthorized use of your account. We reserve the right to suspend or terminate accounts that exhibit suspicious activity.
+              You agree to notify us immediately at <a href="mailto:legal@creatornexuspro.com" className="text-cyan-300 hover:text-orange-400 transition">legal@creatornexuspro.com</a> of any unauthorized use of your account. We reserve the right to suspend or terminate accounts that exhibit suspicious activity.
             </p>
             <p>
               Each individual may maintain only one account on the Platform, unless expressly authorized in writing by Content Creator Nexus.
@@ -194,7 +194,7 @@ export default function TermsOfService() {
             <div className="bg-slate-700/40 border border-cyan-500/30 rounded p-6 space-y-4">
               <div>
                 <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-1">Email</div>
-                <a href="mailto:legal@contentcreatornexus.com" className="text-cyan-300 hover:text-orange-400 transition font-medium">legal@contentcreatornexus.com</a>
+                <a href="mailto:legal@creatornexuspro.com" className="text-cyan-300 hover:text-orange-400 transition font-medium">legal@creatornexuspro.com</a>
               </div>
               <div>
                 <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-1">Location</div>
