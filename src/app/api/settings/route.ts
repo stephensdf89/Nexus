@@ -34,8 +34,8 @@ export async function GET(req: NextRequest) {
       const db = await getPgClient();
       const result = await db.query(
         `SELECT settings
-         FROM public.user_settings
-         WHERE user_id = $1
+         FROM public."UserSettings"
+         WHERE "userId" = $1
          LIMIT 1`,
         [user.id]
       );
@@ -67,10 +67,10 @@ export async function POST(req: NextRequest) {
 
     const db = await getPgClient();
     await db.query(
-      `INSERT INTO public.user_settings (user_id, settings, updated_at)
+      `INSERT INTO public."UserSettings" ("userId", settings, "updatedAt")
        VALUES ($1, $2::jsonb, $3)
-       ON CONFLICT (user_id)
-       DO UPDATE SET settings = EXCLUDED.settings, updated_at = EXCLUDED.updated_at`,
+       ON CONFLICT ("userId")
+       DO UPDATE SET settings = EXCLUDED.settings, "updatedAt" = EXCLUDED."updatedAt"`,
       [user.id, JSON.stringify(settings), new Date().toISOString()]
     );
 
