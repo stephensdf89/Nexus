@@ -5,7 +5,12 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getUserFromRequest(req);
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({
+        userId: null,
+        email: null,
+        isOwner: false,
+        accessLevel: "user",
+      });
     }
 
     const effective = await getEffectiveAccess(user);
@@ -18,6 +23,11 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("Access me route failed:", error);
-    return NextResponse.json({ error: "Failed to load access" }, { status: 500 });
+    return NextResponse.json({
+      userId: null,
+      email: null,
+      isOwner: false,
+      accessLevel: "user",
+    });
   }
 }
