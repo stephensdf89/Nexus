@@ -4,11 +4,13 @@ import { useEffect, ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabaseClient";
+import type { User } from "@supabase/supabase-js";
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const authContext = useUser();
   const [supabaseLoaded, setSupabaseLoaded] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const [fallbackUser, setFallbackUser] = useState<User | null>(null);
   
   if (!authContext) {
     return (
@@ -19,6 +21,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   }
   
   const { user, loading } = authContext;
+  const effectiveUser = user ?? fallbackUser;
   const router = useRouter();
 
   useEffect(() => {
@@ -35,6 +38,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
           const { data } = await supabase.auth.getSession();
           if (data.session?.user) {
             setSupabaseLoaded(true);
+            setFallbackUser(data.session.user);
           }
         } catch (error) {
           console.error("Session check failed:", error);
@@ -44,16 +48,18 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       }
     };
 
-    if (!user && !loading) {
+    if (!effectiveUser && !loading) {
       checkSession();
+    } else if (effectiveUser) {
+      setSessionChecked(true);
     }
-  }, [user, loading]);
+  }, [effectiveUser, loading]);
 
   useEffect(() => {
-    if (!loading && sessionChecked && !user) {
+    if (!loading && sessionChecked && !effectiveUser) {
       router.push("/login");
     }
-  }, [loading, sessionChecked, user, router]);
+  }, [loading, sessionChecked, effectiveUser, router]);
 
   // Show loading screen with timeout
   if ((loading || !sessionChecked) && !supabaseLoaded) {
@@ -67,7 +73,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!user) return null;
+  if (!effectiveUser) return null;
 
   return children;
 }
