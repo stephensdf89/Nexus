@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { setAuthCookies } from "@/lib/auth";
 
 export default function SignUpPage() {
   const getPasswordStrength = (password: string): number => {
@@ -142,6 +143,13 @@ export default function SignUpPage() {
 
       setSubmitted(true);
       if (hasSession) {
+        setAuthCookies(
+          {
+            accessToken: data.session!.access_token,
+            refreshToken: data.session!.refresh_token,
+          },
+          true
+        );
         setTimeout(() => {
           window.location.assign("/dashboard");
         }, 1000);

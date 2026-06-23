@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/contexts/AuthContext";
 import { useSettingsStore } from "@/lib/settingsStore";
+import { setAuthCookies } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -123,12 +124,26 @@ export default function LoginPage() {
       }
 
       if (data?.session) {
+        setAuthCookies(
+          {
+            accessToken: data.session.access_token,
+            refreshToken: data.session.refresh_token,
+          },
+          rememberMe
+        );
         window.location.assign("/dashboard");
         return;
       } else {
         const session = await waitForSession();
 
         if (session) {
+          setAuthCookies(
+            {
+              accessToken: session.access_token,
+              refreshToken: session.refresh_token,
+            },
+            rememberMe
+          );
           window.location.assign("/dashboard");
           return;
         }
