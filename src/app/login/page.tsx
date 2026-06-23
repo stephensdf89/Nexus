@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [showMenu, setShowMenu] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -21,6 +22,29 @@ export default function LoginPage() {
   useEffect(() => {
     a11y.load();
   }, [a11y]);
+
+  useEffect(() => {
+    // Restore saved credentials if they exist
+    if (typeof window !== "undefined") {
+      const savedEmail = localStorage.getItem("loginEmail");
+      const savedPassword = localStorage.getItem("loginPassword");
+      if (savedEmail) {
+        setEmail(savedEmail);
+        setPassword(savedPassword || "");
+        setRememberMe(true);
+      }
+
+      // Restore pending credentials from signup
+      const pendingEmail = sessionStorage.getItem("pendingEmail");
+      const pendingPassword = sessionStorage.getItem("pendingPassword");
+      if (pendingEmail || pendingPassword) {
+        setEmail(pendingEmail || "");
+        setPassword(pendingPassword || "");
+        sessionStorage.removeItem("pendingEmail");
+        sessionStorage.removeItem("pendingPassword");
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -37,6 +61,15 @@ export default function LoginPage() {
       setError("Supabase is not configured");
       setIsLoading(false);
       return;
+    }
+
+    // Save or clear credentials based on remember me
+    if (rememberMe) {
+      localStorage.setItem("loginEmail", email);
+      localStorage.setItem("loginPassword", password);
+    } else {
+      localStorage.removeItem("loginEmail");
+      localStorage.removeItem("loginPassword");
     }
 
     try {
@@ -229,6 +262,22 @@ export default function LoginPage() {
                 {showPassword ? "hide" : "show"}
               </button>
             </div>
+          </div>
+
+          {/* Remember me checkbox */}
+          <div className="flex items-center">
+            <input 
+              id="rememberMe" 
+              type="checkbox" 
+              checked={rememberMe} 
+              onChange={(e) => setRememberMe(e.target.checked)} 
+              disabled={isLoading}
+              className={`w-4 h-4 rounded cursor-pointer accent-cyan-500 focus:ring-2 focus:ring-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed`}
+              aria-label="Remember me on this device"
+            />
+            <label htmlFor="rememberMe" className={`ml-2 cursor-pointer ${textSizeClass} text-gray-300 hover:text-white transition-colors`}>
+              Remember me
+            </label>
           </div>
 
           {/* Sign in button */}
