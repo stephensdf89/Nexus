@@ -5,7 +5,7 @@ import { useSettingsStore } from "@/lib/settingsStore";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function SettingsLoader() {
-  const { detectDevice, getActiveSettings } = useSettingsStore();
+  const { detectDevice, getActiveSettings, update, syncFromServer } = useSettingsStore();
   const {
     highContrast,
     textSize,
@@ -14,21 +14,15 @@ export default function SettingsLoader() {
     disableNeon,
     safeMode,
     theme,
-    update,
-    load,
-    syncFromServer,
   } = useSettingsStore();
 
+  // Detect and record device on mount
   useEffect(() => {
-    const d = detectDevice();
-    update("device", d);
+    update("device", detectDevice());
   }, []);
 
+  // Sync from Supabase once on mount (non-blocking; localStorage already applied)
   useEffect(() => {
-    // Always load from localStorage first for instant apply
-    load();
-
-    // Then sync from server if a Supabase session exists
     const trySync = async () => {
       if (!supabase) return;
       const { data } = await supabase.auth.getSession();
@@ -36,7 +30,6 @@ export default function SettingsLoader() {
         syncFromServer();
       }
     };
-
     trySync();
   }, []);
 

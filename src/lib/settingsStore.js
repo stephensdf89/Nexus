@@ -148,8 +148,24 @@ function createDefaults() {
   };
 }
 
+// Read from localStorage immediately so the store has the correct
+// values on the very first render — no useEffect flash.
+function initializeFromStorage() {
+  if (typeof window === "undefined") return createDefaults();
+  try {
+    const raw = localStorage.getItem("global-settings");
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (saved && typeof saved === "object") {
+        return hydrateStateFromPayload(saved, detectDevice());
+      }
+    }
+  } catch {}
+  return createDefaults();
+}
+
 export const useSettingsStore = create((set) => ({
-  ...createDefaults(),
+  ...initializeFromStorage(),
 
   detectDevice: () => {
     const width = window.innerWidth;
@@ -198,14 +214,23 @@ export const useSettingsStore = create((set) => ({
 
       const payload = await res.json();
       const serverSettings = payload?.settings ?? payload;
-      if (serverSettings && Object.keys(serverSettings).length > 0) {
-        const normalized = hydrateStateFromPayload(
-          serverSettings,
-          useSettingsStore.getState().detectDevice()
-        );
-        set(normalized);
-        persistLocal(normalized);
+      if (!serverSettings || Object.keys(serverSettings).length === 0) return;
+
+      // Only apply server settings when local storage is empty so that a
+      // stale or empty server row never overwrites the user's local changes.
+      const localRaw = localStorage.getItem("global-settings");
+      if (localRaw) {
+        // Local settings exist — push them to the server instead (local wins).
+        useSettingsStore.getState().syncToServer();
+        return;
       }
+
+      const normalized = hydrateStateFromPayload(
+        serverSettings,
+        useSettingsStore.getState().detectDevice()
+      );
+      set(normalized);
+      persistLocal(normalized);
     } catch (error) {
       console.error("Failed to sync settings from server:", error);
     }
