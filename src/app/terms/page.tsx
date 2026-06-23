@@ -4,15 +4,15 @@ export const metadata = {
 
 export default function TermsOfService() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <main className="min-h-screen bg-transparent">
       {/* Header */}
-      <header className="bg-gradient-to-r from-cyan-600/20 to-blue-600/20 border-b border-cyan-500/30 text-white py-16">
+      <header className="bg-gradient-to-r from-cyan-600/20 to-violet-600/20 border-b border-cyan-400/35 text-white py-16">
         <div className="max-w-4xl mx-auto px-6">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Terms of Service</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-violet-300">Terms of Service</h1>
           <div className="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full px-4 py-1.5 text-sm font-medium">
             <span>Effective June 21, 2026</span>
           </div>
-          <p className="text-slate-200 max-w-2xl text-lg leading-relaxed mt-4">
+          <p className="text-cyan-100/85 max-w-2xl text-lg leading-relaxed mt-4">
             Please read these Terms of Service carefully before using Content Creator Nexus. They govern your access to and use of our platform, services, and features. By accessing or using our services, you agree to be bound by these terms.
           </p>
         </div>
@@ -20,7 +20,7 @@ export default function TermsOfService() {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="bg-slate-800/40 border border-cyan-500/30 rounded-xl p-8 backdrop-blur-sm space-y-8 text-gray-200 leading-relaxed">
+        <div className="bg-[rgba(12,30,78,0.82)] border border-cyan-400/40 rounded-xl p-8 backdrop-blur-sm space-y-8 text-cyan-100/85 leading-relaxed shadow-lg shadow-cyan-500/10">
           {/* Section 1 */}
           <section>
             <h2 className="text-2xl font-bold mb-4 text-cyan-400">1. Acceptance of Terms</h2>
@@ -53,7 +53,7 @@ export default function TermsOfService() {
               To access certain features of the Platform, you must register for an account. When registering, you agree to provide accurate, current, and complete information. You are solely responsible for maintaining the confidentiality of your account credentials.
             </p>
             <p className="mb-4">
-              You agree to notify us immediately at <a href="mailto:legal@creatornexuspro.com" className="text-cyan-300 hover:text-orange-400 transition">legal@creatornexuspro.com</a> of any unauthorized use of your account. We reserve the right to suspend or terminate accounts that exhibit suspicious activity.
+              You agree to notify us immediately at <a href="mailto:legal@creatornexuspro.com" className="text-cyan-300 hover:text-violet-300 transition">legal@creatornexuspro.com</a> of any unauthorized use of your account. We reserve the right to suspend or terminate accounts that exhibit suspicious activity.
             </p>
             <p>
               Each individual may maintain only one account on the Platform, unless expressly authorized in writing by Content Creator Nexus.
@@ -124,14 +124,14 @@ export default function TermsOfService() {
           {/* Section 10 */}
           <section>
             <h2 className="text-2xl font-bold mb-4 text-cyan-400">10. Disclaimers</h2>
-            <div className="bg-slate-700/40 border border-orange-500/30 rounded p-6 mb-4">
-              <p className="mb-3 font-semibold text-orange-300">
+            <div className="bg-[rgba(20,43,98,0.78)] border border-violet-400/35 rounded p-6 mb-4">
+              <p className="mb-3 font-semibold text-violet-200">
                 THE PLATFORM AND ALL SERVICES ARE PROVIDED ON AN &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; BASIS WITHOUT WARRANTIES OF ANY KIND, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
               </p>
-              <p className="mb-3 text-gray-200">
+              <p className="mb-3 text-cyan-100/85">
                 WE DO NOT WARRANT THAT THE PLATFORM WILL BE UNINTERRUPTED, SECURE, ERROR-FREE, OR FREE OF VIRUSES.
               </p>
-              <p className="text-gray-200">
+              <p className="text-cyan-100/85">
                 WE MAKE NO GUARANTEES REGARDING EARNINGS, INCOME, BRAND DEALS, SPONSORSHIPS, OR ANY COMMERCIAL OUTCOMES.
               </p>
             </div>
@@ -140,11 +140,11 @@ export default function TermsOfService() {
           {/* Section 11 */}
           <section>
             <h2 className="text-2xl font-bold mb-4 text-cyan-400">11. Limitation of Liability</h2>
-            <div className="bg-slate-700/40 border border-orange-500/30 rounded p-6">
-              <p className="mb-3 font-semibold text-orange-300">
+            <div className="bg-[rgba(20,43,98,0.78)] border border-violet-400/35 rounded p-6">
+              <p className="mb-3 font-semibold text-violet-200">
                 WE ARE NOT LIABLE FOR ANY INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOSS OF PROFITS OR DATA, ARISING FROM YOUR USE OF THE PLATFORM.
               </p>
-              <p className="text-gray-200">
+              <p className="text-cyan-100/85">
                 OUR TOTAL LIABILITY TO YOU DOES NOT EXCEED $100 OR THE AMOUNT YOU PAID US IN THE PAST 12 MONTHS, WHICHEVER IS GREATER.
               </p>
             </div>
@@ -191,18 +191,18 @@ export default function TermsOfService() {
           {/* Section 16 */}
           <section>
             <h2 className="text-2xl font-bold mb-4 text-cyan-400">16. Contact Information</h2>
-            <div className="bg-slate-700/40 border border-cyan-500/30 rounded p-6 space-y-4">
+            <div className="bg-[rgba(20,43,98,0.78)] border border-cyan-400/35 rounded p-6 space-y-4">
               <div>
                 <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-1">Email</div>
-                <a href="mailto:legal@creatornexuspro.com" className="text-cyan-300 hover:text-orange-400 transition font-medium">legal@creatornexuspro.com</a>
+                <a href="mailto:legal@creatornexuspro.com" className="text-cyan-300 hover:text-violet-300 transition font-medium">legal@creatornexuspro.com</a>
               </div>
               <div>
                 <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-1">Location</div>
-                <div className="text-gray-200">Oklahoma, United States</div>
+                <div className="text-cyan-100/85">Oklahoma, United States</div>
               </div>
               <div>
                 <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-1">Response Time</div>
-                <div className="text-gray-200">5–7 business days</div>
+                <div className="text-cyan-100/85">5-7 business days</div>
               </div>
             </div>
           </section>
@@ -210,9 +210,9 @@ export default function TermsOfService() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-slate-800/40 border-t border-cyan-500/30 py-8 mt-12">
+      <footer className="bg-[rgba(12,30,78,0.72)] border-t border-cyan-400/35 py-8 mt-12">
         <div className="max-w-4xl mx-auto px-6">
-          <p className="text-gray-300 text-sm">
+          <p className="text-cyan-100/75 text-sm">
             &copy; 2026 Content Creator Nexus. All rights reserved. Last updated June 21, 2026.
           </p>
         </div>
