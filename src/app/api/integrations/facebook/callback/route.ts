@@ -34,13 +34,6 @@ async function ensureIntegrationsTable() {
     )
   `);
 
-  await pg.query(
-    "CREATE UNIQUE INDEX IF NOT EXISTS idx_integrations_uid_platform ON integrations (user_id, platform, platform_id) WHERE user_id IS NOT NULL"
-  );
-  await pg.query(
-    "CREATE UNIQUE INDEX IF NOT EXISTS idx_integrations_uemail_platform ON integrations (user_email, platform, platform_id) WHERE user_email IS NOT NULL"
-  );
-
   return pg;
 }
 
@@ -59,13 +52,20 @@ async function upsertIntegration(
 
   if (isUuid(userId)) {
     try {
-      await pg.query(
-        `INSERT INTO integrations (user_id, platform, platform_id, page_name, access_token, page_access_token, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, NOW())
-         ON CONFLICT (user_id, platform, platform_id)
-         DO UPDATE SET access_token = $5, page_access_token = $6, updated_at = NOW()`,
+      const updateByUserId = await pg.query(
+        `UPDATE integrations
+         SET page_name = $4, access_token = $5, page_access_token = $6, updated_at = NOW()
+         WHERE user_id = $1 AND platform = $2 AND platform_id = $3`,
         [userId, "facebook", platformId, pageName, accessToken, pageAccessToken]
       );
+
+      if (updateByUserId.rowCount === 0) {
+        await pg.query(
+          `INSERT INTO integrations (user_id, platform, platform_id, page_name, access_token, page_access_token, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+          [userId, "facebook", platformId, pageName, accessToken, pageAccessToken]
+        );
+      }
       return;
     } catch (error) {
       const code = (error as { code?: string }).code;
@@ -79,13 +79,20 @@ async function upsertIntegration(
     throw new Error("missing_identity_for_fallback");
   }
 
-  await pg.query(
-    `INSERT INTO integrations (user_email, platform, platform_id, page_name, access_token, page_access_token, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, NOW())
-     ON CONFLICT (user_email, platform, platform_id)
-     DO UPDATE SET access_token = $5, page_access_token = $6, updated_at = NOW()`,
+  const updateByEmail = await pg.query(
+    `UPDATE integrations
+     SET page_name = $4, access_token = $5, page_access_token = $6, updated_at = NOW()
+     WHERE user_email = $1 AND platform = $2 AND platform_id = $3`,
     [email, "facebook", platformId, pageName, accessToken, pageAccessToken]
   );
+
+  if (updateByEmail.rowCount === 0) {
+    await pg.query(
+      `INSERT INTO integrations (user_email, platform, platform_id, page_name, access_token, page_access_token, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+      [email, "facebook", platformId, pageName, accessToken, pageAccessToken]
+    );
+  }
 }
 
 export async function GET(req: NextRequest) {
