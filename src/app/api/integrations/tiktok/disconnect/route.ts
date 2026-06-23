@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPgClient } from "@/lib/pg";
+import { serverErrorResponse } from "@/lib/apiAuth";
 
 export async function POST(req: NextRequest) {
   try {
-    const userId = req.headers.get("x-user-id");
-    const userEmail = req.headers.get("x-user-email");
+    const userId = (req.headers.get("x-user-id") || "").trim();
+    const userEmail = (req.headers.get("x-user-email") || "").trim();
 
     if (!userId && !userEmail) {
       return NextResponse.json(
@@ -45,9 +46,6 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("Error disconnecting TikTok:", error);
-    return NextResponse.json(
-      { error: "Failed to disconnect TikTok" },
-      { status: 500 }
-    );
+    return serverErrorResponse(error);
   }
 }

@@ -2,10 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { executePipelineById } from "@/lib/pipelineExecutor";
 import { getPgClient } from "@/lib/pg";
+import { createValidationErrorResponse } from "@/lib/requestValidation";
+import { serverErrorResponse } from "@/lib/apiAuth";
 
 export async function POST(req: NextRequest) {
   try {
-    const payload = await req.json().catch(() => ({}));
+    const configuredSecret = process.env.YOUTUBE_TRIGGER_SECRET;
+    if (configuredSecret) {
+      const providedSecret = req.headers.get("x-webhook-secret") || "";
+      if (providedSecret !== configuredSecret) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+    }
+
+    const payload = await req.json().catch(() => null);
+    if (!payload || typeof payload !== "object") {
+      return createValidationErrorResponse([
+        { field: "payload", message: "Webhook payload must be a JSON object" },
+      ]);
+    }
+
     const triggerType = "youtube.new_comment";
 
     const pgClient = await getPgClient();
@@ -34,6 +50,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Error executing YouTube trigger:", error);
-    return NextResponse.json({ error: "Failed to process YouTube trigger" }, { status: 500 });
+    return serverErrorResponse(error);
   }
 }

@@ -4,11 +4,27 @@ import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth-options";
 import { getPgClient } from "@/lib/pg";
 import { requireAccessFromSessionUser } from "@/lib/serverAccess";
+import {
+  createValidationErrorResponse,
+  validateRequestBody,
+  type ValidationSchema,
+} from "@/lib/requestValidation";
+import { serverErrorResponse } from "@/lib/apiAuth";
+
+const SAVE_STEPS_SCHEMA: ValidationSchema = {
+  steps: {
+    type: "array",
+    required: true,
+  },
+};
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  let transactionStarted = false;
+  let pgClient;
+
   try {
     const session = await getServerSession(authOptions);
 
@@ -22,16 +38,35 @@ export async function POST(
     }
 
     const { id } = await params;
-    const pipelineId = id;
+    const pipelineId = String(id || "").trim();
 
-    const body = await req.json();
-    const steps = Array.isArray(body?.steps) ? body.steps : [];
+    if (!pipelineId) {
+      return createValidationErrorResponse([
+        { field: "id", message: "Pipeline ID is required" },
+      ]);
+    }
+
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return createValidationErrorResponse(["Invalid JSON in request body"]);
+    }
+
+    const validation = validateRequestBody(body, SAVE_STEPS_SCHEMA);
+    if (!validation.valid) {
+      return createValidationErrorResponse(validation.errors);
+    }
+
+    const steps = Array.isArray(validation.data?.steps) ? validation.data.steps : [];
 
     if (steps.length === 0) {
       return NextResponse.json({ error: "steps array is required" }, { status: 400 });
     }
 
-    const pgClient = await getPgClient();
+    if (steps.length > 50) {
+      return NextResponse.json({ error: "Too many steps (max 50)" }, { status: 400 });
+    }
+
+    pgClient = await getPgClient();
 
     const pipelineCheck = await pgClient.query(
       "SELECT id FROM pipelines WHERE id = $1 AND user_id = $2 LIMIT 1",
@@ -43,11 +78,18 @@ export async function POST(
     }
 
     await pgClient.query("BEGIN");
+    transactionStarted = true;
 
     await pgClient.query("DELETE FROM pipeline_steps WHERE pipeline_id = $1", [pipelineId]);
 
     for (let i = 0; i < steps.length; i += 1) {
       const step = steps[i];
+      if (!step || typeof step !== "object") {
+        await pgClient.query("ROLLBACK");
+        transactionStarted = false;
+        return NextResponse.json({ error: `Invalid step payload at index ${i}` }, { status: 400 });
+      }
+
       const type = String(step?.type ?? "").trim();
       const config =
         step?.config && typeof step.config === "object" ? step.config : {};
@@ -59,7 +101,14 @@ export async function POST(
 
       if (!["trigger", "condition", "action"].includes(type)) {
         await pgClient.query("ROLLBACK");
+        transactionStarted = false;
         return NextResponse.json({ error: `Invalid step type at index ${i}` }, { status: 400 });
+      }
+
+      if (!Number.isInteger(stepOrder) || stepOrder < 1 || stepOrder > 1000) {
+        await pgClient.query("ROLLBACK");
+        transactionStarted = false;
+        return NextResponse.json({ error: `Invalid step_order at index ${i}` }, { status: 400 });
       }
 
       await pgClient.query(
@@ -70,12 +119,14 @@ export async function POST(
     }
 
     await pgClient.query("COMMIT");
+    transactionStarted = false;
 
     return NextResponse.json({ success: true, count: steps.length });
   } catch (error) {
-    const pgClient = await getPgClient();
-    await pgClient.query("ROLLBACK");
+    if (transactionStarted && pgClient) {
+      await pgClient.query("ROLLBACK");
+    }
     console.error("Error saving pipeline steps:", error);
-    return NextResponse.json({ error: "Failed to save steps" }, { status: 500 });
+    return serverErrorResponse(error);
   }
 }

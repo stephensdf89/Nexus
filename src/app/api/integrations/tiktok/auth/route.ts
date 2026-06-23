@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import {
+  createValidationErrorResponse,
+  validateRequestBody,
+  type ValidationSchema,
+} from "@/lib/requestValidation";
+import { serverErrorResponse } from "@/lib/apiAuth";
+
+const OAUTH_IDENTITY_SCHEMA: ValidationSchema = {
+  uid: { type: "string", required: false, maxLength: 255 },
+  email: { type: "string", required: false, maxLength: 255 },
+};
 
 function buildTikTokAuthUrl(
   clientId: string,
@@ -88,7 +99,18 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { uid, email } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return createValidationErrorResponse(["Invalid JSON in request body"]);
+    }
+
+    const validation = validateRequestBody(body, OAUTH_IDENTITY_SCHEMA);
+    if (!validation.valid) {
+      return createValidationErrorResponse(validation.errors);
+    }
+
+    const uid = String(validation.data?.uid || "").trim();
+    const email = String(validation.data?.email || "").trim();
 
     if (!uid && !email) {
       return NextResponse.json(
@@ -116,9 +138,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Error building TikTok auth URL:", error);
-    return NextResponse.json(
-      { error: "Failed to build TikTok authentication URL" },
-      { status: 500 }
-    );
+    return serverErrorResponse(error);
   }
 }

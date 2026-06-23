@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import {
+  createValidationErrorResponse,
+  validateRequestBody,
+  type ValidationSchema,
+} from "@/lib/requestValidation";
+import { serverErrorResponse } from "@/lib/apiAuth";
+
+const OAUTH_IDENTITY_SCHEMA: ValidationSchema = {
+  uid: { type: "string", required: false, maxLength: 255 },
+  email: { type: "string", required: false, maxLength: 255 },
+};
 
 function buildTwitchAuthUrl(): string {
   const clientId = process.env.TWITCH_CLIENT_ID;
@@ -68,7 +79,23 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { uid, email } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return createValidationErrorResponse(["Invalid JSON in request body"]);
+    }
+
+    const validation = validateRequestBody(body, OAUTH_IDENTITY_SCHEMA);
+    if (!validation.valid) {
+      return createValidationErrorResponse(validation.errors);
+    }
+
+    const uid = String(validation.data?.uid || "").trim();
+    const email = String(validation.data?.email || "").trim();
+
+    if (!uid && !email) {
+      return NextResponse.json({ error: "Missing user identity" }, { status: 401 });
+    }
+
     const authUrl = buildTwitchAuthUrl();
     const state = authUrl.split("state=")[1];
 
@@ -102,9 +129,6 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("Error initiating Twitch auth:", error);
-    return NextResponse.json(
-      { error: "Failed to initiate authentication" },
-      { status: 500 }
-    );
+    return serverErrorResponse(error);
   }
 }

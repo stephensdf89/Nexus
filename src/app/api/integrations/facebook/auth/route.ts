@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { serverErrorResponse } from "@/lib/apiAuth";
 
 const FACEBOOK_APP_ID = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
 const SAFE_FACEBOOK_SCOPES = new Set(["public_profile", "email"]);
@@ -86,8 +87,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const userId = req.headers.get("x-user-id") || undefined;
-    const email = req.headers.get("x-user-email") || undefined;
+    const userId = (req.headers.get("x-user-id") || "").trim() || undefined;
+    const email = (req.headers.get("x-user-email") || "").trim() || undefined;
 
     if (!userId && !email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -102,9 +103,6 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("Facebook auth error:", error);
-    return NextResponse.json(
-      { error: "Failed to initiate Facebook auth" },
-      { status: 500 }
-    );
+    return serverErrorResponse(error);
   }
 }

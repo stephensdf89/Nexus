@@ -1,5 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPgClient } from "@/lib/pg";
+import {
+  createValidationErrorResponse,
+  validateRequestBody,
+  type ValidationSchema,
+} from "@/lib/requestValidation";
+import { serverErrorResponse } from "@/lib/apiAuth";
+
+const SCHEDULED_POST_SCHEMA: ValidationSchema = {
+  platforms: {
+    type: "array",
+    required: true,
+  },
+  content: {
+    type: "string",
+    required: true,
+    minLength: 1,
+    maxLength: 5000,
+  },
+  media_urls: {
+    type: "array",
+    required: false,
+  },
+  scheduled_time: {
+    type: "string",
+    required: true,
+  },
+};
 
 export async function GET(req: NextRequest) {
   const userId = req.headers.get("x-user-id");
@@ -72,28 +99,71 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { platforms, content, media_urls, scheduled_time } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return createValidationErrorResponse(["Invalid JSON in request body"]);
+    }
 
-    if (!platforms || !Array.isArray(platforms) || platforms.length === 0) {
+    const validation = validateRequestBody(body, SCHEDULED_POST_SCHEMA);
+    if (!validation.valid) {
+      return createValidationErrorResponse(validation.errors);
+    }
+
+    const platforms = Array.isArray(validation.data?.platforms)
+      ? validation.data.platforms
+      : [];
+    const content = String(validation.data?.content || "").trim();
+    const media_urls = Array.isArray(validation.data?.media_urls)
+      ? validation.data.media_urls
+      : [];
+    const scheduled_time = String(validation.data?.scheduled_time || "");
+
+    if (platforms.length === 0) {
       return NextResponse.json(
         { error: "At least one platform required" },
         { status: 400 }
       );
     }
 
-    if (!content || content.trim().length === 0) {
+    if (!content) {
       return NextResponse.json({ error: "Content required" }, { status: 400 });
     }
 
-    if (!scheduled_time) {
-      return NextResponse.json(
-        { error: "Scheduled time required" },
-        { status: 400 }
-      );
+    const allowedPlatforms = new Set([
+      "facebook",
+      "instagram",
+      "linkedin",
+      "youtube",
+      "tiktok",
+      "twitter",
+      "pinterest",
+      "twitch",
+      "discord",
+    ]);
+
+    const invalidPlatform = platforms.find(
+      (platform) => typeof platform !== "string" || !allowedPlatforms.has(platform)
+    );
+
+    if (invalidPlatform) {
+      return NextResponse.json({ error: "Invalid platform in request" }, { status: 400 });
+    }
+
+    const invalidMediaUrl = media_urls.find(
+      (url) => typeof url !== "string" || url.length > 2048
+    );
+
+    if (invalidMediaUrl) {
+      return NextResponse.json({ error: "Invalid media_urls value" }, { status: 400 });
+    }
+
+    const scheduledDate = new Date(scheduled_time);
+    if (Number.isNaN(scheduledDate.getTime())) {
+      return NextResponse.json({ error: "Invalid scheduled_time" }, { status: 400 });
     }
 
     // Validate scheduled time is in future
-    if (new Date(scheduled_time) <= new Date()) {
+    if (scheduledDate <= new Date()) {
       return NextResponse.json(
         { error: "Scheduled time must be in the future" },
         { status: 400 }
@@ -131,9 +201,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Error creating scheduled post:", error);
-    return NextResponse.json(
-      { error: "Failed to create scheduled post" },
-      { status: 500 }
-    );
+    return serverErrorResponse(error);
   }
 }

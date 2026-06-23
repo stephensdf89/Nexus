@@ -1,5 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPgClient } from "@/lib/pg";
+import {
+  createValidationErrorResponse,
+  validateRequestBody,
+  type ValidationSchema,
+} from "@/lib/requestValidation";
+import { serverErrorResponse } from "@/lib/apiAuth";
+
+const FACEBOOK_DISCONNECT_SCHEMA: ValidationSchema = {
+  platformId: {
+    type: "string",
+    required: true,
+    minLength: 1,
+    maxLength: 255,
+  },
+};
 
 function isUuid(value?: string) {
   if (!value) return false;
@@ -8,15 +23,25 @@ function isUuid(value?: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const headerEmail = req.headers.get("x-user-email") || undefined;
-    const headerUserId = req.headers.get("x-user-id") || undefined;
+    const headerEmail = (req.headers.get("x-user-email") || "").trim() || undefined;
+    const headerUserId = (req.headers.get("x-user-id") || "").trim() || undefined;
     const email = headerEmail;
 
     if (!email && !headerUserId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { platformId } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return createValidationErrorResponse(["Invalid JSON in request body"]);
+    }
+
+    const validation = validateRequestBody(body, FACEBOOK_DISCONNECT_SCHEMA);
+    if (!validation.valid) {
+      return createValidationErrorResponse(validation.errors);
+    }
+
+    const platformId = String(validation.data?.platformId || "").trim();
 
     if (!platformId) {
       return NextResponse.json({ error: "Missing platformId" }, { status: 400 });
@@ -70,9 +95,6 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("Error disconnecting Facebook:", error);
-    return NextResponse.json(
-      { error: "Failed to disconnect Facebook" },
-      { status: 500 }
-    );
+    return serverErrorResponse(error);
   }
 }
