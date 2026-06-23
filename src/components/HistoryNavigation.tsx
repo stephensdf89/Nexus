@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const STORAGE_KEY = "creator-nexus-history-state";
@@ -50,6 +50,7 @@ function writeStoredState(state: HistoryState) {
 }
 
 export default function HistoryNavigation() {
+  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
@@ -159,8 +160,19 @@ export default function HistoryNavigation() {
       return;
     }
 
+    const target = historyState.stack[historyState.index - 1];
+    if (!target) {
+      return;
+    }
+
     navigationModeRef.current = "pop";
-    window.history.back();
+    const nextState = {
+      stack: historyState.stack,
+      index: historyState.index - 1,
+    };
+    setHistoryState(nextState);
+    writeStoredState(nextState);
+    router.push(target);
   };
 
   const handleForward = () => {
@@ -168,8 +180,19 @@ export default function HistoryNavigation() {
       return;
     }
 
+    const target = historyState.stack[historyState.index + 1];
+    if (!target) {
+      return;
+    }
+
     navigationModeRef.current = "pop";
-    window.history.forward();
+    const nextState = {
+      stack: historyState.stack,
+      index: historyState.index + 1,
+    };
+    setHistoryState(nextState);
+    writeStoredState(nextState);
+    router.push(target);
   };
 
   return (
