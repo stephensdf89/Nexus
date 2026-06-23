@@ -119,7 +119,7 @@ export default function FacebookIntegration() {
         <p className="mb-4 text-cyan-100/70">
           Status:{" "}
           <span className={`font-bold ${facebookStatus?.connected ? "text-green-400" : "text-[#FF0033]"}`}>
-            {facebookStatus?.status || "Loading..."}
+            {facebookStatus?.status || "Not Connected"}
           </span>
         </p>
 

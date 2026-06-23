@@ -6,6 +6,11 @@ import { getPgClient } from "@/lib/pg";
 const FACEBOOK_APP_ID = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
 const FACEBOOK_APP_SECRET = process.env.FACEBOOK_CLIENT_SECRET || process.env.FACEBOOK_APP_SECRET;
 
+function isUuid(value?: string) {
+  if (!value) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 function getFacebookRedirectUri(req: NextRequest) {
   if (process.env.FACEBOOK_REDIRECT_URI) {
     return process.env.FACEBOOK_REDIRECT_URI;
@@ -82,8 +87,17 @@ export async function GET(req: NextRequest) {
 
     // Store integration in database
     const pg = await getPgClient();
-    const userId = (session.user as { id?: string }).id;
-    if (!userId) {
+    let userId = (session.user as { id?: string }).id;
+
+    if (!isUuid(userId)) {
+      const userLookup = await pg.query(
+        "SELECT id FROM auth.users WHERE email = $1 LIMIT 1",
+        [session.user.email]
+      );
+      userId = userLookup.rows[0]?.id;
+    }
+
+    if (!isUuid(userId)) {
       return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_user_id", req.url));
     }
 

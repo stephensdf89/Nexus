@@ -3,6 +3,11 @@ import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { getPgClient } from "@/lib/pg";
 
+function isUuid(value?: string) {
+  if (!value) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -11,9 +16,22 @@ export async function GET() {
     }
 
     const pg = await getPgClient();
-    const userId = (session.user as { id?: string }).id;
-    if (!userId) {
-      return NextResponse.json({ error: "Missing user id in session" }, { status: 400 });
+    let userId = (session.user as { id?: string }).id;
+
+    if (!isUuid(userId)) {
+      const userLookup = await pg.query(
+        "SELECT id FROM auth.users WHERE email = $1 LIMIT 1",
+        [session.user.email]
+      );
+      userId = userLookup.rows[0]?.id;
+    }
+
+    if (!isUuid(userId)) {
+      return NextResponse.json({
+        connected: false,
+        pages: [],
+        status: "Not Connected",
+      });
     }
 
     const result = await pg.query(
