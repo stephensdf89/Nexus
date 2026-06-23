@@ -173,6 +173,35 @@ export async function GET(req: NextRequest) {
       console.error("Error fetching Twitter analytics:", err);
     }
 
+    // Fetch Twitch analytics if connected
+    let twitchMetrics: PlatformMetrics | null = null;
+    try {
+      const tcnAnalyticsRes = await fetch(
+        `${process.env.NEXTAUTH_URL || "https://www.creatornexuspro.com"}/api/integrations/twitch/analytics`,
+        {
+          headers: {
+            "x-user-id": userId || "",
+            "x-user-email": userEmail || "",
+          },
+        }
+      );
+
+      if (tcnAnalyticsRes.ok) {
+        const tcnData = await tcnAnalyticsRes.json();
+        if (tcnData.success && tcnData.metrics) {
+          twitchMetrics = {
+            platform: "Twitch",
+            views: tcnData.metrics.views || 0,
+            engagement: tcnData.metrics.recent_engagement || 0,
+            followers: tcnData.metrics.subscribers || 0,
+            trend: 28, // placeholder
+          };
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching Twitch analytics:", err);
+    }
+
     // Mock data for other platforms (for now, these are placeholders)
     const mockPlatforms: PlatformMetrics[] = [
       {
@@ -205,6 +234,7 @@ export async function GET(req: NextRequest) {
       ...(tiktokMetrics ? [tiktokMetrics] : []),
       ...(instagramMetrics ? [instagramMetrics] : []),
       ...(twitterMetrics ? [twitterMetrics] : []),
+      ...(twitchMetrics ? [twitchMetrics] : []),
       ...mockPlatforms,
     ];
 

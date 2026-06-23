@@ -29,6 +29,7 @@ import YouTubeIntegration from "@/components/YouTubeIntegration";
 import TikTokIntegration from "@/components/TikTokIntegration";
 import InstagramIntegration from "@/components/InstagramIntegration";
 import TwitterIntegration from "@/components/TwitterIntegration";
+import TwitchIntegration from "@/components/TwitchIntegration";
 import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function SettingsPage() {
@@ -1245,6 +1246,9 @@ function ConnectedPlatforms() {
 
         {/* Twitter - Using Real Integration Component */}
         <TwitterIntegration />
+
+        {/* Twitch - Using Real Integration Component */}
+        <TwitchIntegration />
 
         {/* Other Platforms - Coming Soon */}
         {otherPlatforms.map((p) => (
