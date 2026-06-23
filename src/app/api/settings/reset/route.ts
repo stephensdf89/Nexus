@@ -1,7 +1,6 @@
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth-options';
 import { NextRequest, NextResponse } from 'next/server';
-import { Client } from 'pg';
+import { getPgClient } from '@/lib/pg';
+import { requireSession, serverErrorResponse } from '@/lib/apiAuth';
 
 // Default settings template
 const DEFAULT_SETTINGS = {
@@ -29,39 +28,22 @@ const DEFAULT_SETTINGS = {
   tabletSettings: {},
 };
 
-let client: Client | null = null;
-
-async function getClient() {
-  if (!client) {
-    client = new Client({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-    });
-    await client.connect();
-  }
-  return client;
-}
-
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.name) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const sessionResult = await requireSession(req);
+    if ("error" in sessionResult) {
+      return sessionResult.error;
     }
 
-    const userId = session.user.name;
-    const pgClient = await getClient();
+    const { user } = sessionResult;
+    const pgClient = await getPgClient();
 
     await pgClient.query(
       `INSERT INTO "UserSettings" ("userId", settings, "updatedAt") 
        VALUES ($1, $2, NOW())
        ON CONFLICT ("userId") DO UPDATE 
        SET settings = $2, "updatedAt" = NOW()`,
-      [userId, JSON.stringify(DEFAULT_SETTINGS)]
+      [user.userId, JSON.stringify(DEFAULT_SETTINGS)]
     );
 
     return NextResponse.json({
@@ -70,9 +52,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Error resetting settings:', error);
-    return NextResponse.json(
-      { error: 'Failed to reset settings' },
-      { status: 500 }
-    );
+    return serverErrorResponse(error);
   }
 }

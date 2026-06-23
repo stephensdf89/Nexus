@@ -5,6 +5,19 @@ import { authOptions } from "@/lib/auth-options";
 import { executePipelineById } from "@/lib/pipelineExecutor";
 import { getPgClient } from "@/lib/pg";
 import { requireAccessFromSessionUser } from "@/lib/serverAccess";
+import {
+  validateRequestBody,
+  createValidationErrorResponse,
+  type ValidationSchema,
+} from "@/lib/requestValidation";
+import { serverErrorResponse } from "@/lib/apiAuth";
+
+const RUN_PIPELINE_SCHEMA: ValidationSchema = {
+  input: {
+    type: "object",
+    required: false,
+  },
+};
 
 export async function POST(
   req: NextRequest,
@@ -23,7 +36,13 @@ export async function POST(
     }
 
     const { id } = await params;
-    const pipelineId = id;
+    const pipelineId = String(id || "").trim();
+
+    if (!pipelineId) {
+      return createValidationErrorResponse([
+        { field: "id", message: "Pipeline ID is required" },
+      ]);
+    }
 
     const pgClient = await getPgClient();
     const accessResult = await pgClient.query(
@@ -35,9 +54,22 @@ export async function POST(
       return NextResponse.json({ error: "Pipeline not found" }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const input =
-      body?.input && typeof body.input === "object" ? body.input : {};
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch {
+      body = {};
+    }
+
+    // Validate input if provided
+    if (body.input !== undefined) {
+      const validation = validateRequestBody({ input: body.input }, RUN_PIPELINE_SCHEMA);
+      if (!validation.valid) {
+        return createValidationErrorResponse(validation.errors);
+      }
+    }
+
+    const input = body?.input && typeof body.input === "object" ? body.input : {};
 
     const result = await executePipelineById(pipelineId, input);
 
@@ -48,6 +80,6 @@ export async function POST(
     return NextResponse.json(result);
   } catch (error) {
     console.error("Error running pipeline:", error);
-    return NextResponse.json({ error: "Failed to run pipeline" }, { status: 500 });
+    return serverErrorResponse(error);
   }
 }

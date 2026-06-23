@@ -1,30 +1,66 @@
-import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";
-
-import { authOptions } from "@/lib/auth-options";
 import { getPgClient } from "@/lib/pg";
 import { requireAccessFromSessionUser } from "@/lib/serverAccess";
+import {
+  validateRequestBody,
+  createValidationErrorResponse,
+  type ValidationSchema,
+} from "@/lib/requestValidation";
+import { requireSession, serverErrorResponse } from "@/lib/apiAuth";
+
+const CREATE_PIPELINE_SCHEMA: ValidationSchema = {
+  name: {
+    type: "string",
+    required: true,
+    minLength: 1,
+    maxLength: 255,
+  },
+  description: {
+    type: "string",
+    required: false,
+    maxLength: 1000,
+  },
+  active: {
+    type: "boolean",
+    required: false,
+  },
+};
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.name) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const sessionResult = await requireSession(req);
+    if ("error" in sessionResult) {
+      return sessionResult.error;
     }
 
-    const access = await requireAccessFromSessionUser(session.user, "pro");
+    const { user } = sessionResult;
+
+    const access = await requireAccessFromSessionUser(
+      { name: user.userId, email: user.email } as any,
+      "pro"
+    );
     if ("error" in access) {
       return NextResponse.json({ error: access.error }, { status: access.status });
     }
 
-    const body = await req.json();
-    const name = String(body?.name ?? "").trim();
-    const description = String(body?.description ?? "").trim();
-    const active = body?.active !== false;
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return createValidationErrorResponse(["Invalid JSON in request body"]);
+    }
+
+    const validation = validateRequestBody(body, CREATE_PIPELINE_SCHEMA);
+    if (!validation.valid) {
+      return createValidationErrorResponse(validation.errors);
+    }
+
+    const name = String(validation.data?.name || "").trim();
+    const description = validation.data?.description ? String(validation.data.description).trim() : null;
+    const active = validation.data?.active !== false;
 
     if (!name) {
-      return NextResponse.json({ error: "Pipeline name is required" }, { status: 400 });
+      return createValidationErrorResponse([
+        { field: "name", message: "Pipeline name cannot be empty" },
+      ]);
     }
 
     const pgClient = await getPgClient();
@@ -33,12 +69,12 @@ export async function POST(req: NextRequest) {
       `INSERT INTO pipelines (user_id, name, description, active, created_at, updated_at)
        VALUES ($1, $2, $3, $4, NOW(), NOW())
        RETURNING id, user_id, name, description, active, created_at, updated_at`,
-      [session.user.name, name, description || null, active]
+      [user.userId, name, description, active]
     );
 
     return NextResponse.json({ pipeline: result.rows[0] }, { status: 201 });
   } catch (error) {
     console.error("Error creating pipeline:", error);
-    return NextResponse.json({ error: "Failed to create pipeline" }, { status: 500 });
+    return serverErrorResponse(error);
   }
 }

@@ -1,8 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPgClient } from "@/lib/pg";
 import { getEffectiveAccess, getUserFromRequest } from "@/lib/serverAccess";
+import {
+  validateRequestBody,
+  createValidationErrorResponse,
+  type ValidationSchema,
+} from "@/lib/requestValidation";
+import { serverErrorResponse } from "@/lib/apiAuth";
 
 type ChatRole = "user" | "assistant" | "system";
+
+const ASSISTANT_POST_SCHEMA: ValidationSchema = {
+  message: {
+    type: "string",
+    required: true,
+    minLength: 1,
+    maxLength: 2000,
+  },
+  mode: {
+    type: "string",
+    required: false,
+    enum: ["standard", "creative", "strict"],
+  },
+  threadId: {
+    type: "string",
+    required: false,
+  },
+};
 
 type StoredMessage = {
   id: string;
@@ -169,15 +193,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const message = String(body?.message || "").trim();
-    const mode = String(body?.mode || "standard");
-
-    if (!message) {
-      return NextResponse.json({ error: "message is required" }, { status: 400 });
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return createValidationErrorResponse(["Invalid JSON in request body"]);
     }
 
-    let threadId = body?.threadId ? String(body.threadId) : "";
+    // Validate request body
+    const validation = validateRequestBody(body, ASSISTANT_POST_SCHEMA);
+    if (!validation.valid) {
+      return createValidationErrorResponse(validation.errors);
+    }
+
+    const message = String(validation.data?.message || "").trim();
+    const mode = String(validation.data?.mode || "standard");
+    let threadId = validation.data?.threadId ? String(validation.data.threadId) : "";
+
+    if (!message) {
+      return createValidationErrorResponse([
+        { field: "message", message: "Message cannot be empty" },
+      ]);
+    }
 
     if (threadId) {
       const owns = await assertThreadOwnership(threadId, user.id);
@@ -223,7 +260,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Assistant POST failed:", error);
-    const msg = error instanceof Error ? error.message : "Failed to generate response";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverErrorResponse(error);
   }
 }
