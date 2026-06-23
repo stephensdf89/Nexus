@@ -11,6 +11,11 @@ const resetButtonClass = "mt-4 rounded px-3 py-1 font-bold bg-violet-600 hover:b
 
 export default function SettingsPage() {
   const {
+    device,
+    globalSettings,
+    desktopSettings,
+    mobileSettings,
+    tabletSettings,
     highContrast,
     textSize,
     colorBlindMode,
@@ -54,6 +59,36 @@ export default function SettingsPage() {
     setIsSaving(false);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);
+  };
+
+  const handleCopyGlobalToDevice = () => {
+    if (device === "global") return;
+
+    const bucketKey = `${device}Settings`;
+    useSettingsStore.setState((state) => ({
+      ...state,
+      ...state.globalSettings,
+      [bucketKey]: { ...state.globalSettings },
+    }));
+
+    const next = useSettingsStore.getState();
+    localStorage.setItem("global-settings", JSON.stringify(next));
+    void syncToServer();
+  };
+
+  const handleResetDeviceSettings = () => {
+    if (device === "global") return;
+
+    const bucketKey = `${device}Settings`;
+    useSettingsStore.setState((state) => ({
+      ...state,
+      ...state.globalSettings,
+      [bucketKey]: {},
+    }));
+
+    const next = useSettingsStore.getState();
+    localStorage.setItem("global-settings", JSON.stringify(next));
+    void syncToServer();
   };
 
   return (
@@ -196,6 +231,57 @@ export default function SettingsPage() {
               <option value="strict">Strict</option>
             </select>
           </label>
+        </section>
+
+        <section className={sectionClass}>
+          <h2 className="mb-4 text-2xl font-bold">Device-Specific Overrides</h2>
+
+          <label className="mb-4 block">
+            Apply changes to:
+            <select
+              value={device}
+              onChange={(e) => update("device", e.target.value)}
+              className={selectClass}
+            >
+              <option value="desktop">Desktop</option>
+              <option value="mobile">Mobile</option>
+              <option value="tablet">Tablet</option>
+              <option value="global">Global</option>
+            </select>
+          </label>
+
+          <div className="mb-4 text-sm text-cyan-100/70">
+            <p>Global keys: {Object.keys(globalSettings || {}).length}</p>
+            <p>Desktop overrides: {Object.keys(desktopSettings || {}).length}</p>
+            <p>Mobile overrides: {Object.keys(mobileSettings || {}).length}</p>
+            <p>Tablet overrides: {Object.keys(tabletSettings || {}).length}</p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleCopyGlobalToDevice}
+              disabled={device === "global"}
+              className={`rounded px-4 py-2 font-bold border ${
+                device === "global"
+                  ? "bg-slate-700/50 border-slate-500/40 text-slate-300 cursor-not-allowed"
+                  : "bg-cyan-600 hover:bg-cyan-500 border-cyan-300/50 text-slate-950"
+              }`}
+            >
+              Copy global settings to this device
+            </button>
+
+            <button
+              onClick={handleResetDeviceSettings}
+              disabled={device === "global"}
+              className={`rounded px-4 py-2 font-bold border ${
+                device === "global"
+                  ? "bg-slate-700/50 border-slate-500/40 text-slate-300 cursor-not-allowed"
+                  : "bg-violet-700 hover:bg-violet-600 border-violet-300/50 text-white"
+              }`}
+            >
+              Reset device settings
+            </button>
+          </div>
         </section>
 
         <section className={sectionClass}>

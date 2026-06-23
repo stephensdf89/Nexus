@@ -6,6 +6,7 @@ import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function SettingsLoader() {
   const { data: session } = useSession();
+  const { detectDevice, device, getActiveSettings } = useSettingsStore();
   const {
     highContrast,
     textSize,
@@ -14,9 +15,15 @@ export default function SettingsLoader() {
     disableNeon,
     safeMode,
     theme,
+    update,
     load,
     syncFromServer,
   } = useSettingsStore();
+
+  useEffect(() => {
+    const d = detectDevice();
+    update("device", d);
+  }, []);
 
   useEffect(() => {
     // Load saved settings from localStorage on startup
@@ -30,14 +37,16 @@ export default function SettingsLoader() {
 
   useEffect(() => {
     // Apply settings to <body>
+    const active = getActiveSettings(useSettingsStore.getState());
+
     document.body.className = `
-      theme-neon
-      ${highContrast ? "hc-mode" : ""}
-      ${textSize === "large" ? "text-lg" : textSize === "small" ? "text-sm" : ""}
-      ${colorBlindMode !== "none" ? `cb-${colorBlindMode}` : ""}
-      ${disableNeon ? "no-neon" : ""}
-      ${safeMode ? "safe-mode" : ""}
-      ${reducedMotion ? "reduced-motion" : ""}
+      ${active.theme === "dark" ? "theme-dark" : "theme-light"}
+      ${active.highContrast ? "hc-mode" : ""}
+      ${active.textSize === "large" ? "text-lg" : active.textSize === "small" ? "text-sm" : ""}
+      ${active.colorBlindMode !== "none" ? `cb-${active.colorBlindMode}` : ""}
+      ${active.disableNeon ? "no-neon" : ""}
+      ${active.safeMode ? "safe-mode" : ""}
+      ${active.reducedMotion ? "reduced-motion" : ""}
     `;
   }, [
     theme,

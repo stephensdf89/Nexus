@@ -4,7 +4,7 @@ import { create } from "zustand";
 
 let isSyncing = false;
 
-export const useSettingsStore = create((set) => ({
+const BASE_SETTINGS = {
   // ACCESSIBILITY
   highContrast: false,
   textSize: "medium",
@@ -20,7 +20,7 @@ export const useSettingsStore = create((set) => ({
   sidebarCollapsed: false,
 
   // DASHBOARD
-  dashboardLayout: "default", // grid, list, custom
+  dashboardLayout: "default",
   showAnalyticsPreview: true,
   showCreatorToolsPreview: true,
 
@@ -30,7 +30,120 @@ export const useSettingsStore = create((set) => ({
   vibrationEnabled: false,
 
   // AI BEHAVIOR
-  aiMode: "standard", // standard, creative, strict
+  aiMode: "standard",
+};
+
+function pickBaseSettings(source) {
+  const picked = {};
+  for (const key of Object.keys(BASE_SETTINGS)) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      picked[key] = source[key];
+    }
+  }
+  return picked;
+}
+
+function getActiveSettingsFromBuckets(state) {
+  const currentDevice = state.device;
+
+  if (currentDevice === "mobile" && Object.keys(state.mobileSettings).length) {
+    return { ...state.globalSettings, ...state.mobileSettings };
+  }
+
+  if (currentDevice === "tablet" && Object.keys(state.tabletSettings).length) {
+    return { ...state.globalSettings, ...state.tabletSettings };
+  }
+
+  if (currentDevice === "desktop" && Object.keys(state.desktopSettings).length) {
+    return { ...state.globalSettings, ...state.desktopSettings };
+  }
+
+  return state.globalSettings;
+}
+
+function getPersistedShape(state) {
+  return {
+    globalSettings: state.globalSettings,
+    desktopSettings: state.desktopSettings,
+    mobileSettings: state.mobileSettings,
+    tabletSettings: state.tabletSettings,
+  };
+}
+
+function hydrateStateFromPayload(payload, detectedDevice) {
+  const globalSettings = {
+    ...BASE_SETTINGS,
+    ...(payload?.globalSettings && typeof payload.globalSettings === "object"
+      ? payload.globalSettings
+      : pickBaseSettings(payload || {})),
+  };
+
+  const desktopSettings =
+    payload?.desktopSettings && typeof payload.desktopSettings === "object"
+      ? payload.desktopSettings
+      : {};
+  const mobileSettings =
+    payload?.mobileSettings && typeof payload.mobileSettings === "object"
+      ? payload.mobileSettings
+      : {};
+  const tabletSettings =
+    payload?.tabletSettings && typeof payload.tabletSettings === "object"
+      ? payload.tabletSettings
+      : {};
+
+  const bucketState = {
+    globalSettings,
+    desktopSettings,
+    mobileSettings,
+    tabletSettings,
+    device: detectedDevice,
+  };
+
+  return {
+    ...createDefaults(),
+    ...getActiveSettingsFromBuckets(bucketState),
+    ...bucketState,
+  };
+}
+
+function persistLocal(state) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("global-settings", JSON.stringify(getPersistedShape(state)));
+}
+
+function detectDevice() {
+  if (typeof window === "undefined") return "desktop";
+  const width = window.innerWidth;
+  if (width < 768) return "mobile";
+  if (width < 1024) return "tablet";
+  return "desktop";
+}
+
+function createDefaults() {
+  return {
+    ...BASE_SETTINGS,
+    device: detectDevice(), // auto-detected
+    globalSettings: { ...BASE_SETTINGS },
+    desktopSettings: {},
+    mobileSettings: {},
+    tabletSettings: {},
+  };
+}
+
+export const useSettingsStore = create((set) => ({
+  ...createDefaults(),
+
+  detectDevice: () => {
+    const width = window.innerWidth;
+
+    if (width < 768) return "mobile";
+    if (width < 1024) return "tablet";
+    return "desktop";
+  },
+
+  getActiveSettings: (state) => {
+    return getActiveSettingsFromBuckets(state);
+  },
 
   load: () => {
     if (typeof window === "undefined") return;
@@ -39,7 +152,7 @@ export const useSettingsStore = create((set) => ({
       if (!raw) return;
       const saved = JSON.parse(raw);
       if (saved && typeof saved === "object") {
-        set(saved);
+        set(hydrateStateFromPayload(saved, useSettingsStore.getState().detectDevice()));
       }
     } catch (error) {
       console.error("Failed to load settings:", error);
@@ -57,8 +170,12 @@ export const useSettingsStore = create((set) => ({
       const payload = await res.json();
       const serverSettings = payload?.settings ?? payload;
       if (serverSettings && Object.keys(serverSettings).length > 0) {
-        set(serverSettings);
-        localStorage.setItem("global-settings", JSON.stringify(serverSettings));
+        const normalized = hydrateStateFromPayload(
+          serverSettings,
+          useSettingsStore.getState().detectDevice()
+        );
+        set(normalized);
+        persistLocal(normalized);
       }
     } catch (error) {
       console.error("Failed to sync settings from server:", error);
@@ -71,25 +188,7 @@ export const useSettingsStore = create((set) => ({
 
     try {
       const state = useSettingsStore.getState();
-      const settings = {
-        highContrast: state.highContrast,
-        textSize: state.textSize,
-        colorBlindMode: state.colorBlindMode,
-        reducedMotion: state.reducedMotion,
-        disableNeon: state.disableNeon,
-        safeMode: state.safeMode,
-        theme: state.theme,
-        compactMode: state.compactMode,
-        language: state.language,
-        sidebarCollapsed: state.sidebarCollapsed,
-        dashboardLayout: state.dashboardLayout,
-        showAnalyticsPreview: state.showAnalyticsPreview,
-        showCreatorToolsPreview: state.showCreatorToolsPreview,
-        notificationsEnabled: state.notificationsEnabled,
-        soundEnabled: state.soundEnabled,
-        vibrationEnabled: state.vibrationEnabled,
-        aiMode: state.aiMode,
-      };
+      const settings = getPersistedShape(state);
 
       const res = await fetch("/api/settings", {
         method: "POST",
@@ -102,7 +201,9 @@ export const useSettingsStore = create((set) => ({
 
       const savedPayload = await res.json();
       const saved = savedPayload?.settings ?? savedPayload;
-      localStorage.setItem("global-settings", JSON.stringify(saved));
+      const normalized = hydrateStateFromPayload(saved, useSettingsStore.getState().detectDevice());
+      set(normalized);
+      persistLocal(normalized);
     } catch (error) {
       console.error("Failed to sync settings to server:", error);
     } finally {
@@ -112,10 +213,37 @@ export const useSettingsStore = create((set) => ({
 
   update: (key, value) =>
     set((state) => {
-      const updated = { ...state, [key]: value };
+      const updated = {
+        ...state,
+        [key]: value,
+        globalSettings: {
+          ...state.globalSettings,
+          [key]: value,
+        },
+      };
+
+      if (state.device === "desktop") {
+        updated.desktopSettings = {
+          ...state.desktopSettings,
+          [key]: value,
+        };
+      }
+      if (state.device === "mobile") {
+        updated.mobileSettings = {
+          ...state.mobileSettings,
+          [key]: value,
+        };
+      }
+      if (state.device === "tablet") {
+        updated.tabletSettings = {
+          ...state.tabletSettings,
+          [key]: value,
+        };
+      }
+
       if (typeof window !== "undefined") {
         try {
-          localStorage.setItem("global-settings", JSON.stringify(updated));
+          persistLocal(updated);
           useSettingsStore.getState().syncToServer();
         } catch (error) {
           console.error("Failed to save settings:", error);
@@ -124,6 +252,20 @@ export const useSettingsStore = create((set) => ({
         useSettingsStore.getState().syncToServer();
       }
       return updated;
+    }),
+
+  updateDeviceSetting: (key, value) =>
+    set((state) => {
+      const device = state.device;
+      const updated = { ...state[`${device}Settings`], [key]: value };
+
+      const newState = {
+        ...state,
+        [`${device}Settings`]: updated,
+      };
+
+      persistLocal(newState);
+      return newState;
     }),
 
   resetAccessibility: () =>
@@ -138,7 +280,7 @@ export const useSettingsStore = create((set) => ({
         safeMode: false,
       };
       if (typeof window !== "undefined") {
-        localStorage.setItem("global-settings", JSON.stringify(updated));
+        persistLocal(updated);
       }
       useSettingsStore.getState().syncToServer();
       return updated;
@@ -154,7 +296,7 @@ export const useSettingsStore = create((set) => ({
         sidebarCollapsed: false,
       };
       if (typeof window !== "undefined") {
-        localStorage.setItem("global-settings", JSON.stringify(updated));
+        persistLocal(updated);
       }
       useSettingsStore.getState().syncToServer();
       return updated;
@@ -169,7 +311,7 @@ export const useSettingsStore = create((set) => ({
         vibrationEnabled: false,
       };
       if (typeof window !== "undefined") {
-        localStorage.setItem("global-settings", JSON.stringify(updated));
+        persistLocal(updated);
       }
       useSettingsStore.getState().syncToServer();
       return updated;
@@ -184,7 +326,7 @@ export const useSettingsStore = create((set) => ({
         language: "en",
       };
       if (typeof window !== "undefined") {
-        localStorage.setItem("global-settings", JSON.stringify(updated));
+        persistLocal(updated);
       }
       useSettingsStore.getState().syncToServer();
       return updated;
@@ -192,32 +334,10 @@ export const useSettingsStore = create((set) => ({
 
   resetAll: () =>
     set((state) => {
-      const defaults = {
-        highContrast: false,
-        textSize: "medium",
-        colorBlindMode: "none",
-        reducedMotion: false,
-        disableNeon: false,
-        safeMode: false,
-
-        theme: "neon",
-        compactMode: false,
-        language: "en",
-        sidebarCollapsed: false,
-
-        dashboardLayout: "default",
-        showAnalyticsPreview: true,
-        showCreatorToolsPreview: true,
-
-        notificationsEnabled: true,
-        soundEnabled: true,
-        vibrationEnabled: false,
-
-        aiMode: "standard",
-      };
+      const defaults = createDefaults();
 
       if (typeof window !== "undefined") {
-        localStorage.setItem("global-settings", JSON.stringify(defaults));
+        persistLocal(defaults);
       }
 
       // Sync to server after reset
