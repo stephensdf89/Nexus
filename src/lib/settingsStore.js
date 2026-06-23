@@ -33,11 +33,18 @@ const BASE_SETTINGS = {
   aiMode: "standard",
 };
 
-function enforceNeonDefaults(settings) {
+const THEMES = ["neon", "ocean", "sunset", "graphite"];
+
+function normalizeTheme(theme) {
+  if (THEMES.includes(theme)) return theme;
+  return "neon";
+}
+
+function enforceThemeDefaults(settings) {
   return {
     ...settings,
-    theme: "neon",
-    disableNeon: false,
+    theme: normalizeTheme(settings?.theme),
+    disableNeon: Boolean(settings?.disableNeon),
   };
 }
 
@@ -79,24 +86,24 @@ function getPersistedShape(state) {
 }
 
 function hydrateStateFromPayload(payload, detectedDevice) {
-  const globalSettings = enforceNeonDefaults({
+  const globalSettings = enforceThemeDefaults({
     ...BASE_SETTINGS,
     ...(payload?.globalSettings && typeof payload.globalSettings === "object"
       ? payload.globalSettings
       : pickBaseSettings(payload || {})),
   });
 
-  const desktopSettings = enforceNeonDefaults(
+  const desktopSettings = enforceThemeDefaults(
     payload?.desktopSettings && typeof payload.desktopSettings === "object"
       ? payload.desktopSettings
       : {}
   );
-  const mobileSettings = enforceNeonDefaults(
+  const mobileSettings = enforceThemeDefaults(
     payload?.mobileSettings && typeof payload.mobileSettings === "object"
       ? payload.mobileSettings
       : {}
   );
-  const tabletSettings = enforceNeonDefaults(
+  const tabletSettings = enforceThemeDefaults(
     payload?.tabletSettings && typeof payload.tabletSettings === "object"
       ? payload.tabletSettings
       : {}
@@ -224,8 +231,7 @@ export const useSettingsStore = create((set) => ({
 
   update: (key, value) =>
     set((state) => {
-      const normalizedValue =
-        key === "theme" ? "neon" : key === "disableNeon" ? false : value;
+      const normalizedValue = key === "theme" ? normalizeTheme(value) : value;
 
       const updated = {
         ...state,

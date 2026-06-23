@@ -41,6 +41,45 @@ body.theme-neon {
   color: var(--brand-text);
 }
 
+body.theme-ocean {
+  --brand-bg-start: #04293a;
+  --brand-bg-mid: #064663;
+  --brand-bg-end: #0b6e8f;
+  --brand-primary: #6ee7ff;
+  --brand-secondary: #57c7ff;
+  --brand-text: #e8fbff;
+  background:
+    radial-gradient(circle at 20% 15%, #0b6e8f 0%, var(--brand-bg-start) 45%),
+    linear-gradient(145deg, var(--brand-bg-start) 0%, var(--brand-bg-mid) 55%, var(--brand-bg-end) 100%);
+  color: var(--brand-text);
+}
+
+body.theme-sunset {
+  --brand-bg-start: #3f1a2f;
+  --brand-bg-mid: #7a2648;
+  --brand-bg-end: #c15a3b;
+  --brand-primary: #ffb457;
+  --brand-secondary: #ff6f61;
+  --brand-text: #fff3e9;
+  background:
+    radial-gradient(circle at 18% 15%, #ff7a59 0%, var(--brand-bg-start) 42%),
+    linear-gradient(145deg, var(--brand-bg-start) 0%, var(--brand-bg-mid) 55%, var(--brand-bg-end) 100%);
+  color: var(--brand-text);
+}
+
+body.theme-graphite {
+  --brand-bg-start: #121417;
+  --brand-bg-mid: #1c2026;
+  --brand-bg-end: #2a303a;
+  --brand-primary: #8ab4ff;
+  --brand-secondary: #9b8fff;
+  --brand-text: #edf1f7;
+  background:
+    radial-gradient(circle at 22% 14%, #364152 0%, var(--brand-bg-start) 44%),
+    linear-gradient(145deg, var(--brand-bg-start) 0%, var(--brand-bg-mid) 55%, var(--brand-bg-end) 100%);
+  color: var(--brand-text);
+}
+
 a {
   color: inherit;
   text-decoration: none;

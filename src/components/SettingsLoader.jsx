@@ -39,14 +39,21 @@ export default function SettingsLoader() {
     // Apply settings to <body>
     const active = getActiveSettings(useSettingsStore.getState());
 
-    document.body.className = `
-      theme-neon
-      ${active.highContrast ? "hc-mode" : ""}
-      ${active.textSize === "large" ? "text-lg" : active.textSize === "small" ? "text-sm" : ""}
-      ${active.colorBlindMode !== "none" ? `cb-${active.colorBlindMode}` : ""}
-      ${active.safeMode ? "safe-mode" : ""}
-      ${active.reducedMotion ? "reduced-motion" : ""}
-    `;
+    const classes = [
+      `theme-${active.theme || "neon"}`,
+      active.highContrast ? "hc-mode" : "",
+      active.textSize === "large"
+        ? "text-lg"
+        : active.textSize === "small"
+        ? "text-sm"
+        : "",
+      active.colorBlindMode !== "none" ? `cb-${active.colorBlindMode}` : "",
+      active.safeMode ? "safe-mode" : "",
+      active.reducedMotion ? "reduced-motion" : "",
+      active.disableNeon ? "no-neon" : "",
+    ].filter(Boolean);
+
+    document.body.className = classes.join(" ");
   }, [
     theme,
     highContrast,

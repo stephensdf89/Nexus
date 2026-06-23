@@ -425,7 +425,9 @@ function Breadcrumbs({ active }) {
   );
 }
 
-function AppearanceSettings({ theme, compactMode, language, update, resetTheme }) {
+function AppearanceSettings() {
+  const { theme, compactMode, language, update, resetTheme } = useSettingsStore();
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Appearance / Themes</h1>
@@ -438,9 +440,11 @@ function AppearanceSettings({ theme, compactMode, language, update, resetTheme }
             value={theme}
             onChange={(e) => update("theme", e.target.value)}
             className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-100 w-full"
-            disabled
           >
             <option value="neon">Neon</option>
+            <option value="ocean">Ocean</option>
+            <option value="sunset">Sunset</option>
+            <option value="graphite">Graphite</option>
           </select>
         </label>
 
