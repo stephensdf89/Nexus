@@ -313,7 +313,6 @@ export default function SettingsPage() {
 
         <div className="flex-1 overflow-y-auto p-10 pb-32 md:ml-72">
           <Breadcrumbs active={active} />
-          <PageHeader active={active} />
 
           {active === "account" && <AccountSettings />}
           {active === "profile" && <ProfileSettings />}
@@ -391,32 +390,6 @@ function Breadcrumbs({ active }) {
       <span className="text-cyan-500/70">/</span>
       <span className="text-cyan-100">{labels[active]}</span>
     </div>
-  );
-}
-
-function PageHeader({ active }) {
-  const titles = {
-    account: "Account Settings",
-    profile: "Profile Settings",
-    connected: "Connected Platforms",
-    notifications: "Notifications",
-    ai: "AI Settings",
-    appearance: "Appearance & Themes",
-    language: "Language & Region",
-    pipelines: "Pipelines",
-    dashboard: "Dashboard Layout",
-    accessibility: "Accessibility",
-    security: "Security & Privacy",
-    integrations: "Integrations",
-    billing: "Billing & Subscription",
-    backup: "Backup & Sync",
-    about: "About & Support",
-  };
-
-  return (
-    <h1 className="mb-6 text-3xl font-bold text-cyan-100 drop-shadow-[0_0_8px_rgba(0,229,255,0.25)]">
-      {titles[active]}
-    </h1>
   );
 }
 
