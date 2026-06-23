@@ -18,10 +18,11 @@ export async function POST(req: NextRequest) {
 
     // Delete the integration from database
     const pg = await getPgClient();
+    const userId = (session.user as { id?: string }).id || session.user.email; // Use ID if available, fallback to email
     await pg.query(
       `DELETE FROM integrations 
-       WHERE user_email = $1 AND platform = 'facebook' AND platform_id = $2`,
-      [session.user.email, platformId]
+       WHERE user_id = $1 AND platform = 'facebook' AND platform_id = $2`,
+      [userId, platformId]
     );
 
     return NextResponse.json({ success: true });

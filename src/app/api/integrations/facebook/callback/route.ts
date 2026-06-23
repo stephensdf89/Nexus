@@ -56,13 +56,14 @@ export async function GET(req: NextRequest) {
 
     // Store integration in database
     const pg = await getPgClient();
+    const userId = (session.user as { id?: string }).id || session.user.email; // Use ID if available, fallback to email
     await pg.query(
-      `INSERT INTO integrations (user_email, platform, platform_id, page_name, access_token, page_access_token, created_at)
+      `INSERT INTO integrations (user_id, platform, platform_id, page_name, access_token, page_access_token, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, NOW())
-       ON CONFLICT (user_email, platform, platform_id) 
+       ON CONFLICT (user_id, platform, platform_id) 
        DO UPDATE SET access_token = $5, page_access_token = $6, updated_at = NOW()`,
       [
-        session.user.email,
+        userId,
         "facebook",
         page.id,
         page.name,

@@ -11,12 +11,13 @@ export async function GET() {
     }
 
     const pg = await getPgClient();
+    const userId = (session.user as { id?: string }).id || session.user.email; // Use ID if available, fallback to email
     const result = await pg.query(
       `SELECT platform_id, page_name, access_token, created_at 
        FROM integrations 
-       WHERE user_email = $1 AND platform = 'facebook'
+       WHERE user_id = $1 AND platform = 'facebook'
        ORDER BY created_at DESC`,
-      [session.user.email]
+      [userId]
     );
 
     return NextResponse.json({
