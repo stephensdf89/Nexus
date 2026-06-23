@@ -7,12 +7,13 @@ function isUuid(value?: string) {
 }
 
 export async function GET(req: NextRequest) {
+  const cookiePlatformId = req.cookies.get("fb_platform_id")?.value;
+  const cookiePageName = req.cookies.get("fb_page_name")?.value;
+
   try {
     const headerEmail = req.headers.get("x-user-email") || undefined;
     const headerUserId = req.headers.get("x-user-id") || undefined;
     const email = headerEmail;
-    const cookiePlatformId = req.cookies.get("fb_platform_id")?.value;
-    const cookiePageName = req.cookies.get("fb_page_name")?.value;
 
     if (!email && !headerUserId) {
       if (cookiePlatformId) {
@@ -103,9 +104,25 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("Error fetching Facebook integration:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch integration status" },
-      { status: 500 }
-    );
+
+    if (cookiePlatformId) {
+      return NextResponse.json({
+        connected: true,
+        pages: [
+          {
+            platform_id: cookiePlatformId,
+            page_name: cookiePageName || "Facebook Account",
+            created_at: new Date().toISOString(),
+          },
+        ],
+        status: "Connected",
+      });
+    }
+
+    return NextResponse.json({
+      connected: false,
+      pages: [],
+      status: "Not Connected",
+    });
   }
 }

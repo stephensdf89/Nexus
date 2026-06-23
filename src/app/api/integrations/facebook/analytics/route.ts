@@ -22,6 +22,11 @@ async function resolveUserId(email: string, sessionUserId?: string) {
 }
 
 export async function GET(req: NextRequest) {
+  const cookiePlatformId = req.cookies.get("fb_platform_id")?.value || "";
+  const cookiePageName = req.cookies.get("fb_page_name")?.value || "Facebook Account";
+  const cookiePageAccessToken = req.cookies.get("fb_page_access_token")?.value || "";
+  const cookieAccessToken = req.cookies.get("fb_access_token")?.value || "";
+
   try {
     const headerEmail = req.headers.get("x-user-email") || undefined;
     const headerUserId = req.headers.get("x-user-id") || undefined;
@@ -140,9 +145,69 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("Error fetching Facebook analytics:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch Facebook analytics" },
-      { status: 500 }
-    );
+
+    const platformId = cookiePlatformId;
+    const token = cookiePageAccessToken || cookieAccessToken;
+
+    if (!platformId || !token) {
+      return NextResponse.json(
+        { error: "Failed to fetch Facebook analytics" },
+        { status: 500 }
+      );
+    }
+
+    try {
+      const pageFieldsRes = await fetch(
+        `https://graph.facebook.com/v18.0/${platformId}?fields=id,name,fan_count,followers_count&access_token=${encodeURIComponent(token)}`
+      );
+      const pageFields = await pageFieldsRes.json();
+
+      let impressions: number | null = null;
+      let engagedUsers: number | null = null;
+      let warning: string | undefined;
+
+      const insightsRes = await fetch(
+        `https://graph.facebook.com/v18.0/${platformId}/insights?metric=page_impressions,page_engaged_users&period=day&access_token=${encodeURIComponent(token)}`
+      );
+      const insights = await insightsRes.json();
+
+      if (insights?.data?.length) {
+        for (const metric of insights.data as Array<{ name: string; values?: Array<{ value: number }> }>) {
+          const value = metric.values?.[0]?.value;
+          if (metric.name === "page_impressions") impressions = typeof value === "number" ? value : null;
+          if (metric.name === "page_engaged_users") engagedUsers = typeof value === "number" ? value : null;
+        }
+      } else {
+        warning = "Connected, but insights are unavailable for current token/scopes.";
+      }
+
+      if (pageFields?.error) {
+        return NextResponse.json(
+          { connected: true, warning: pageFields.error.message || "Connected, but unable to fetch page fields." },
+          { status: 200 }
+        );
+      }
+
+      return NextResponse.json({
+        connected: true,
+        page: {
+          id: pageFields.id || platformId,
+          name: pageFields.name || cookiePageName,
+          fanCount: typeof pageFields.fan_count === "number" ? pageFields.fan_count : null,
+          followersCount: typeof pageFields.followers_count === "number" ? pageFields.followers_count : null,
+        },
+        insights: {
+          pageImpressions: impressions,
+          pageEngagedUsers: engagedUsers,
+        },
+        warning,
+      });
+    } catch (cookieFallbackError) {
+      console.error("Cookie fallback analytics error:", cookieFallbackError);
+      return NextResponse.json(
+        { error: "Failed to fetch Facebook analytics" },
+        { status: 500 }
+      );
+    }
   }
 }

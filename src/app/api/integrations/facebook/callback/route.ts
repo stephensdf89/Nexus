@@ -177,26 +177,6 @@ export async function GET(req: NextRequest) {
       `https://graph.facebook.com/me/accounts?access_token=${tokenData.access_token}`
     );
     const pagesData = await pagesResponse.json();
-
-    if (Array.isArray(pagesData.data) && pagesData.data.length > 0) {
-      const page = pagesData.data[0];
-      platformId = page.id;
-      pageName = page.name;
-      pageAccessToken = page.access_token || null;
-    } else {
-      const meResponse = await fetch(
-        `https://graph.facebook.com/me?fields=id,name&access_token=${tokenData.access_token}`
-      );
-      const meData = await meResponse.json();
-
-      if (!meData?.id) {
-        return NextResponse.redirect(new URL("/settings?tab=connected&error=no_profile", req.url));
-      }
-
-      platformId = meData.id;
-      pageName = meData.name || "Facebook Account";
-    }
-
     // Store integration in database
     const pg = await ensureIntegrationsTable();
     let userId = cookieUserId;
