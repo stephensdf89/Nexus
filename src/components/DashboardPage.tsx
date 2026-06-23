@@ -3,8 +3,23 @@
 import AppShell from "@/components/AppShell";
 import CreatorToolsPanel from "@/components/CreatorToolsPanel";
 import NotificationsCenter from "@/components/NotificationsCenter";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { ViewsOverTimeChart, PlatformBreakdownChart } from "@/components/AnalyticsCharts";
 
 export default function DashboardPage() {
+  const { summary, timeseries, loading } = useAnalytics();
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+    if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+    return num.toString();
+  };
+
+  const totalReach = summary ? formatNumber(summary.totalViews) : "128.4K";
+  const engagementRate = summary
+    ? ((summary.totalEngagement / summary.totalViews) * 100).toFixed(1)
+    : "6.7";
+
   return (
     <AppShell>
       <div className="space-y-8">
@@ -20,8 +35,8 @@ export default function DashboardPage() {
 
         {/* SUMMARY CARDS */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <SummaryCard label="Total Reach" value="128.4K" change="+12.3%" accent="cyan" />
-          <SummaryCard label="Active Pipelines" value="4" change="+1" accent="cyan" />
+          <SummaryCard label="Total Reach" value={totalReach} change="+12.3%" accent="cyan" />
+          <SummaryCard label="Engagement Rate" value={`${engagementRate}%`} change="+2.1%" accent="cyan" />
           <SummaryCard label="Monthly Revenue" value="$2,340" change="+8.1%" accent="purple" />
         </section>
 
@@ -30,27 +45,27 @@ export default function DashboardPage() {
 
           <DashboardWidget title="Analytics Overview" span="lg:col-span-2">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <GrowthStat label="Views" value="12.4K" change="+14%" />
-              <GrowthStat label="Likes" value="1.8K" change="+9%" />
-              <GrowthStat label="Comments" value="342" change="+6%" />
+              <GrowthStat label="Views" value={summary ? formatNumber(summary.totalViews) : "12.4K"} change="+14%" />
+              <GrowthStat label="Engagement" value={summary ? formatNumber(summary.totalEngagement) : "1.8K"} change="+9%" />
+              <GrowthStat label="Followers" value={summary ? formatNumber(summary.totalFollowers) : "24.5K"} change="+6%" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ChartPlaceholder label="Views" />
+              {!loading && timeseries ? (
+                <div className="bg-slate-950/80 border border-cyan-400/30 rounded-lg p-4 shadow-[0_0_12px_rgba(0,229,255,0.15)]">
+                  <h3 className="text-sm font-bold text-cyan-400 mb-3">Views Trend</h3>
+                  <ViewsOverTimeChart timeseries={timeseries} />
+                </div>
+              ) : (
+                <ChartPlaceholder label="Views" />
+              )}
 
-              <ChartPlaceholder label="Engagement" />
-
-              <div className="bg-slate-950/80 border border-cyan-400/30 rounded-lg p-4 shadow-[0_0_12px_rgba(0,229,255,0.15)]">
-                <h3 className="text-sm font-bold text-cyan-400 mb-3 drop-shadow-[0_0_6px_rgba(0,229,255,0.4)]">
-                  Platform Breakdown
-                </h3>
-                <ul className="text-sm text-gray-300 space-y-2">
-                  <li>YouTube • 62%</li>
-                  <li>TikTok • 28%</li>
-                  <li>Instagram • 7%</li>
-                  <li>Discord • 3%</li>
-                </ul>
-              </div>
+              {summary && summary.platforms && (
+                <div className="bg-slate-950/80 border border-cyan-400/30 rounded-lg p-4 shadow-[0_0_12px_rgba(0,229,255,0.15)]">
+                  <h3 className="text-sm font-bold text-cyan-400 mb-3">Platform Breakdown</h3>
+                  <PlatformBreakdownChart platforms={summary.platforms} />
+                </div>
+              )}
 
               <div className="bg-slate-950/80 border border-cyan-400/30 rounded-lg p-4 shadow-[0_0_12px_rgba(0,229,255,0.15)]">
                 <h3 className="text-sm font-bold text-cyan-400 mb-3 drop-shadow-[0_0_6px_rgba(0,229,255,0.4)]">
@@ -95,10 +110,21 @@ export default function DashboardPage() {
             </button>
           </DashboardWidget>
 
-          <DashboardWidget title="Monetization Snapshot">
-            <PlaceholderBlock>
-              Revenue by platform, CPM, and conversion funnels coming soon.
-            </PlaceholderBlock>
+          <DashboardWidget title="Top Performing Content">
+            <div className="space-y-3">
+              <div className="bg-slate-950/50 rounded p-2 border border-cyan-400/10">
+                <p className="text-sm font-medium text-cyan-100">YouTube Shorts Compilation</p>
+                <p className="text-xs text-gray-400 mt-1">8.2K views • 642 likes</p>
+              </div>
+              <div className="bg-slate-950/50 rounded p-2 border border-cyan-400/10">
+                <p className="text-sm font-medium text-cyan-100">TikTok Trending Sound</p>
+                <p className="text-xs text-gray-400 mt-1">5.4K views • 1.2K likes</p>
+              </div>
+              <div className="bg-slate-950/50 rounded p-2 border border-cyan-400/10">
+                <p className="text-sm font-medium text-cyan-100">Instagram Carousel Post</p>
+                <p className="text-xs text-gray-400 mt-1">2.1K views • 189 likes</p>
+              </div>
+            </div>
           </DashboardWidget>
 
         </section>
