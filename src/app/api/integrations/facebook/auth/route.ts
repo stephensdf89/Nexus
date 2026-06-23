@@ -18,6 +18,10 @@ function getFacebookRedirectUri(req: NextRequest) {
     return process.env.FACEBOOK_REDIRECT_URI;
   }
 
+  if (process.env.NEXTAUTH_URL) {
+    return `${process.env.NEXTAUTH_URL}/api/integrations/facebook/callback`;
+  }
+
   return `${req.nextUrl.origin}/api/integrations/facebook/callback`;
 }
 
