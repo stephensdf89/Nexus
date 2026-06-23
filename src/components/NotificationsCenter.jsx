@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useUser } from "../contexts/AuthContext";
 
@@ -12,6 +12,7 @@ export default function NotificationsCenter() {
   const [readNotifications, setReadNotifications] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const seededForUser = useRef(null);
 
   useEffect(() => {
     if (!user || !supabase) {
@@ -30,26 +31,39 @@ export default function NotificationsCenter() {
 
       if (!error && data) {
         if (data.length === 0) {
-          const { data: seeded, error: seedError } = await supabase
-            .from("notifications")
-            .insert({
-              user_id: user.id,
-              type: "system",
-              category: "system",
-              message: "Welcome to Creator Nexus notifications.",
-              is_read: false,
-            })
-            .select("*")
-            .single();
+          // Guard against duplicate inserts when effects run more than once.
+          if (seededForUser.current !== user.id) {
+            seededForUser.current = user.id;
 
-          if (!seedError && seeded) {
-            setNotifications([seeded]);
-            setReadNotifications(new Set());
-          } else {
-            setNotifications([]);
+            const { error: seedError } = await supabase
+              .from("notifications")
+              .insert({
+                user_id: user.id,
+                type: "system",
+                category: "system",
+                message: "Welcome to Creator Nexus notifications.",
+                is_read: false,
+              });
+
             if (seedError) {
               setLoadError("Could not create starter notification.");
             }
+          }
+
+          const { data: refreshed, error: refreshError } = await supabase
+            .from("notifications")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false });
+
+          if (!refreshError && refreshed) {
+            setNotifications(refreshed);
+            const alreadyRead = new Set(
+              refreshed.filter((n) => n.is_read).map((n) => n.id)
+            );
+            setReadNotifications(alreadyRead);
+          } else {
+            setNotifications([]);
           }
         } else {
           setNotifications(data);
