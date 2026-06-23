@@ -90,6 +90,16 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Backfill missing columns for legacy notifications table variants
+ALTER TABLE IF EXISTS public.notifications ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE IF EXISTS public.notifications ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'system';
+ALTER TABLE IF EXISTS public.notifications ADD COLUMN IF NOT EXISTS message TEXT;
+ALTER TABLE IF EXISTS public.notifications ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'platform';
+ALTER TABLE IF EXISTS public.notifications ADD COLUMN IF NOT EXISTS is_read BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE IF EXISTS public.notifications ADD COLUMN IF NOT EXISTS data JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE IF EXISTS public.notifications ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE IF EXISTS public.notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
 -- ============================================================================
 -- CREATE INDEXES FOR PERFORMANCE
 -- ============================================================================
