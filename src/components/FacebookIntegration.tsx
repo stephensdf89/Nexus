@@ -66,33 +66,22 @@ export default function FacebookIntegration() {
     }
   };
 
-  const handleConnect = async () => {
+  const handleConnect = () => {
     setLoading(true);
     setError("");
-    try {
-      const response = await fetch("/api/integrations/facebook/auth", {
-        method: "POST",
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
 
-      if (data.authUrl) {
-        // Redirect to Facebook OAuth
-        window.location.href = data.authUrl;
-      } else if (data.error) {
-        setError(data.error);
-      } else {
-        setError("Failed to get authentication URL");
-      }
+    const timeoutId = window.setTimeout(() => {
+      setLoading(false);
+      setError("Facebook connect took too long. Please try again.");
+    }, 12000);
+
+    try {
+      window.location.assign("/api/integrations/facebook/auth");
     } catch (err) {
+      window.clearTimeout(timeoutId);
       const errorMsg = err instanceof Error ? err.message : "Error initiating Facebook auth";
       console.error("Error initiating Facebook auth:", err);
       setError(errorMsg);
-    } finally {
       setLoading(false);
     }
   };

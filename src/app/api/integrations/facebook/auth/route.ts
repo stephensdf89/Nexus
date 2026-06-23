@@ -23,6 +23,39 @@ function getFacebookRedirectUri(req: NextRequest) {
   return `${req.nextUrl.origin}/api/integrations/facebook/callback`;
 }
 
+function buildFacebookAuthUrl(req: NextRequest, state: string) {
+  const redirectUri = getFacebookRedirectUri(req);
+  const scopes = getSanitizedScopes();
+  return `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${encodeURIComponent(scopes)}&response_type=code`;
+}
+
+function withStateCookie(response: NextResponse, state: string) {
+  response.cookies.set("fb_oauth_state", state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 600,
+  });
+  return response;
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+
+    const state = Math.random().toString(36).substring(7);
+    const authUrl = buildFacebookAuthUrl(req, state);
+    const response = NextResponse.redirect(authUrl);
+    return withStateCookie(response, state);
+  } catch (error) {
+    console.error("Facebook auth GET error:", error);
+    return NextResponse.redirect(new URL("/settings?tab=connected&error=auth_init_failed", req.url));
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -30,25 +63,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Generate state for CSRF protection
     const state = Math.random().toString(36).substring(7);
-    const redirectUri = getFacebookRedirectUri(req);
-    const scopes = getSanitizedScopes();
+    const authUrl = buildFacebookAuthUrl(req, state);
 
-    // Store state in session/cookie for verification
-    const response = NextResponse.json({
-      authUrl: `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${encodeURIComponent(scopes)}&response_type=code`,
-    });
-
-    // Set secure cookie with state
-    response.cookies.set("fb_oauth_state", state, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 600, // 10 minutes
-    });
-
-    return response;
+    const response = NextResponse.json({ authUrl });
+    return withStateCookie(response, state);
   } catch (error) {
     console.error("Facebook auth error:", error);
     return NextResponse.json(
