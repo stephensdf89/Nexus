@@ -483,16 +483,8 @@ function AppearanceSettings() {
   );
 }
 
-function AccessibilitySettings({
-  highContrast,
-  textSize,
-  colorBlindMode,
-  reducedMotion,
-  disableNeon,
-  safeMode,
-  update,
-  resetAccessibility,
-}) {
+function AccessibilitySettings() {
+  const { highContrast, textSize, colorBlindMode, reducedMotion, disableNeon, safeMode, update, resetAccessibility } = useSettingsStore();
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Accessibility</h1>
@@ -540,11 +532,10 @@ function AccessibilitySettings({
           <input
             type="checkbox"
             checked={disableNeon}
-            onChange={() => update("disableNeon", false)}
-            disabled
+            onChange={() => update("disableNeon", !disableNeon)}
             className="w-4 h-4 rounded cursor-pointer toggle-neon"
           />
-          <span className="ml-3 text-cyan-100">Disable Neon Effects (Locked Off)</span>
+          <span className="ml-3 text-cyan-100">Disable Neon Effects</span>
         </label>
 
         <label className="flex items-center cursor-pointer">
@@ -745,13 +736,8 @@ function DashboardLayoutSettings() {
   );
 }
 
-function NotificationSettings({
-  notificationsEnabled,
-  soundEnabled,
-  vibrationEnabled,
-  update,
-  resetNotifications,
-}) {
+function NotificationSettings() {
+  const { notificationsEnabled, soundEnabled, vibrationEnabled, update, resetNotifications } = useSettingsStore();
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Notifications</h1>
@@ -799,7 +785,8 @@ function NotificationSettings({
   );
 }
 
-function AISettings({ aiMode, update }) {
+function AISettings() {
+  const { aiMode, update } = useSettingsStore();
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">AI Settings</h1>

@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { useSettingsStore } from "@/lib/settingsStore";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function SettingsLoader() {
-  const { data: session } = useSession();
-  const { detectDevice, device, getActiveSettings } = useSettingsStore();
+  const { detectDevice, getActiveSettings } = useSettingsStore();
   const {
     highContrast,
     textSize,
@@ -26,14 +25,20 @@ export default function SettingsLoader() {
   }, []);
 
   useEffect(() => {
-    // Load saved settings from localStorage on startup
+    // Always load from localStorage first for instant apply
     load();
 
-    // If user is authenticated, sync from database
-    if (session?.user) {
-      syncFromServer();
-    }
-  }, [session, load, syncFromServer]);
+    // Then sync from server if a Supabase session exists
+    const trySync = async () => {
+      if (!supabase) return;
+      const { data } = await supabase.auth.getSession();
+      if (data?.session?.user) {
+        syncFromServer();
+      }
+    };
+
+    trySync();
+  }, []);
 
   useEffect(() => {
     // Apply settings to <body>

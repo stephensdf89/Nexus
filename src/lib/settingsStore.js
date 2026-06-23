@@ -180,8 +180,19 @@ export const useSettingsStore = create((set) => ({
   syncFromServer: async () => {
     if (typeof window === "undefined") return;
     try {
+      const accessToken = document.cookie
+        .split("; ")
+        .find((c) => c.startsWith("sb-access-token="))
+        ?.split("=")[1];
+
+      const headers = {};
+      if (accessToken) {
+        headers["x-supabase-auth"] = decodeURIComponent(accessToken);
+      }
+
       const res = await fetch("/api/settings", {
         credentials: "include",
+        headers,
       });
       if (!res.ok) return;
 
@@ -208,10 +219,21 @@ export const useSettingsStore = create((set) => ({
       const state = useSettingsStore.getState();
       const settings = getPersistedShape(state);
 
+      // Read Supabase access token from cookie for server-side auth
+      const accessToken = document.cookie
+        .split("; ")
+        .find((c) => c.startsWith("sb-access-token="))
+        ?.split("=")[1];
+
+      const headers = { "Content-Type": "application/json" };
+      if (accessToken) {
+        headers["x-supabase-auth"] = decodeURIComponent(accessToken);
+      }
+
       const res = await fetch("/api/settings", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(settings),
       });
 
