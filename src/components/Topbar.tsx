@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AccessibilityButton from "@/components/AccessibilityButton";
+import HistoryNavigation from "@/components/HistoryNavigation";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { clearAuthCookies } from "@/lib/auth";
 
@@ -96,6 +97,10 @@ export default function Topbar() {
       </div>
 
       <div className="flex items-center gap-3 relative">
+        <Suspense fallback={null}>
+          <HistoryNavigation embedded />
+        </Suspense>
+
         <button
           type="button"
           onClick={() => router.push("/notifications")}

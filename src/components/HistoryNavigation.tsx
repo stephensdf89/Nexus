@@ -5,6 +5,16 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const STORAGE_KEY = "creator-nexus-history-state";
+const APP_SHELL_ROUTES = [
+  "/dashboard",
+  "/analytics",
+  "/assistant",
+  "/pipelines",
+  "/community",
+  "/settings",
+  "/content",
+  "/notifications",
+];
 
 type HistoryState = {
   stack: string[];
@@ -49,7 +59,7 @@ function writeStoredState(state: HistoryState) {
   window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-export default function HistoryNavigation() {
+export default function HistoryNavigation({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -154,6 +164,7 @@ export default function HistoryNavigation() {
   const canGoBack = historyState.index > 0;
   const canGoForward =
     historyState.index >= 0 && historyState.index < historyState.stack.length - 1;
+  const isAppShellRoute = APP_SHELL_ROUTES.some((route) => pathname.startsWith(route));
 
   const handleBack = () => {
     if (!canGoBack || typeof window === "undefined") {
@@ -195,9 +206,25 @@ export default function HistoryNavigation() {
     router.push(target);
   };
 
+  if (embedded && !isAppShellRoute) {
+    return null;
+  }
+
+  if (!embedded && isAppShellRoute) {
+    return null;
+  }
+
+  const wrapperClassName = embedded
+    ? "flex items-center gap-2"
+    : "pointer-events-none fixed bottom-4 left-4 z-50";
+
+  const panelClassName = embedded
+    ? "pointer-events-auto flex items-center gap-2 rounded-2xl border border-cyan-400/35 bg-cyan-500/8 px-2 py-2 text-cyan-100 shadow-[0_8px_18px_rgba(0,194,255,0.12)]"
+    : "pointer-events-auto flex items-center gap-2 rounded-2xl border border-cyan-400/35 bg-[rgba(10,20,58,0.88)] px-3 py-2 text-cyan-100 shadow-[0_12px_28px_rgba(0,194,255,0.18)] backdrop-blur-md";
+
   return (
-    <div className="pointer-events-none fixed bottom-4 left-4 z-50">
-      <div className="pointer-events-auto flex items-center gap-2 rounded-2xl border border-cyan-400/35 bg-[rgba(10,20,58,0.88)] px-3 py-2 text-cyan-100 shadow-[0_12px_28px_rgba(0,194,255,0.18)] backdrop-blur-md">
+    <div className={wrapperClassName}>
+      <div className={panelClassName}>
         <button
           type="button"
           onClick={handleBack}
