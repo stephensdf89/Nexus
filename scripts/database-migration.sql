@@ -21,6 +21,13 @@ CREATE TABLE IF NOT EXISTS public.integrations (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Backfill missing columns for legacy integrations table variants
+ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS user_email TEXT;
+ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS platform TEXT;
+ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
 -- ============================================================================
 -- TABLE: user_settings
 -- Purpose: Store user preferences (theme, language, region, etc.)
@@ -32,10 +39,14 @@ CREATE TABLE IF NOT EXISTS public.user_settings (
   theme TEXT DEFAULT 'neon',
   language TEXT DEFAULT 'en',
   region TEXT DEFAULT 'US',
+  settings JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(user_id)
 );
+
+-- Ensure settings JSON exists for code paths that upsert/read user_settings.settings
+ALTER TABLE IF EXISTS public.user_settings ADD COLUMN IF NOT EXISTS settings JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 -- ============================================================================
 -- TABLE: scheduled_posts
@@ -54,6 +65,13 @@ CREATE TABLE IF NOT EXISTS public.scheduled_posts (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Backfill missing columns for legacy scheduled_posts table variants
+ALTER TABLE IF EXISTS public.scheduled_posts ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE IF EXISTS public.scheduled_posts ADD COLUMN IF NOT EXISTS user_email TEXT;
+ALTER TABLE IF EXISTS public.scheduled_posts ADD COLUMN IF NOT EXISTS scheduled_time TIMESTAMP WITH TIME ZONE;
+ALTER TABLE IF EXISTS public.scheduled_posts ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE IF EXISTS public.scheduled_posts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 
 -- ============================================================================
 -- TABLE: notifications
