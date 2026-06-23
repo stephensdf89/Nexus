@@ -32,6 +32,7 @@ import TwitterIntegration from "@/components/TwitterIntegration";
 import TwitchIntegration from "@/components/TwitchIntegration";
 import LinkedInIntegration from "@/components/LinkedInIntegration";
 import PinterestIntegration from "@/components/PinterestIntegration";
+import TaskManager from "@/components/TaskManager";
 import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function SettingsPage() {
@@ -1463,6 +1464,10 @@ function PipelinesSettings() {
         Automate tasks, workflows, and creator actions using triggers and
         actions. Full automation engine coming soon.
       </p>
+
+      <section className="mb-10">
+        <TaskManager />
+      </section>
 
       {/* PIPELINE LIST */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">

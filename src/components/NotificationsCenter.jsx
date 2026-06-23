@@ -83,6 +83,101 @@ export default function NotificationsCenter() {
     load();
   }, [user]);
 
+  useEffect(() => {
+    if (!user?.id || !supabase) {
+      return;
+    }
+
+    const channel = supabase
+      .channel(`notifications-realtime-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const incoming = payload?.new;
+          if (!incoming || !incoming.id) {
+            return;
+          }
+
+          setNotifications((prev) => {
+            if (prev.some((n) => n.id === incoming.id)) {
+              return prev;
+            }
+            return [incoming, ...prev];
+          });
+
+          if (incoming.is_read) {
+            setReadNotifications((prev) => {
+              const next = new Set(prev);
+              next.add(incoming.id);
+              return next;
+            });
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updated = payload?.new;
+          if (!updated || !updated.id) {
+            return;
+          }
+
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === updated.id ? { ...n, ...updated } : n))
+          );
+
+          setReadNotifications((prev) => {
+            const next = new Set(prev);
+            if (updated.is_read) {
+              next.add(updated.id);
+            } else {
+              next.delete(updated.id);
+            }
+            return next;
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const deleted = payload?.old;
+          if (!deleted || !deleted.id) {
+            return;
+          }
+
+          setNotifications((prev) => prev.filter((n) => n.id !== deleted.id));
+          setReadNotifications((prev) => {
+            const next = new Set(prev);
+            next.delete(deleted.id);
+            return next;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   const categorise = (n) => {
     if (n.category) return n.category;
     const pipelines = ["pipeline", "automation", "workflow"];
