@@ -26,6 +26,7 @@ import AppShell from "@/components/AppShell";
 import ConfirmModal from "@/components/ConfirmModal";
 import FacebookIntegration from "@/components/FacebookIntegration";
 import YouTubeIntegration from "@/components/YouTubeIntegration";
+import TikTokIntegration from "@/components/TikTokIntegration";
 import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function SettingsPage() {
@@ -1233,6 +1234,9 @@ function ConnectedPlatforms() {
 
         {/* YouTube - Using Real Integration Component */}
         <YouTubeIntegration />
+
+        {/* TikTok - Using Real Integration Component */}
+        <TikTokIntegration />
 
         {/* Other Platforms - Coming Soon */}
         {otherPlatforms.map((p) => (

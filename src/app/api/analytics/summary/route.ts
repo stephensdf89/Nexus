@@ -86,6 +86,35 @@ export async function GET(req: NextRequest) {
       console.error("Error fetching YouTube analytics:", err);
     }
 
+    // Fetch TikTok analytics if connected
+    let tiktokMetrics: PlatformMetrics | null = null;
+    try {
+      const ttAnalyticsRes = await fetch(
+        `${process.env.NEXTAUTH_URL || "https://www.creatornexuspro.com"}/api/integrations/tiktok/analytics`,
+        {
+          headers: {
+            "x-user-id": userId || "",
+            "x-user-email": userEmail || "",
+          },
+        }
+      );
+
+      if (ttAnalyticsRes.ok) {
+        const ttData = await ttAnalyticsRes.json();
+        if (ttData.success && ttData.metrics) {
+          tiktokMetrics = {
+            platform: "TikTok",
+            views: ttData.metrics.views || 0,
+            engagement: ttData.metrics.recent_engagement || 0,
+            followers: ttData.metrics.subscribers || 0,
+            trend: 22, // placeholder
+          };
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching TikTok analytics:", err);
+    }
+
     // Mock data for other platforms (for now, these are placeholders)
     const mockPlatforms: PlatformMetrics[] = [
       {
@@ -115,6 +144,7 @@ export async function GET(req: NextRequest) {
     const allPlatforms = [
       ...(facebookMetrics ? [facebookMetrics] : []),
       ...(youtubeMetrics ? [youtubeMetrics] : []),
+      ...(tiktokMetrics ? [tiktokMetrics] : []),
       ...mockPlatforms,
     ];
 
