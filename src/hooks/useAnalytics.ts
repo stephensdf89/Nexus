@@ -30,7 +30,7 @@ export interface PlatformTimeseries {
   data: DailyMetric[];
 }
 
-export const useAnalytics = () => {
+export const useAnalytics = ({ enabled = true }: { enabled?: boolean } = {}) => {
   const authContext = useUser();
   const user = authContext?.user;
 
@@ -40,7 +40,10 @@ export const useAnalytics = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !enabled) {
+      setSummary(null);
+      setTimeseries(null);
+      setError(null);
       setLoading(false);
       return;
     }
@@ -84,7 +87,7 @@ export const useAnalytics = () => {
     };
 
     fetchAnalytics();
-  }, [user]);
+  }, [user, enabled]);
 
   return { summary, timeseries, loading, error };
 };

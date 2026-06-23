@@ -12,6 +12,7 @@ export default function LoginPage() {
   const authContext = useUser();
   const user = authContext?.user;
   const a11y = useSettingsStore();
+  const loadA11y = useSettingsStore((state) => state.load);
   const [showMenu, setShowMenu] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -56,8 +57,8 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    a11y.load();
-  }, [a11y]);
+    loadA11y();
+  }, [loadA11y]);
 
   useEffect(() => {
     // Restore saved credentials if they exist

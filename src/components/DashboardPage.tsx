@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import CreatorToolsPanel from "@/components/CreatorToolsPanel";
 import NotificationsCenter from "@/components/NotificationsCenter";
@@ -8,8 +9,43 @@ import OwnerAuditLogPanel from "@/components/OwnerAuditLogPanel";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { ViewsOverTimeChart, PlatformBreakdownChart } from "@/components/AnalyticsCharts";
 
+type AccessLevel = "user" | "pro" | "admin";
+
+type AccessResponse = {
+  isOwner: boolean;
+  accessLevel: AccessLevel;
+};
+
 export default function DashboardPage() {
-  const { summary, timeseries, loading } = useAnalytics();
+  const [canUseAnalytics, setCanUseAnalytics] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+
+  useEffect(() => {
+    const loadAccess = async () => {
+      try {
+        const res = await fetch("/api/access/me");
+        if (!res.ok) {
+          setCanUseAnalytics(false);
+          setIsOwner(false);
+          return;
+        }
+
+        const data = (await res.json()) as AccessResponse;
+        const analyticsAllowed =
+          data.isOwner || data.accessLevel === "pro" || data.accessLevel === "admin";
+
+        setCanUseAnalytics(analyticsAllowed);
+        setIsOwner(Boolean(data.isOwner));
+      } catch {
+        setCanUseAnalytics(false);
+        setIsOwner(false);
+      }
+    };
+
+    loadAccess();
+  }, []);
+
+  const { summary, timeseries, loading } = useAnalytics({ enabled: canUseAnalytics });
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
@@ -96,8 +132,8 @@ export default function DashboardPage() {
             <CreatorToolsPanel />
           </DashboardWidget>
 
-          <OwnerMemberAccessPanel />
-          <OwnerAuditLogPanel />
+          {isOwner && <OwnerMemberAccessPanel />}
+          {isOwner && <OwnerAuditLogPanel />}
 
           <DashboardWidget title="Notifications">
             <NotificationsCenter />
