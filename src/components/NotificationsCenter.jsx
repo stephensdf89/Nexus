@@ -1,53 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
+import { useUser } from "../contexts/AuthContext";
 
 export default function NotificationsCenter() {
+  const authContext = useUser();
+  const user = authContext?.user;
   const [activeTab, setActiveTab] = useState("all");
+  const [notifications, setNotifications] = useState([]);
   const [readNotifications, setReadNotifications] = useState(new Set());
+  const [loading, setLoading] = useState(true);
 
-  const allNotifications = [
-    {
-      id: "notif-1",
-      type: "tiktok",
-      message: "New follower on TikTok",
-      time: "2 minutes ago",
-      color: "text-pink-400",
-      category: "platform",
-    },
-    {
-      id: "notif-2",
-      type: "youtube",
-      message: "New comment on your YouTube video",
-      time: "18 minutes ago",
-      color: "text-red-400",
-      category: "platform",
-    },
-    {
-      id: "notif-3",
-      type: "pipeline",
-      message: "Pipeline 'Welcome New Followers' executed",
-      time: "1 hour ago",
-      color: "text-cyan-400",
-      category: "pipelines",
-    },
-    {
-      id: "notif-4",
-      type: "discord",
-      message: "New member joined your Discord server",
-      time: "3 hours ago",
-      color: "text-purple-400",
-      category: "platform",
-    },
-    {
-      id: "notif-5",
-      type: "system",
-      message: "Backup completed successfully",
-      time: "5 hours ago",
-      color: "text-green-400",
-      category: "system",
-    },
-  ];
+  useEffect(() => {
+    if (!user || !supabase) {
+      setLoading(false);
+      return;
+    }
+
+    const load = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        setNotifications(data);
+        const alreadyRead = new Set(
+          data.filter((n) => n.is_read).map((n) => n.id)
+        );
+        setReadNotifications(alreadyRead);
+      }
+      setLoading(false);
+    };
+
+    load();
+  }, [user]);
+
+  const categorise = (n) => {
+    if (n.category) return n.category;
+    const pipelines = ["pipeline", "automation", "workflow"];
+    const system = ["system", "backup", "security"];
+    if (pipelines.includes(n.type)) return "pipelines";
+    if (system.includes(n.type)) return "system";
+    return "platform";
+  };
+
+  const formatTime = (ts) => {
+    if (!ts) return "";
+    const diff = Date.now() - new Date(ts).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins} minute${mins !== 1 ? "s" : ""} ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} hour${hrs !== 1 ? "s" : ""} ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days} day${days !== 1 ? "s" : ""} ago`;
+  };
 
   const icons = {
     tiktok: <span className="text-pink-400">🎵</span>,
@@ -55,6 +66,25 @@ export default function NotificationsCenter() {
     pipeline: <span className="text-cyan-400">⚙️</span>,
     discord: <span className="text-purple-400">💬</span>,
     system: <span className="text-green-400">✔️</span>,
+    instagram: <span className="text-pink-300">📸</span>,
+    twitter: <span className="text-sky-400">🐦</span>,
+    twitch: <span className="text-purple-500">🎮</span>,
+    facebook: <span className="text-blue-400">📘</span>,
+    linkedin: <span className="text-blue-500">💼</span>,
+    default: <span className="text-cyan-300">🔔</span>,
+  };
+
+  const typeColour = {
+    tiktok: "text-pink-400",
+    youtube: "text-red-400",
+    pipeline: "text-cyan-400",
+    discord: "text-purple-400",
+    system: "text-green-400",
+    instagram: "text-pink-300",
+    twitter: "text-sky-400",
+    twitch: "text-purple-500",
+    facebook: "text-blue-400",
+    linkedin: "text-blue-500",
   };
 
   const tabs = [
@@ -67,19 +97,30 @@ export default function NotificationsCenter() {
   // Filter notifications based on active tab
   const filteredNotifications =
     activeTab === "all"
-      ? allNotifications
-      : allNotifications.filter((n) => n.category === activeTab);
+      ? notifications
+      : notifications.filter((n) => categorise(n) === activeTab);
 
-  // Mark all as read
-  const handleMarkAllAsRead = () => {
-    setReadNotifications(new Set(allNotifications.map((n) => n.id)));
+  const handleMarkAllAsRead = async () => {
+    setReadNotifications(new Set(notifications.map((n) => n.id)));
+    if (supabase && user) {
+      await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("user_id", user.id);
+    }
   };
 
-  // Mark individual notification as read
-  const handleMarkAsRead = (id) => {
+  const handleMarkAsRead = async (id) => {
     const updated = new Set(readNotifications);
     updated.add(id);
     setReadNotifications(updated);
+    if (supabase && user) {
+      await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", id)
+        .eq("user_id", user.id);
+    }
   };
 
   return (
@@ -118,9 +159,13 @@ export default function NotificationsCenter() {
 
       {/* Notifications list */}
       <div className="space-y-4">
-        {filteredNotifications.length === 0 ? (
+        {loading ? (
+          <p className="text-gray-400 text-center py-8">Loading notifications...</p>
+        ) : filteredNotifications.length === 0 ? (
           <p className="text-gray-400 text-center py-8">
-            No notifications in this category.
+            {notifications.length === 0
+              ? "No notifications yet."
+              : "No notifications in this category."}
           </p>
         ) : (
           filteredNotifications.map((n) => (
@@ -133,10 +178,14 @@ export default function NotificationsCenter() {
               }`}
             >
               <div className="flex items-center gap-3">
-                {icons[n.type]}
+                {icons[n.type] ?? icons.default}
                 <div>
-                  <p className={`font-bold ${n.color}`}>{n.message}</p>
-                  <p className="text-gray-400 text-xs">{n.time}</p>
+                  <p className={`font-bold ${typeColour[n.type] ?? "text-cyan-300"}`}>
+                    {n.message}
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                    {n.time ?? formatTime(n.created_at)}
+                  </p>
                 </div>
               </div>
 
