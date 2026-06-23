@@ -90,13 +90,13 @@ export default function Topbar() {
   };
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-cyan-400/30 bg-[rgba(10,20,58,0.86)] px-6 backdrop-blur-sm">
-      <div>
-        <p className="text-sm text-cyan-100/75">Creator Dashboard</p>
-        <h2 className="text-lg font-semibold">Welcome back</h2>
+    <header className="flex min-h-16 flex-wrap items-center justify-between gap-y-2 border-b border-cyan-400/30 bg-[rgba(10,20,58,0.86)] px-4 py-2 backdrop-blur-sm sm:px-6">
+      <div className="flex min-w-0 flex-col justify-center">
+        <p className="text-sm leading-tight text-cyan-100/75">Creator Dashboard</p>
+        <h2 className="text-base font-semibold leading-tight sm:text-lg">Welcome back</h2>
       </div>
 
-      <div className="flex items-center gap-3 relative">
+      <div className="relative flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:gap-3">
         <Suspense fallback={null}>
           <HistoryNavigation embedded />
         </Suspense>
