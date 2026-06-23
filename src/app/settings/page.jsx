@@ -27,6 +27,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import FacebookIntegration from "@/components/FacebookIntegration";
 import YouTubeIntegration from "@/components/YouTubeIntegration";
 import TikTokIntegration from "@/components/TikTokIntegration";
+import InstagramIntegration from "@/components/InstagramIntegration";
 import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function SettingsPage() {
@@ -1237,6 +1238,9 @@ function ConnectedPlatforms() {
 
         {/* TikTok - Using Real Integration Component */}
         <TikTokIntegration />
+
+        {/* Instagram - Using Real Integration Component */}
+        <InstagramIntegration />
 
         {/* Other Platforms - Coming Soon */}
         {otherPlatforms.map((p) => (

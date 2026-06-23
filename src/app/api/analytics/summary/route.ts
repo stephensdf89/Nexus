@@ -115,6 +115,35 @@ export async function GET(req: NextRequest) {
       console.error("Error fetching TikTok analytics:", err);
     }
 
+    // Fetch Instagram analytics if connected
+    let instagramMetrics: PlatformMetrics | null = null;
+    try {
+      const igAnalyticsRes = await fetch(
+        `${process.env.NEXTAUTH_URL || "https://www.creatornexuspro.com"}/api/integrations/instagram/analytics`,
+        {
+          headers: {
+            "x-user-id": userId || "",
+            "x-user-email": userEmail || "",
+          },
+        }
+      );
+
+      if (igAnalyticsRes.ok) {
+        const igData = await igAnalyticsRes.json();
+        if (igData.success && igData.metrics) {
+          instagramMetrics = {
+            platform: "Instagram",
+            views: igData.metrics.views || 0,
+            engagement: igData.metrics.recent_engagement || 0,
+            followers: igData.metrics.subscribers || 0,
+            trend: 15, // placeholder
+          };
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching Instagram analytics:", err);
+    }
+
     // Mock data for other platforms (for now, these are placeholders)
     const mockPlatforms: PlatformMetrics[] = [
       {
@@ -145,6 +174,7 @@ export async function GET(req: NextRequest) {
       ...(facebookMetrics ? [facebookMetrics] : []),
       ...(youtubeMetrics ? [youtubeMetrics] : []),
       ...(tiktokMetrics ? [tiktokMetrics] : []),
+      ...(instagramMetrics ? [instagramMetrics] : []),
       ...mockPlatforms,
     ];
 
