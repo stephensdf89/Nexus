@@ -27,9 +27,41 @@ export default function DashboardPage() {
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           <DashboardWidget title="Analytics Overview" span="lg:col-span-2">
-            <PlaceholderBlock>
-              Traffic, views, watch time, and engagement charts coming soon.
-            </PlaceholderBlock>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <GrowthStat label="Views" value="12.4K" change="+14%" />
+              <GrowthStat label="Likes" value="1.8K" change="+9%" />
+              <GrowthStat label="Comments" value="342" change="+6%" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ChartPlaceholder label="Views" />
+
+              <ChartPlaceholder label="Engagement" />
+
+              <div className="bg-slate-950/80 border border-cyan-400/30 rounded-lg p-4 shadow-[0_0_12px_rgba(0,229,255,0.15)]">
+                <h3 className="text-sm font-bold text-cyan-400 mb-3 drop-shadow-[0_0_6px_rgba(0,229,255,0.4)]">
+                  Platform Breakdown
+                </h3>
+                <ul className="text-sm text-gray-300 space-y-2">
+                  <li>YouTube • 62%</li>
+                  <li>TikTok • 28%</li>
+                  <li>Instagram • 7%</li>
+                  <li>Discord • 3%</li>
+                </ul>
+              </div>
+
+              <div className="bg-slate-950/80 border border-cyan-400/30 rounded-lg p-4 shadow-[0_0_12px_rgba(0,229,255,0.15)]">
+                <h3 className="text-sm font-bold text-cyan-400 mb-3 drop-shadow-[0_0_6px_rgba(0,229,255,0.4)]">
+                  Audience Metrics
+                </h3>
+                <ul className="text-sm text-gray-300 space-y-2">
+                  <li>Returning Viewers • 42%</li>
+                  <li>New Viewers • 58%</li>
+                  <li>Avg Watch Time • 3m 12s</li>
+                  <li>Top Region • United States</li>
+                </ul>
+              </div>
+            </div>
           </DashboardWidget>
 
           <DashboardWidget title="Recent Activity">
@@ -126,5 +158,23 @@ function QuickTool({ label }: { label: string }) {
                        hover:shadow-[0_0_10px_rgba(0,229,255,0.3)] transition-all duration-200">
       {label}
     </button>
+  );
+}
+
+function GrowthStat({ label, value, change }: { label: string; value: string; change: string }) {
+  return (
+    <div className="bg-slate-900/80 border border-cyan-400/30 rounded-lg p-3 shadow-[0_0_12px_rgba(0,229,255,0.2)]">
+      <p className="text-xs text-gray-400">{label}</p>
+      <p className="text-xl font-bold text-white">{value}</p>
+      <p className="text-xs text-cyan-300">{change} this week</p>
+    </div>
+  );
+}
+
+function ChartPlaceholder({ label }: { label: string }) {
+  return (
+    <div className="h-40 bg-slate-950/80 border border-cyan-400/30 rounded-lg flex items-center justify-center text-gray-500 text-xs shadow-[0_0_12px_rgba(0,229,255,0.2)]">
+      {label} chart coming soon
+    </div>
   );
 }
