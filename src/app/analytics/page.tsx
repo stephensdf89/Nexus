@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AppShell from "@/components/AppShell";
+import RealtimeAnalyticsWidget from "@/components/RealtimeAnalyticsWidget";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import {
   ViewsOverTimeChart,
@@ -56,6 +57,9 @@ export default function AnalyticsPage() {
             Real-time performance metrics across all platforms
           </p>
         </div>
+
+        {/* REAL-TIME ANALYTICS WIDGET */}
+        <RealtimeAnalyticsWidget />
 
         {/* SUMMARY CARDS */}
         <div className="grid gap-4 md:grid-cols-3">
