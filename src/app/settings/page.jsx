@@ -28,6 +28,7 @@ import FacebookIntegration from "@/components/FacebookIntegration";
 import YouTubeIntegration from "@/components/YouTubeIntegration";
 import TikTokIntegration from "@/components/TikTokIntegration";
 import InstagramIntegration from "@/components/InstagramIntegration";
+import TwitterIntegration from "@/components/TwitterIntegration";
 import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function SettingsPage() {
@@ -1241,6 +1242,9 @@ function ConnectedPlatforms() {
 
         {/* Instagram - Using Real Integration Component */}
         <InstagramIntegration />
+
+        {/* Twitter - Using Real Integration Component */}
+        <TwitterIntegration />
 
         {/* Other Platforms - Coming Soon */}
         {otherPlatforms.map((p) => (
