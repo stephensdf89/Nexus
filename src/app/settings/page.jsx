@@ -1,12 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  Accessibility,
+  Bell,
+  CloudUpload,
+  CreditCard,
+  ChevronDown,
+  Globe,
+  IdCard,
+  Info,
+  LayoutDashboard,
+  Menu,
+  Palette,
+  PlugZap,
+  Share2,
+  ShieldCheck,
+  UserCircle,
+  Workflow,
+  Sparkles,
+} from "lucide-react";
 import AppShell from "@/components/AppShell";
 import ConfirmModal from "@/components/ConfirmModal";
 import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function SettingsPage() {
   const [active, setActive] = useState("appearance");
+  const [search, setSearch] = useState("");
+  const [filtered, setFiltered] = useState([]);
+  const [focusedIndex, setFocusedIndex] = useState(0);
+  const [sidebarOpen] = useState(true);
+  const [open, setOpen] = useState({
+    account: true,
+    creator: true,
+    system: true,
+    advanced: false,
+    support: true,
+  });
   const [modalOpen, setModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalMessage, setModalMessage] = useState("");
@@ -84,6 +114,70 @@ export default function SettingsPage() {
     void syncToServer();
   };
 
+  const handleSearch = (value) => {
+    setSearch(value);
+
+    if (!value.trim()) {
+      setFiltered([]);
+      return;
+    }
+
+    const lower = value.toLowerCase();
+
+    const matches = Object.keys(searchIndex).filter((key) =>
+      searchIndex[key].some((term) => term.includes(lower))
+    );
+
+    setFiltered(matches);
+  };
+
+  const sidebarOrder = [
+    "account",
+    "profile",
+    "security",
+    "connected",
+    "pipelines",
+    "dashboard",
+    "appearance",
+    "language",
+    "notifications",
+    "accessibility",
+    "integrations",
+    "backup",
+    "billing",
+    "about",
+  ];
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      // DOWN ARROW
+      if (e.key === "ArrowDown") {
+        setFocusedIndex((prev) =>
+          Math.min(prev + 1, sidebarOrder.length - 1)
+        );
+      }
+
+      // UP ARROW
+      if (e.key === "ArrowUp") {
+        setFocusedIndex((prev) => Math.max(prev - 1, 0));
+      }
+
+      // ENTER selects the focused item
+      if (e.key === "Enter") {
+        setActive(sidebarOrder[focusedIndex]);
+      }
+
+      // ESC clears search
+      if (e.key === "Escape") {
+        setSearch("");
+        setFiltered([]);
+      }
+    };
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [focusedIndex, sidebarOrder]);
+
   const navItems = [
     "account",
     "profile",
@@ -92,15 +186,98 @@ export default function SettingsPage() {
     "ai",
     "appearance",
     "language",
-    "accessibility",
-    "device-overrides",
+    "pipelines",
     "dashboard",
+    "accessibility",
     "security",
     "integrations",
     "billing",
     "backup",
     "about",
   ];
+
+  const searchIndex = {
+    account: ["account", "email", "username", "password", "delete"],
+    profile: ["profile", "bio", "avatar", "banner", "social", "handle"],
+    connected: ["platforms", "facebook", "tiktok", "youtube", "instagram"],
+    notifications: ["notifications", "alerts", "sound", "vibration"],
+    ai: ["ai", "assistant", "model", "creative", "strict"],
+    appearance: ["theme", "appearance", "neon", "dark mode", "compact"],
+    language: ["language", "region", "timezone", "date", "format"],
+    pipelines: ["pipelines", "automation", "workflow", "triggers", "actions"],
+    dashboard: ["dashboard", "layout", "widgets", "grid", "custom"],
+    accessibility: ["accessibility", "contrast", "text size", "color blind"],
+    security: ["security", "privacy", "2fa", "sessions", "devices"],
+    integrations: ["integrations", "api", "webhooks", "oauth"],
+    billing: ["billing", "subscription", "payment", "invoices"],
+    backup: ["backup", "sync", "export", "import"],
+    about: ["about", "support", "help", "version", "status"],
+  };
+
+  const labelMap = {
+    account: "Account",
+    profile: "Profile",
+    security: "Security & Privacy",
+    connected: "Connected Platforms",
+    pipelines: "Pipelines",
+    dashboard: "Dashboard Layout",
+    appearance: "Appearance / Themes",
+    language: "Language & Region",
+    notifications: "Notifications",
+    accessibility: "Accessibility",
+    integrations: "Integrations",
+    backup: "Backup & Sync",
+    billing: "Billing & Subscription",
+    about: "About / Support",
+  };
+
+  const iconMap = {
+    account: UserCircle,
+    profile: IdCard,
+    connected: Share2,
+    notifications: Bell,
+    ai: Sparkles,
+    appearance: Palette,
+    language: Globe,
+    pipelines: Workflow,
+    dashboard: LayoutDashboard,
+    accessibility: Accessibility,
+    security: ShieldCheck,
+    integrations: PlugZap,
+    billing: CreditCard,
+    backup: CloudUpload,
+    about: Info,
+  };
+
+  const toggleSection = (section) => {
+    setOpen((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const renderButton = (key, label, Icon, index) => {
+    const isFocused = index === focusedIndex;
+    const isMatch = filtered.length === 0 || filtered.includes(key);
+
+    return (
+      <button
+        key={key}
+        onClick={() => setActive(key)}
+        className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg transition-all duration-200
+        ${
+          active === key
+            ? "bg-red-700 text-white shadow-[0_0_12px_rgba(255,0,0,0.7)]"
+            : isFocused
+            ? "bg-gray-800 text-white shadow-[0_0_10px_rgba(255,0,0,0.5)]"
+            : isMatch
+            ? "hover:bg-gray-800 text-gray-300"
+            : "opacity-20 cursor-not-allowed"
+        }
+      `}
+      >
+        <Icon className="w-5 h-5 text-red-500 drop-shadow-[0_0_6px_rgba(255,0,0,0.7)]" />
+        {label}
+      </button>
+    );
+  };
 
   return (
     <AppShell>
@@ -115,102 +292,66 @@ export default function SettingsPage() {
       />
 
       <div className="min-h-screen bg-slate-950 text-white flex">
+        <button className="md:hidden fixed top-4 left-4 z-50 text-red-500 drop-shadow-[0_0_6px_rgba(255,0,0,0.7)]">
+          <Menu />
+        </button>
+
         {/* SIDEBAR */}
-        <aside className="w-64 bg-slate-900 border-r border-cyan-400/40 p-6 overflow-y-auto">
+        <aside
+          className={`fixed inset-y-0 left-0 w-72 transform 
+            ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+            transition-transform duration-300`}
+        >
           <h2 className="text-xl font-semibold mb-3">Settings</h2>
 
+          {/* SEARCH BAR */}
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Search settings..."
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && filtered.length > 0) {
+                  setActive(filtered[0]);
+                }
+              }}
+              className="w-full p-2 bg-black border border-red-600 rounded-lg text-white placeholder-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:shadow-[0_0_12px_rgba(255,0,0,0.6)] transition-all duration-200"
+            />
+          </div>
+
           <nav className="space-y-2">
-            {navItems.map((item) => (
-              <button
-                key={item}
-                onClick={() => setActive(item)}
-                className={`block w-full text-left px-4 py-2 rounded transition-all ${
-                  active === item
-                    ? "nav-active-neon font-semibold"
-                    : "text-cyan-100/70 hover:bg-slate-800 hover:text-cyan-200"
-                }`}
-              >
-                {item
-                  .replace("connected", "Connected Platforms")
-                  .replace("ai", "AI Settings")
-                  .replace("appearance", "Appearance / Themes")
-                  .replace("device-overrides", "Device Overrides")
-                  .replace("dashboard", "Dashboard Layout")
-                  .replace("security", "Security & Privacy")
-                  .replace("billing", "Billing & Subscription")
-                  .replace("backup", "Backup & Sync")
-                  .replace("about", "About / Support")
-                  .replace(/^\w/, (c) => c.toUpperCase())}
-              </button>
-            ))}
+            {sidebarOrder.map((key, index) => {
+              return renderButton(key, labelMap[key], iconMap[key], index);
+            })}
+            {search && filtered.length === 0 && (
+              <div className="text-red-500 text-sm mt-2 drop-shadow-[0_0_6px_rgba(255,0,0,0.7)]">
+                No matching settings found.
+              </div>
+            )}
           </nav>
         </aside>
 
-        {/* MAIN PANEL */}
-        <main className="flex-1 p-10 pb-32">
-          {active === "appearance" && (
-            <AppearanceSettings
-              theme={theme}
-              compactMode={compactMode}
-              language={language}
-              update={update}
-              resetTheme={() => confirmReset(resetTheme, "Reset appearance settings?")}
-            />
-          )}
+        <div className="flex-1 p-10 overflow-y-auto">
+          <Breadcrumbs active={active} />
+          <PageHeader active={active} />
 
-          {active === "accessibility" && (
-            <AccessibilitySettings
-              highContrast={highContrast}
-              textSize={textSize}
-              colorBlindMode={colorBlindMode}
-              reducedMotion={reducedMotion}
-              disableNeon={disableNeon}
-              safeMode={safeMode}
-              update={update}
-              resetAccessibility={() => confirmReset(resetAccessibility, "Reset accessibility settings?")}
-            />
-          )}
-
-          {active === "dashboard" && (
-            <DashboardLayoutSettings />
-          )}
-
-          {active === "notifications" && (
-            <NotificationSettings
-              notificationsEnabled={notificationsEnabled}
-              soundEnabled={soundEnabled}
-              vibrationEnabled={vibrationEnabled}
-              update={update}
-              resetNotifications={() => confirmReset(resetNotifications, "Reset notification settings?")}
-            />
-          )}
-
-          {active === "ai" && <AISettings aiMode={aiMode} update={update} />}
-
-          {active === "device-overrides" && (
-            <DeviceOverridesSettings
-              device={device}
-              globalSettings={globalSettings}
-              desktopSettings={desktopSettings}
-              mobileSettings={mobileSettings}
-              tabletSettings={tabletSettings}
-              update={update}
-              onCopyGlobal={handleCopyGlobalToDevice}
-              onResetDevice={handleResetDeviceSettings}
-            />
-          )}
-
-          {/* PLACEHOLDERS FOR FUTURE FEATURES */}
           {active === "account" && <AccountSettings />}
           {active === "profile" && <ProfileSettings />}
           {active === "connected" && <ConnectedPlatforms />}
+          {active === "notifications" && <NotificationSettings />}
+          {active === "ai" && <AISettings />}
+          {active === "appearance" && <AppearanceSettings />}
           {active === "language" && <LanguageSettings />}
+          {active === "pipelines" && <PipelinesSettings />}
+          {active === "dashboard" && <DashboardLayoutSettings />}
+          {active === "accessibility" && <AccessibilitySettings />}
           {active === "security" && <SecuritySettings />}
           {active === "integrations" && <IntegrationsSettings />}
           {active === "billing" && <BillingSettings />}
           {active === "backup" && <BackupSyncSettings />}
           {active === "about" && <AboutSupportSettings />}
-        </main>
+        </div>
       </div>
 
       {/* FIXED FOOTER SAVE BUTTON */}
@@ -243,6 +384,60 @@ function Placeholder({ title }) {
       <h1 className="text-3xl font-bold mb-6">{title}</h1>
       <p className="text-cyan-100/70">This section is not implemented yet.</p>
     </div>
+  );
+}
+
+function Breadcrumbs({ active }) {
+  const labels = {
+    account: "Account",
+    profile: "Profile",
+    connected: "Connected Platforms",
+    notifications: "Notifications",
+    ai: "AI Settings",
+    appearance: "Appearance / Themes",
+    language: "Language & Region",
+    pipelines: "Pipelines",
+    dashboard: "Dashboard Layout",
+    accessibility: "Accessibility",
+    security: "Security & Privacy",
+    integrations: "Integrations",
+    billing: "Billing & Subscription",
+    backup: "Backup & Sync",
+    about: "About / Support",
+  };
+
+  return (
+    <div className="mb-6 flex items-center gap-2 text-gray-400 text-sm drop-shadow-[0_0_6px_rgba(255,0,0,0.4)]">
+      <span className="text-red-500">Settings</span>
+      <span className="text-red-600">/</span>
+      <span className="text-gray-300">{labels[active]}</span>
+    </div>
+  );
+}
+
+function PageHeader({ active }) {
+  const titles = {
+    account: "Account Settings",
+    profile: "Profile Settings",
+    connected: "Connected Platforms",
+    notifications: "Notifications",
+    ai: "AI Settings",
+    appearance: "Appearance & Themes",
+    language: "Language & Region",
+    pipelines: "Pipelines",
+    dashboard: "Dashboard Layout",
+    accessibility: "Accessibility",
+    security: "Security & Privacy",
+    integrations: "Integrations",
+    billing: "Billing & Subscription",
+    backup: "Backup & Sync",
+    about: "About & Support",
+  };
+
+  return (
+    <h1 className="text-3xl font-bold mb-6 text-red-500 drop-shadow-[0_0_8px_rgba(255,0,0,0.7)]">
+      {titles[active]}
+    </h1>
   );
 }
 
