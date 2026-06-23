@@ -179,6 +179,12 @@ export const useSettingsStore = create((set) => ({
     return getActiveSettingsFromBuckets(state);
   },
 
+  setDevice: (device) =>
+    set((state) => ({
+      ...state,
+      device,
+    })),
+
   load: () => {
     if (typeof window === "undefined") return;
     try {

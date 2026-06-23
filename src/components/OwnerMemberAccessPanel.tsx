@@ -13,6 +13,7 @@ export default function OwnerMemberAccessPanel() {
   const [members, setMembers] = useState<MemberRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isOwner, setIsOwner] = useState(false);
   const [savingId, setSavingId] = useState("");
   const [ownerId, setOwnerId] = useState<string>("");
   const [ownerEmail, setOwnerEmail] = useState<string>("");
@@ -24,6 +25,22 @@ export default function OwnerMemberAccessPanel() {
       setError("");
 
       try {
+        const accessRes = await fetch("/api/access/me");
+        if (!accessRes.ok) {
+          setMembers([]);
+          setIsOwner(false);
+          return;
+        }
+
+        const accessData = await accessRes.json();
+        if (!accessData?.isOwner) {
+          setMembers([]);
+          setIsOwner(false);
+          return;
+        }
+
+        setIsOwner(true);
+
         const res = await fetch("/api/admin/members");
 
         if (res.status === 403 || res.status === 401) {
@@ -95,6 +112,10 @@ export default function OwnerMemberAccessPanel() {
   }
 
   if (members.length === 0) {
+    return null;
+  }
+
+  if (!isOwner) {
     return null;
   }
 
