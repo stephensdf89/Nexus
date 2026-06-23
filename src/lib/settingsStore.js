@@ -250,6 +250,11 @@ export const useSettingsStore = create((set) => ({
         .find((c) => c.startsWith("sb-access-token="))
         ?.split("=")[1];
 
+      // Public pages and logged-out sessions should never call protected settings APIs.
+      if (!accessToken) {
+        return;
+      }
+
       const headers = { "Content-Type": "application/json" };
       if (accessToken) {
         headers["x-supabase-auth"] = decodeURIComponent(accessToken);
