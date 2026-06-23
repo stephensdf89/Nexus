@@ -91,6 +91,7 @@ export default function Topbar() {
       <div className="flex items-center gap-3 relative">
         <button
           type="button"
+          onClick={() => router.push("/notifications")}
           className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/20"
         >
           Notifications

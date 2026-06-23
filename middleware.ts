@@ -19,6 +19,7 @@ export function middleware(req: NextRequest) {
     "/pipelines",
     "/community",
     "/settings",
+    "/notifications",
   ];
 
   const { pathname } = req.nextUrl;
@@ -43,5 +44,6 @@ export const config = {
     "/pipelines/:path*",
     "/community/:path*",
     "/settings/:path*",
+    "/notifications/:path*",
   ],
 };
