@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function DashboardPage() {
@@ -113,6 +114,12 @@ export default function DashboardPage() {
           <button className="bg-slate-900 border border-cyan-400/40 px-4 py-2 rounded-lg text-sm hover:shadow-[0_0_12px_rgba(0,229,255,0.3)] transition-all duration-200 text-cyan-300">
             View Pipelines
           </button>
+          <Link
+            href="/settings"
+            className="bg-slate-900 border border-cyan-400/40 px-4 py-2 rounded-lg text-sm hover:shadow-[0_0_12px_rgba(0,229,255,0.3)] transition-all duration-200 text-cyan-300"
+          >
+            Settings
+          </Link>
           <button className="glow-neon bg-gradient-to-r from-[#00E5FF] via-[#3A7BFF] to-[#A45CFF] px-4 py-2 rounded-lg font-bold shadow-[0_0_12px_rgba(0,229,255,0.4)] transition-all duration-200 text-slate-950">
             New Automation
           </button>

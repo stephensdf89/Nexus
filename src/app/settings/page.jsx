@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Accessibility,
   Bell,
@@ -330,7 +331,12 @@ export default function SettingsPage() {
         </aside>
 
         <div className={`flex-1 overflow-y-auto p-10 pb-32 transition-[margin] duration-300 ${sidebarCollapsed ? "md:ml-0" : "md:ml-72"}`}>
-          <Breadcrumbs active={active} />
+          <div className="flex items-center justify-between mb-6">
+            <Breadcrumbs active={active} />
+            <Link href="/dashboard" className="text-cyan-300 text-sm hover:text-cyan-100 transition-colors">
+              ← Back to Dashboard
+            </Link>
+          </div>
 
           {active === "account" && <AccountSettings />}
           {active === "profile" && <ProfileSettings />}
