@@ -6,6 +6,8 @@ import {
   Bell,
   CloudUpload,
   CreditCard,
+  ChevronLeft,
+  ChevronRight,
   Globe,
   IdCard,
   Info,
@@ -29,6 +31,7 @@ export default function SettingsPage() {
   const [filtered, setFiltered] = useState([]);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalMessage, setModalMessage] = useState("");
@@ -272,14 +275,29 @@ export default function SettingsPage() {
           <Menu />
         </button>
 
+        <button
+          onClick={() => setSidebarCollapsed((prev) => !prev)}
+          className="fixed left-4 top-4 z-50 hidden rounded-lg border border-cyan-400/40 bg-slate-950/90 p-2 text-cyan-300 shadow-[0_0_12px_rgba(0,229,255,0.2)] backdrop-blur md:flex"
+        >
+          {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+        </button>
+
         {/* SIDEBAR */}
         <aside
-          className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-cyan-400/30 bg-slate-950/95 backdrop-blur-md transform transition-transform duration-300 ${
+          className={`fixed inset-y-0 left-0 z-40 w-72 overflow-y-auto border-r border-cyan-400/30 bg-slate-950/95 backdrop-blur-md transform transition-transform duration-300 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } md:translate-x-0`}
+          } ${sidebarCollapsed ? "md:-translate-x-full" : "md:translate-x-0"}`}
         >
-          <div className="p-6">
-            <h2 className="mb-3 text-xl font-semibold text-cyan-100">Settings</h2>
+          <div className="min-h-full p-6">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-xl font-semibold text-cyan-100">Settings</h2>
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className="hidden rounded-lg border border-cyan-400/30 p-2 text-cyan-300 transition-colors hover:bg-slate-800 md:inline-flex"
+              >
+                <ChevronLeft size={16} />
+              </button>
+            </div>
 
             {/* SEARCH BAR */}
             <div className="mb-6">
@@ -311,7 +329,7 @@ export default function SettingsPage() {
           </div>
         </aside>
 
-        <div className="flex-1 overflow-y-auto p-10 pb-32 md:ml-72">
+        <div className={`flex-1 overflow-y-auto p-10 pb-32 transition-[margin] duration-300 ${sidebarCollapsed ? "md:ml-0" : "md:ml-72"}`}>
           <Breadcrumbs active={active} />
 
           {active === "account" && <AccountSettings />}
@@ -333,7 +351,7 @@ export default function SettingsPage() {
       </div>
 
       {/* FIXED FOOTER SAVE BUTTON */}
-      <div className="fixed bottom-0 left-0 right-0 flex items-center justify-between border-t border-cyan-400/40 bg-slate-900/95 p-6 backdrop-blur md:left-72">
+      <div className={`fixed bottom-0 left-0 right-0 flex items-center justify-between border-t border-cyan-400/40 bg-slate-900/95 p-6 backdrop-blur transition-[left] duration-300 ${sidebarCollapsed ? "md:left-0" : "md:left-72"}`}>
         <div>
           {isSaving && <span className="font-semibold text-cyan-300">Saving settings...</span>}
           {saveSuccess && !isSaving && <span className="font-semibold text-emerald-300">Settings saved to cloud!</span>}
