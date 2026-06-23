@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getPgClient } from '@/lib/pg';
+import {
+  validateRequestHeaders,
+  createValidationErrorResponse,
+  validateRequestBody,
+  type ValidationSchema,
+} from '@/lib/requestValidation';
+
+const SETTINGS_SCHEMA: ValidationSchema = {
+  settings: {
+    type: 'object',
+    required: true,
+  },
+};
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -10,23 +23,28 @@ function getSupabase() {
 }
 
 async function getUserFromRequest(req: NextRequest) {
-  const accessToken =
-    req.cookies.get('sb-access-token')?.value ||
-    req.headers.get('x-supabase-auth') ||
-    null;
+  const { valid, errors, token } = validateRequestHeaders(req);
+  if (!valid) {
+    return { user: null, error: 'Unauthorized' };
+  }
 
-  if (!accessToken) return null;
+  if (!token) {
+    return { user: null, error: 'Unauthorized' };
+  }
 
   const supabase = getSupabase();
-  const { data: { user }, error } = await supabase.auth.getUser(accessToken);
-  if (error || !user) return null;
-  return user;
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) {
+    return { user: null, error: 'Unauthorized' };
+  }
+
+  return { user, error: null };
 }
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUserFromRequest(req);
-    if (!user) {
+    const { user, error: authError } = await getUserFromRequest(req);
+    if (!user || authError) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -53,13 +71,20 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUserFromRequest(req);
-    if (!user) {
+    const { user, error: authError } = await getUserFromRequest(req);
+    if (!user || authError) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
-    const settings = body?.settings && typeof body.settings === 'object' ? body.settings : body;
+
+    // Validate request body structure
+    const validation = validateRequestBody(body, SETTINGS_SCHEMA);
+    if (!validation.valid) {
+      return createValidationErrorResponse(validation.errors);
+    }
+
+    const settings = body.settings || body;
 
     if (!settings || typeof settings !== 'object') {
       return NextResponse.json({ error: 'Invalid settings payload' }, { status: 400 });

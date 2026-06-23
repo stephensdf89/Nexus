@@ -2,8 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPgClient } from "@/lib/pg";
 import { requireOwner } from "@/lib/serverAccess";
 import { writeAccessAuditLog } from "@/lib/serverAccess";
+import {
+  validateRequestBody,
+  createValidationErrorResponse,
+  type ValidationSchema,
+} from "@/lib/requestValidation";
 
 type AccessLevel = "user" | "pro" | "admin";
+
+const UPDATE_MEMBER_SCHEMA: ValidationSchema = {
+  userId: {
+    type: "string",
+    required: true,
+    minLength: 1,
+  },
+  accessLevel: {
+    type: "string",
+    required: true,
+    enum: ["user", "pro", "admin"],
+  },
+};
 
 function normalizeAccessLevel(value: unknown): AccessLevel {
   const role = String(value || "user").toLowerCase();
@@ -51,15 +69,21 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const userId = String(body?.userId || "").trim();
-    const accessLevel = normalizeAccessLevel(body?.accessLevel);
 
-    if (!userId) {
-      return NextResponse.json({ error: "userId is required" }, { status: 400 });
+    // Validate request body
+    const validation = validateRequestBody(body, UPDATE_MEMBER_SCHEMA);
+    if (!validation.valid) {
+      return createValidationErrorResponse(validation.errors);
     }
 
+    const userId = String(validation.data?.userId || "").trim();
+    const accessLevel = String(validation.data?.accessLevel || "user") as AccessLevel;
+
     if (userId === auth.user.id) {
-      return NextResponse.json({ error: "Owner access is managed by environment settings" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Owner access is managed by environment settings" },
+        { status: 400 }
+      );
     }
 
     const db = await getPgClient();

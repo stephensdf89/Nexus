@@ -1,7 +1,7 @@
 -- Enable RLS and apply ownership policies for pipeline and creator tables.
 -- Safe to re-run: each policy is dropped/re-created.
 
--- user_settings
+-- user_settings (legacy, snake_case)
 ALTER TABLE IF EXISTS public.user_settings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can access their own data" ON public.user_settings;
 CREATE POLICY "Users can access their own data"
@@ -10,6 +10,16 @@ FOR ALL
 TO authenticated
 USING ((select auth.uid()) = user_id)
 WITH CHECK ((select auth.uid()) = user_id);
+
+-- UserSettings (Prisma ORM table, camelCase)
+ALTER TABLE IF EXISTS public."UserSettings" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can access their own data" ON public."UserSettings";
+CREATE POLICY "Users can access their own data"
+ON public."UserSettings"
+FOR ALL
+TO authenticated
+USING ((select auth.uid()) = "userId")
+WITH CHECK ((select auth.uid()) = "userId");
 
 -- pipelines
 ALTER TABLE IF EXISTS public.pipelines ENABLE ROW LEVEL SECURITY;
