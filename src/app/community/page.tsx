@@ -1,5 +1,4 @@
 import AppShell from "@/components/AppShell";
-import Navigation from "@/components/Navigation";
 
 const posts = [
   {
@@ -22,9 +21,6 @@ const posts = [
 export default function CommunityPage() {
   return (
     <AppShell>
-      <div className="px-8 py-3 bg-slate-950/60 border-b border-cyan-400/20">
-        <Navigation />
-      </div>
       <section className="space-y-6">
         <h1 className="text-3xl font-bold">Community</h1>
         <div className="space-y-4">

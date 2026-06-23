@@ -1,52 +1,23 @@
 "use client";
 
-import Link from "next/link";
-import Navigation from "@/components/Navigation";
+import AppShell from "@/components/AppShell";
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
-      {/* NAVIGATION */}
-      <div className="px-8 py-3 bg-slate-950/60 border-b border-cyan-400/20">
-        <Navigation />
-      </div>
-
-      {/* TOP BAR */}
-      <header className="flex items-center justify-between px-8 py-4 border-b border-cyan-400/40 
-                         shadow-[0_0_20px_rgba(0,229,255,0.1)] bg-slate-950/80 backdrop-blur-md">
+    <AppShell>
+      <div className="space-y-8">
+        {/* HEADER */}
         <div>
-          <h1 className="text-3xl font-bold text-cyan-100 drop-shadow-[0_0_8px_rgba(0,229,255,0.25)]">
+          <h1 className="text-3xl font-bold text-cyan-100">
             Creator Nexus
           </h1>
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-400 text-sm mt-1">
             Your creator cockpit — analytics, tools, and automations in one place.
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <button className="bg-slate-900 border border-cyan-400/40 px-4 py-2 rounded-lg text-sm 
-                             hover:shadow-[0_0_12px_rgba(0,229,255,0.3)] transition-all duration-200 text-cyan-300">
-            View Pipelines
-          </button>
-          <Link
-            href="/settings"
-            className="bg-slate-900 border border-cyan-400/40 px-4 py-2 rounded-lg text-sm 
-                       hover:shadow-[0_0_12px_rgba(0,229,255,0.3)] transition-all duration-200 text-cyan-300"
-          >
-            Settings
-          </Link>
-          <button className="glow-neon bg-gradient-to-r from-[#00E5FF] via-[#3A7BFF] to-[#A45CFF] px-4 py-2 rounded-lg font-bold 
-                             shadow-[0_0_12px_rgba(0,229,255,0.4)] transition-all duration-200 text-slate-950">
-            New Automation
-          </button>
-        </div>
-      </header>
-
-      {/* MAIN CONTENT */}
-      <main className="flex-1 p-8">
-
         {/* SUMMARY CARDS */}
-        <section className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <SummaryCard label="Total Reach" value="128.4K" change="+12.3%" accent="cyan" />
           <SummaryCard label="Active Pipelines" value="4" change="+1" accent="cyan" />
           <SummaryCard label="Monthly Revenue" value="$2,340" change="+8.1%" accent="purple" />
@@ -104,8 +75,8 @@ export default function DashboardPage() {
           </DashboardWidget>
 
         </section>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
 

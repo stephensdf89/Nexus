@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import AccessibilityButton from "@/components/AccessibilityButton";
 import { getSupabaseClient } from "@/lib/supabase";
 import { clearAuthCookies } from "@/lib/auth";
 
@@ -87,13 +88,15 @@ export default function Topbar() {
         <h2 className="text-lg font-semibold">Welcome back</h2>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 relative">
         <button
           type="button"
           className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/20"
         >
           Notifications
         </button>
+
+        <AccessibilityButton />
 
         <div className="hidden text-right md:block">
           <p className="text-sm">{session.email || "Creator account"}</p>

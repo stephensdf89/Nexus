@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Navigation from "@/components/Navigation";
 import {
   Accessibility,
   Bell,
@@ -259,9 +258,6 @@ export default function SettingsPage() {
 
   return (
     <AppShell showSidebar={false} contentClassName="flex-1 p-0">
-      <div className="px-8 py-3 bg-slate-950/60 border-b border-cyan-400/20">
-        <Navigation />
-      </div>
       <ConfirmModal
         open={modalOpen}
         message={modalMessage}
