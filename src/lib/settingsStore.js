@@ -226,8 +226,7 @@ export const useSettingsStore = create((set) => ({
       // stale or empty server row never overwrites the user's local changes.
       const localRaw = localStorage.getItem("global-settings");
       if (localRaw) {
-        // Local settings exist — push them to the server instead (local wins).
-        useSettingsStore.getState().syncToServer();
+        // Local settings exist, so keep them as the source of truth on mount.
         return;
       }
 

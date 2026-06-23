@@ -45,17 +45,22 @@ export function isOwnerIdentity(user: { id: string; email?: string | null }) {
 }
 
 export async function getAccessLevelForUser(userId: string): Promise<AccessLevel> {
-  const db = await getPgClient();
-  const result = await db.query(
-    `SELECT access_level
-     FROM public.user_access
-     WHERE user_id = $1
-     LIMIT 1`,
-    [userId]
-  );
+  try {
+    const db = await getPgClient();
+    const result = await db.query(
+      `SELECT access_level
+       FROM public.user_access
+       WHERE user_id = $1
+       LIMIT 1`,
+      [userId]
+    );
 
-  const value = String(result.rows[0]?.access_level || "user") as AccessLevel;
-  return value === "admin" || value === "pro" ? value : "user";
+    const value = String(result.rows[0]?.access_level || "user") as AccessLevel;
+    return value === "admin" || value === "pro" ? value : "user";
+  } catch (error) {
+    console.error("Access level lookup failed:", error);
+    return "user";
+  }
 }
 
 export async function getEffectiveAccess(user: { id: string; email?: string | null }) {
@@ -89,18 +94,23 @@ export async function getEffectiveAccessByEmail(email?: string | null) {
     return { isOwner: false, accessLevel: "user" as AccessLevel };
   }
 
-  const db = await getPgClient();
-  const result = await db.query(
-    `SELECT COALESCE(ua.access_level, 'user') AS access_level
-     FROM auth.users u
-     LEFT JOIN public.user_access ua ON ua.user_id = u.id
-     WHERE lower(u.email) = lower($1)
-     LIMIT 1`,
-    [normalizedEmail]
-  );
+  try {
+    const db = await getPgClient();
+    const result = await db.query(
+      `SELECT COALESCE(ua.access_level, 'user') AS access_level
+       FROM auth.users u
+       LEFT JOIN public.user_access ua ON ua.user_id = u.id
+       WHERE lower(u.email) = lower($1)
+       LIMIT 1`,
+      [normalizedEmail]
+    );
 
-  const accessLevel = normalizeAccessLevel(result.rows[0]?.access_level);
-  return { isOwner: false, accessLevel };
+    const accessLevel = normalizeAccessLevel(result.rows[0]?.access_level);
+    return { isOwner: false, accessLevel };
+  } catch (error) {
+    console.error("Email access lookup failed:", error);
+    return { isOwner: false, accessLevel: "user" as AccessLevel };
+  }
 }
 
 export async function writeAccessAuditLog(args: {
