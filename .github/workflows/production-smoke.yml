@@ -1,0 +1,33 @@
+name: Production Smoke Tests
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE_URL: ${{ vars.PRODUCTION_BASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run production smoke checks
+        run: node scripts/smoke.mjs --base-url "${BASE_URL:-https://creatornexuspro.com}"
+
+      - name: Notify Slack on failure
+        if: failure() && secrets.SLACK_WEBHOOK_URL != ''
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"Creator Nexus production smoke test failed. Check GitHub Actions run details."}' \
+            "${{ secrets.SLACK_WEBHOOK_URL }}"
