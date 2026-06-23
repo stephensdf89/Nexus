@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AccessibilityButton from "@/components/AccessibilityButton";
-import { getSupabaseClient } from "@/lib/supabase";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 import { clearAuthCookies } from "@/lib/auth";
 
 type SessionState = {
@@ -23,6 +23,10 @@ export default function Topbar() {
     try {
       supabase = getSupabaseClient();
     } catch {
+      return;
+    }
+
+    if (!supabase) {
       return;
     }
 
@@ -72,6 +76,9 @@ export default function Topbar() {
 
     try {
       const supabase = getSupabaseClient();
+      if (!supabase) {
+        return;
+      }
       await supabase.auth.signOut();
       clearAuthCookies();
       router.replace("/login");
