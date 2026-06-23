@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getPgClient } from "@/lib/pg";
 
 function isUuid(value?: string) {
@@ -21,7 +21,7 @@ async function resolveUserId(email: string, sessionUserId?: string) {
   return { pg, userId: userLookup.rows[0]?.id as string | undefined };
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const headerEmail = req.headers.get("x-user-email") || undefined;
     const headerUserId = req.headers.get("x-user-id") || undefined;
@@ -67,21 +67,34 @@ export async function GET(req: Request) {
       );
     }
 
-    if (integration.rows.length === 0) {
+    let platformId = "";
+    let pageName = "Facebook Account";
+    let token = "";
+
+    if (integration.rows.length > 0) {
+      const row = integration.rows[0] as {
+        platform_id: string;
+        page_name: string;
+        access_token: string;
+        page_access_token: string | null;
+      };
+      platformId = row.platform_id;
+      pageName = row.page_name;
+      token = row.page_access_token || row.access_token;
+    } else {
+      platformId = req.cookies.get("fb_platform_id")?.value || "";
+      pageName = req.cookies.get("fb_page_name")?.value || "Facebook Account";
+      const cookiePageAccessToken = req.cookies.get("fb_page_access_token")?.value || "";
+      const cookieAccessToken = req.cookies.get("fb_access_token")?.value || "";
+      token = cookiePageAccessToken || cookieAccessToken;
+    }
+
+    if (!platformId || !token) {
       return NextResponse.json({ connected: false, error: "Facebook not connected" }, { status: 404 });
     }
 
-    const row = integration.rows[0] as {
-      platform_id: string;
-      page_name: string;
-      access_token: string;
-      page_access_token: string | null;
-    };
-
-    const token = row.page_access_token || row.access_token;
-
     const pageFieldsRes = await fetch(
-      `https://graph.facebook.com/v18.0/${row.platform_id}?fields=id,name,fan_count,followers_count&access_token=${encodeURIComponent(token)}`
+      `https://graph.facebook.com/v18.0/${platformId}?fields=id,name,fan_count,followers_count&access_token=${encodeURIComponent(token)}`
     );
     const pageFields = await pageFieldsRes.json();
 
@@ -90,7 +103,7 @@ export async function GET(req: Request) {
     let warning: string | undefined;
 
     const insightsRes = await fetch(
-      `https://graph.facebook.com/v18.0/${row.platform_id}/insights?metric=page_impressions,page_engaged_users&period=day&access_token=${encodeURIComponent(token)}`
+      `https://graph.facebook.com/v18.0/${platformId}/insights?metric=page_impressions,page_engaged_users&period=day&access_token=${encodeURIComponent(token)}`
     );
     const insights = await insightsRes.json();
 
@@ -114,8 +127,8 @@ export async function GET(req: Request) {
     return NextResponse.json({
       connected: true,
       page: {
-        id: pageFields.id || row.platform_id,
-        name: pageFields.name || row.page_name,
+        id: pageFields.id || platformId,
+        name: pageFields.name || pageName,
         fanCount: typeof pageFields.fan_count === "number" ? pageFields.fan_count : null,
         followersCount: typeof pageFields.followers_count === "number" ? pageFields.followers_count : null,
       },

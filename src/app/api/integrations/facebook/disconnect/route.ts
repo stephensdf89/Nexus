@@ -61,7 +61,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    const secure = process.env.NODE_ENV === "production";
+    response.cookies.set("fb_platform_id", "", { httpOnly: true, secure, sameSite: "lax", maxAge: 0 });
+    response.cookies.set("fb_page_name", "", { httpOnly: true, secure, sameSite: "lax", maxAge: 0 });
+    response.cookies.set("fb_access_token", "", { httpOnly: true, secure, sameSite: "lax", maxAge: 0 });
+    response.cookies.set("fb_page_access_token", "", { httpOnly: true, secure, sameSite: "lax", maxAge: 0 });
+    return response;
   } catch (error) {
     console.error("Error disconnecting Facebook:", error);
     return NextResponse.json(

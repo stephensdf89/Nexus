@@ -17,6 +17,43 @@ function getFacebookRedirectUri(req: NextRequest) {
   return `${req.nextUrl.origin}/api/integrations/facebook/callback`;
 }
 
+function withFacebookCookies(
+  response: NextResponse,
+  payload: {
+    platformId: string;
+    pageName: string;
+    accessToken: string;
+    pageAccessToken: string | null;
+  }
+) {
+  const secure = process.env.NODE_ENV === "production";
+  response.cookies.set("fb_platform_id", payload.platformId, {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+  response.cookies.set("fb_page_name", payload.pageName, {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+  response.cookies.set("fb_access_token", payload.accessToken, {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+  response.cookies.set("fb_page_access_token", payload.pageAccessToken || "", {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+  return response;
+}
+
 async function ensureIntegrationsTable() {
   const pg = await getPgClient();
   await pg.query(`
@@ -176,21 +213,36 @@ export async function GET(req: NextRequest) {
       userId = userLookup.rows[0]?.id;
     }
 
-    if (!isUuid(userId)) {
-      return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_user_id", req.url));
+    if (!isUuid(userId) && !email) {
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_identity", req.url));
     }
 
-    await upsertIntegration(pg, {
-      userId,
-      email,
+    let storageWarning = "";
+    try {
+      await upsertIntegration(pg, {
+        userId,
+        email,
+        platformId,
+        pageName,
+        accessToken: tokenData.access_token,
+        pageAccessToken,
+      });
+    } catch (storageError) {
+      console.error("Facebook callback storage warning:", storageError);
+      storageWarning = "&warning=storage_fallback";
+    }
+
+    // Redirect with success and store secure cookie fallback for analytics/status.
+    const response = NextResponse.redirect(
+      new URL(`/settings?tab=connected&platform=facebook&status=connected${storageWarning}`, req.url)
+    );
+    withFacebookCookies(response, {
       platformId,
       pageName,
       accessToken: tokenData.access_token,
       pageAccessToken,
     });
-
-    // Redirect with success
-    return NextResponse.redirect(new URL("/settings?tab=connected&platform=facebook&status=connected", req.url));
+    return response;
   } catch (error) {
     console.error("Facebook callback error:", error);
     const code = (error as { code?: string }).code;
