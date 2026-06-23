@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AppShell from "@/components/AppShell";
+import AccessLevelGate from "@/components/AccessLevelGate";
 import RealtimeAnalyticsWidget from "@/components/RealtimeAnalyticsWidget";
 import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
 import { useAnalytics } from "@/hooks/useAnalytics";
@@ -50,6 +51,11 @@ export default function AnalyticsPage() {
 
   return (
     <AppShell>
+      <AccessLevelGate
+        minimum="pro"
+        blockedTitle="Analytics requires Pro access"
+        blockedDescription="Ask the account owner to upgrade your member access from the dashboard."
+      >
       <section className="space-y-6">
         {/* HEADER */}
         <div>
@@ -184,6 +190,7 @@ export default function AnalyticsPage() {
           <AdvancedAnalyticsDashboard />
         </article>
       </section>
+      </AccessLevelGate>
     </AppShell>
   );
 }

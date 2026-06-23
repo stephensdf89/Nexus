@@ -51,14 +51,12 @@ export const useAnalytics = () => {
         setError(null);
 
         // Fetch summary
-        const summaryRes = await fetch("/api/analytics/summary", {
-          headers: {
-            "x-user-id": user.id || "",
-            "x-user-email": user.email || "",
-          },
-        });
+        const summaryRes = await fetch("/api/analytics/summary");
 
         if (!summaryRes.ok) {
+          if (summaryRes.status === 403) {
+            throw new Error("Pro access required for analytics");
+          }
           throw new Error("Failed to fetch analytics summary");
         }
 
@@ -66,14 +64,12 @@ export const useAnalytics = () => {
         setSummary(summaryData);
 
         // Fetch timeseries (default 30 days)
-        const timeseriesRes = await fetch("/api/analytics/timeseries?days=30", {
-          headers: {
-            "x-user-id": user.id || "",
-            "x-user-email": user.email || "",
-          },
-        });
+        const timeseriesRes = await fetch("/api/analytics/timeseries?days=30");
 
         if (!timeseriesRes.ok) {
+          if (timeseriesRes.status === 403) {
+            throw new Error("Pro access required for analytics");
+          }
           throw new Error("Failed to fetch analytics timeseries");
         }
 

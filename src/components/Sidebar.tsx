@@ -8,6 +8,7 @@ import { useSidebarCollapse } from "./CollapsibleSidebarWrapper";
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/analytics", label: "Analytics" },
+  { href: "/assistant", label: "Assistant" },
   { href: "/pipelines", label: "Pipelines" },
   { href: "/community", label: "Community" },
   { href: "/settings", label: "Settings" },

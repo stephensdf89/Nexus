@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { authOptions } from "@/lib/auth-options";
 import { getPgClient } from "@/lib/pg";
+import { requireAccessFromSessionUser } from "@/lib/serverAccess";
 
 export async function POST(
   req: NextRequest,
@@ -13,6 +14,11 @@ export async function POST(
 
     if (!session?.user?.name) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const access = await requireAccessFromSessionUser(session.user, "pro");
+    if ("error" in access) {
+      return NextResponse.json({ error: access.error }, { status: access.status });
     }
 
     const { id } = await params;

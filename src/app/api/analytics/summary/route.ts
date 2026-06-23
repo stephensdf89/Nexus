@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAccess } from "@/lib/serverAccess";
 
 interface PlatformMetrics {
   platform: string;
@@ -18,15 +19,13 @@ interface AnalyticsSummary {
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = req.headers.get("x-user-id");
-    const userEmail = req.headers.get("x-user-email");
-
-    if (!userId && !userEmail) {
-      return NextResponse.json(
-        { error: "Missing user identity headers" },
-        { status: 401 }
-      );
+    const auth = await requireAccess(req, "pro");
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+
+    const userId = auth.user.id;
+    const userEmail = auth.user.email || "";
 
     // Fetch Facebook analytics if connected
     let facebookMetrics: PlatformMetrics | null = null;
@@ -35,8 +34,8 @@ export async function GET(req: NextRequest) {
         `${process.env.NEXTAUTH_URL || "https://www.creatornexuspro.com"}/api/integrations/facebook/analytics`,
         {
           headers: {
-            "x-user-id": userId || "",
-            "x-user-email": userEmail || "",
+            "x-user-id": userId,
+            "x-user-email": userEmail,
           },
         }
       );

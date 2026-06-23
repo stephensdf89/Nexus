@@ -3,6 +3,8 @@
 import AppShell from "@/components/AppShell";
 import CreatorToolsPanel from "@/components/CreatorToolsPanel";
 import NotificationsCenter from "@/components/NotificationsCenter";
+import OwnerMemberAccessPanel from "@/components/OwnerMemberAccessPanel";
+import OwnerAuditLogPanel from "@/components/OwnerAuditLogPanel";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { ViewsOverTimeChart, PlatformBreakdownChart } from "@/components/AnalyticsCharts";
 
@@ -93,6 +95,9 @@ export default function DashboardPage() {
           <DashboardWidget title="Creator Tools">
             <CreatorToolsPanel />
           </DashboardWidget>
+
+          <OwnerMemberAccessPanel />
+          <OwnerAuditLogPanel />
 
           <DashboardWidget title="Notifications">
             <NotificationsCenter />

@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { requireAccess } from "@/lib/serverAccess";
 
 interface StreamMetrics {
   timestamp: number;
@@ -36,12 +37,13 @@ async function fetchPlatformAnalytics(
 }
 
 export async function GET(req: NextRequest) {
-  const userId = req.headers.get("x-user-id");
-  const userEmail = req.headers.get("x-user-email");
-
-  if (!userId && !userEmail) {
-    return new Response("Unauthorized", { status: 401 });
+  const auth = await requireAccess(req, "pro");
+  if ("error" in auth) {
+    return new Response(auth.error, { status: auth.status });
   }
+
+  const userId = auth.user.id;
+  const userEmail = auth.user.email || "";
 
   const textEncoder = new TextEncoder();
   let isClosed = false;
@@ -73,8 +75,8 @@ export async function GET(req: NextRequest) {
           const baseUrl =
             process.env.NEXTAUTH_URL || "https://www.creatornexuspro.com";
           const identityHeaders = {
-            "x-user-id": userId || "",
-            "x-user-email": userEmail || "",
+            "x-user-id": userId,
+            "x-user-email": userEmail,
           };
 
           const platforms = [

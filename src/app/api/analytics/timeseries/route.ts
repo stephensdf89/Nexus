@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAccess } from "@/lib/serverAccess";
 
 interface DailyMetric {
   date: string;
@@ -13,15 +14,11 @@ interface PlatformTimeseries {
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = req.headers.get("x-user-id");
-    const userEmail = req.headers.get("x-user-email");
+    const auth = await requireAccess(req, "pro");
     const days = req.nextUrl.searchParams.get("days") || "30";
 
-    if (!userId && !userEmail) {
-      return NextResponse.json(
-        { error: "Missing user identity headers" },
-        { status: 401 }
-      );
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     // Generate mock time series data for the last N days

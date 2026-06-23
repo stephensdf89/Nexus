@@ -1,4 +1,7 @@
+"use client";
+
 import AppShell from "@/components/AppShell";
+import AccessLevelGate from "@/components/AccessLevelGate";
 
 const board = {
   Ideas: ["30-day creator challenge", "Livestream workflow breakdown"],
@@ -11,6 +14,11 @@ const board = {
 export default function PipelinesPage() {
   return (
     <AppShell>
+      <AccessLevelGate
+        minimum="pro"
+        blockedTitle="Pipelines requires Pro access"
+        blockedDescription="Ask the account owner to upgrade your member access from the dashboard."
+      >
       <section className="space-y-6">
         <h1 className="text-3xl font-bold">Pipelines</h1>
 
@@ -29,6 +37,7 @@ export default function PipelinesPage() {
           ))}
         </div>
       </section>
+      </AccessLevelGate>
     </AppShell>
   );
 }
