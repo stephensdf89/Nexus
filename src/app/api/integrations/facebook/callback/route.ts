@@ -50,18 +50,35 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL("/settings?tab=connected&error=token_failed", req.url));
     }
 
-    // Get user's pages
+    // Try to fetch pages when page scopes are granted.
+    // If page scopes are unavailable, fall back to basic profile so connect still works.
+    let platformId = "";
+    let pageName = "";
+    let pageAccessToken: string | null = null;
+
     const pagesResponse = await fetch(
       `https://graph.facebook.com/me/accounts?access_token=${tokenData.access_token}`
     );
     const pagesData = await pagesResponse.json();
 
-    if (!pagesData.data || pagesData.data.length === 0) {
-      return NextResponse.redirect(new URL("/settings?tab=connected&error=no_pages", req.url));
-    }
+    if (Array.isArray(pagesData.data) && pagesData.data.length > 0) {
+      const page = pagesData.data[0];
+      platformId = page.id;
+      pageName = page.name;
+      pageAccessToken = page.access_token || null;
+    } else {
+      const meResponse = await fetch(
+        `https://graph.facebook.com/me?fields=id,name&access_token=${tokenData.access_token}`
+      );
+      const meData = await meResponse.json();
 
-    // Get first page (user can select others later)
-    const page = pagesData.data[0];
+      if (!meData?.id) {
+        return NextResponse.redirect(new URL("/settings?tab=connected&error=no_profile", req.url));
+      }
+
+      platformId = meData.id;
+      pageName = meData.name || "Facebook Account";
+    }
 
     // Store integration in database
     const pg = await getPgClient();
@@ -78,10 +95,10 @@ export async function GET(req: NextRequest) {
       [
         userId,
         "facebook",
-        page.id,
-        page.name,
+        platformId,
+        pageName,
         tokenData.access_token,
-        page.access_token,
+        pageAccessToken,
       ]
     );
 
