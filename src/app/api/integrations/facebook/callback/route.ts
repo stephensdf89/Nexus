@@ -19,6 +19,77 @@ function getFacebookRedirectUri(req: NextRequest) {
   return `${req.nextUrl.origin}/api/integrations/facebook/callback`;
 }
 
+async function ensureIntegrationsTable() {
+  const pg = await getPgClient();
+  await pg.query(`
+    CREATE TABLE IF NOT EXISTS integrations (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID,
+      user_email VARCHAR,
+      platform VARCHAR NOT NULL,
+      platform_id VARCHAR NOT NULL,
+      page_name VARCHAR,
+      access_token TEXT NOT NULL,
+      page_access_token TEXT,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  await pg.query(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_integrations_uid_platform ON integrations (user_id, platform, platform_id) WHERE user_id IS NOT NULL"
+  );
+  await pg.query(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_integrations_uemail_platform ON integrations (user_email, platform, platform_id) WHERE user_email IS NOT NULL"
+  );
+
+  return pg;
+}
+
+async function upsertIntegration(
+  pg: Awaited<ReturnType<typeof getPgClient>>,
+  params: {
+    userId?: string;
+    email?: string;
+    platformId: string;
+    pageName: string;
+    accessToken: string;
+    pageAccessToken: string | null;
+  }
+) {
+  const { userId, email, platformId, pageName, accessToken, pageAccessToken } = params;
+
+  if (isUuid(userId)) {
+    try {
+      await pg.query(
+        `INSERT INTO integrations (user_id, platform, platform_id, page_name, access_token, page_access_token, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())
+         ON CONFLICT (user_id, platform, platform_id)
+         DO UPDATE SET access_token = $5, page_access_token = $6, updated_at = NOW()`,
+        [userId, "facebook", platformId, pageName, accessToken, pageAccessToken]
+      );
+      return;
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      if (code !== "42703") {
+        throw error;
+      }
+    }
+  }
+
+  if (!email) {
+    throw new Error("missing_identity_for_fallback");
+  }
+
+  await pg.query(
+    `INSERT INTO integrations (user_email, platform, platform_id, page_name, access_token, page_access_token, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, NOW())
+     ON CONFLICT (user_email, platform, platform_id)
+     DO UPDATE SET access_token = $5, page_access_token = $6, updated_at = NOW()`,
+    [email, "facebook", platformId, pageName, accessToken, pageAccessToken]
+  );
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -88,7 +159,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Store integration in database
-    const pg = await getPgClient();
+    const pg = await ensureIntegrationsTable();
     let userId = sessionUserId || cookieUserId;
 
     if (!isUuid(userId)) {
@@ -107,25 +178,25 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_user_id", req.url));
     }
 
-    await pg.query(
-      `INSERT INTO integrations (user_id, platform, platform_id, page_name, access_token, page_access_token, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())
-       ON CONFLICT (user_id, platform, platform_id) 
-       DO UPDATE SET access_token = $5, page_access_token = $6, updated_at = NOW()`,
-      [
-        userId,
-        "facebook",
-        platformId,
-        pageName,
-        tokenData.access_token,
-        pageAccessToken,
-      ]
-    );
+    await upsertIntegration(pg, {
+      userId,
+      email,
+      platformId,
+      pageName,
+      accessToken: tokenData.access_token,
+      pageAccessToken,
+    });
 
     // Redirect with success
     return NextResponse.redirect(new URL("/settings?tab=connected&platform=facebook&status=connected", req.url));
   } catch (error) {
     console.error("Facebook callback error:", error);
-    return NextResponse.redirect(new URL("/settings?tab=connected&error=server_error", req.url));
+    const code = (error as { code?: string }).code;
+    const reason = code === "42P01"
+      ? "table_missing"
+      : code === "42703"
+        ? "schema_mismatch"
+        : "callback_failed";
+    return NextResponse.redirect(new URL(`/settings?tab=connected&error=server_error&reason=${reason}`, req.url));
   }
 }

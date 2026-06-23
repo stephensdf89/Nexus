@@ -45,14 +45,31 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Missing user id in session" }, { status: 400 });
     }
 
-    const integration = await pg.query(
-      `SELECT platform_id, page_name, access_token, page_access_token
-       FROM integrations
-       WHERE user_id = $1 AND platform = 'facebook'
-       ORDER BY created_at DESC
-       LIMIT 1`,
-      [userId]
-    );
+    let integration;
+    try {
+      integration = await pg.query(
+        `SELECT platform_id, page_name, access_token, page_access_token
+         FROM integrations
+         WHERE user_id = $1 AND platform = 'facebook'
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [userId]
+      );
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      if (code !== "42703") {
+        throw error;
+      }
+
+      integration = await pg.query(
+        `SELECT platform_id, page_name, access_token, page_access_token
+         FROM integrations
+         WHERE user_email = $1 AND platform = 'facebook'
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [email]
+      );
+    }
 
     if (integration.rows.length === 0) {
       return NextResponse.json({ connected: false, error: "Facebook not connected" }, { status: 404 });

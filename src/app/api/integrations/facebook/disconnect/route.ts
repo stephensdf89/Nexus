@@ -45,11 +45,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing user id in session" }, { status: 400 });
     }
 
-    await pg.query(
-      `DELETE FROM integrations 
-       WHERE user_id = $1 AND platform = 'facebook' AND platform_id = $2`,
-      [userId, platformId]
-    );
+    try {
+      await pg.query(
+        `DELETE FROM integrations
+         WHERE user_id = $1 AND platform = 'facebook' AND platform_id = $2`,
+        [userId, platformId]
+      );
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      if (code !== "42703") {
+        throw error;
+      }
+
+      await pg.query(
+        `DELETE FROM integrations
+         WHERE user_email = $1 AND platform = 'facebook' AND platform_id = $2`,
+        [email, platformId]
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

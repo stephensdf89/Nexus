@@ -38,13 +38,29 @@ export async function GET(req: Request) {
       });
     }
 
-    const result = await pg.query(
-      `SELECT platform_id, page_name, access_token, created_at 
-       FROM integrations 
-       WHERE user_id = $1 AND platform = 'facebook'
-       ORDER BY created_at DESC`,
-      [userId]
-    );
+    let result;
+    try {
+      result = await pg.query(
+        `SELECT platform_id, page_name, access_token, created_at
+         FROM integrations
+         WHERE user_id = $1 AND platform = 'facebook'
+         ORDER BY created_at DESC`,
+        [userId]
+      );
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      if (code !== "42703") {
+        throw error;
+      }
+
+      result = await pg.query(
+        `SELECT platform_id, page_name, access_token, created_at
+         FROM integrations
+         WHERE user_email = $1 AND platform = 'facebook'
+         ORDER BY created_at DESC`,
+        [email]
+      );
+    }
 
     return NextResponse.json({
       connected: result.rows.length > 0,
