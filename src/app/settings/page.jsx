@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import ConfirmModal from "@/components/ConfirmModal";
+import FacebookIntegration from "@/components/FacebookIntegration";
 import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function SettingsPage() {
@@ -1164,13 +1165,7 @@ function ProfileSettings() {
 }
 
 function ConnectedPlatforms() {
-  const platforms = [
-    {
-      name: "Facebook",
-      color: "bg-[#00E5FF]",
-      status: "Not Connected",
-      button: "Connect",
-    },
+  const otherPlatforms = [
     {
       name: "Instagram",
       color: "bg-[#A45CFF]",
@@ -1232,7 +1227,11 @@ function ConnectedPlatforms() {
 
       {/* PLATFORM GRID */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {platforms.map((p) => (
+        {/* Facebook - Using Real Integration Component */}
+        <FacebookIntegration />
+
+        {/* Other Platforms - Coming Soon */}
+        {otherPlatforms.map((p) => (
           <div
             key={p.name}
             className="flex flex-col justify-between rounded border border-cyan-400/40 bg-slate-900/50 p-6"

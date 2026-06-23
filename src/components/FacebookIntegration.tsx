@@ -12,11 +12,13 @@ interface FacebookStatus {
   connected: boolean;
   pages: FacebookPage[];
   status: string;
+  error?: string;
 }
 
 export default function FacebookIntegration() {
   const [facebookStatus, setFacebookStatus] = useState<FacebookStatus | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>("");
 
   // Fetch Facebook connection status on mount
   useEffect(() => {
@@ -25,29 +27,49 @@ export default function FacebookIntegration() {
 
   const fetchStatus = async () => {
     try {
+      setError("");
       const res = await fetch("/api/integrations/facebook/status");
+      
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      
       const data = await res.json();
       setFacebookStatus(data);
-    } catch (error) {
-      console.error("Error fetching Facebook status:", error);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to fetch Facebook status";
+      console.error("Error fetching Facebook status:", err);
+      setError(errorMsg);
+      setFacebookStatus(null);
     }
   };
 
   const handleConnect = async () => {
     setLoading(true);
+    setError("");
     try {
       const response = await fetch("/api/integrations/facebook/auth", {
         method: "POST",
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
 
       if (data.authUrl) {
+        // Redirect to Facebook OAuth
         window.location.href = data.authUrl;
+      } else if (data.error) {
+        setError(data.error);
       } else {
-        console.error("Failed to get auth URL");
+        setError("Failed to get authentication URL");
       }
-    } catch (error) {
-      console.error("Error initiating Facebook auth:", error);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Error initiating Facebook auth";
+      console.error("Error initiating Facebook auth:", err);
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -57,16 +79,25 @@ export default function FacebookIntegration() {
     if (!facebookStatus?.pages[0]?.platform_id) return;
 
     try {
-      await fetch("/api/integrations/facebook/disconnect", {
+      setError("");
+      const response = await fetch("/api/integrations/facebook/disconnect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           platformId: facebookStatus.pages[0].platform_id,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      setError("");
       fetchStatus();
-    } catch (error) {
-      console.error("Error disconnecting Facebook:", error);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Error disconnecting Facebook";
+      console.error("Error disconnecting Facebook:", err);
+      setError(errorMsg);
     }
   };
 
@@ -79,10 +110,16 @@ export default function FacebookIntegration() {
 
         <h2 className="text-xl font-semibold mb-3">Facebook</h2>
 
+        {error && (
+          <div className="mb-4 p-3 rounded bg-red-900/30 border border-red-400/50">
+            <p className="text-red-300 text-sm">{error}</p>
+          </div>
+        )}
+
         <p className="mb-4 text-cyan-100/70">
           Status:{" "}
           <span className={`font-bold ${facebookStatus?.connected ? "text-green-400" : "text-[#FF0033]"}`}>
-            {facebookStatus?.status}
+            {facebookStatus?.status || "Loading..."}
           </span>
         </p>
 
@@ -106,15 +143,16 @@ export default function FacebookIntegration() {
         {facebookStatus?.connected ? (
           <button
             onClick={handleDisconnect}
-            className="rounded bg-red-700 px-4 py-2 font-bold hover:bg-red-600 transition-colors"
+            disabled={loading}
+            className="rounded bg-red-700 px-4 py-2 font-bold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Disconnect
+            {loading ? "Disconnecting..." : "Disconnect"}
           </button>
         ) : (
           <button
             onClick={handleConnect}
             disabled={loading}
-            className="rounded bg-[#1877F2] px-4 py-2 font-bold hover:bg-[#165ec7] transition-colors disabled:opacity-50"
+            className="rounded bg-[#1877F2] px-4 py-2 font-bold hover:bg-[#165ec7] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Connecting..." : "Connect"}
           </button>
