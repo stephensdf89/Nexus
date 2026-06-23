@@ -15,9 +15,26 @@ interface FacebookStatus {
   error?: string;
 }
 
+interface FacebookAnalytics {
+  connected: boolean;
+  warning?: string;
+  page?: {
+    id: string;
+    name: string;
+    fanCount: number | null;
+    followersCount: number | null;
+  };
+  insights?: {
+    pageImpressions: number | null;
+    pageEngagedUsers: number | null;
+  };
+}
+
 export default function FacebookIntegration() {
   const [facebookStatus, setFacebookStatus] = useState<FacebookStatus | null>(null);
   const [loading, setLoading] = useState(false);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analytics, setAnalytics] = useState<FacebookAnalytics | null>(null);
   const [error, setError] = useState<string>("");
 
   // Fetch Facebook connection status on mount
@@ -36,6 +53,11 @@ export default function FacebookIntegration() {
       
       const data = await res.json();
       setFacebookStatus(data);
+      if (data?.connected) {
+        fetchAnalytics();
+      } else {
+        setAnalytics(null);
+      }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Failed to fetch Facebook status";
       console.error("Error fetching Facebook status:", err);
@@ -75,6 +97,29 @@ export default function FacebookIntegration() {
     }
   };
 
+  const fetchAnalytics = async () => {
+    try {
+      setAnalyticsLoading(true);
+      const response = await fetch("/api/integrations/facebook/analytics");
+
+      if (!response.ok) {
+        const message = response.status === 404
+          ? "Connect Facebook first to pull analytics."
+          : `HTTP ${response.status}: ${response.statusText}`;
+        throw new Error(message);
+      }
+
+      const data = await response.json();
+      setAnalytics(data);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to fetch analytics";
+      setError(errorMsg);
+      setAnalytics(null);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
   const handleDisconnect = async () => {
     if (!facebookStatus?.pages[0]?.platform_id) return;
 
@@ -93,6 +138,7 @@ export default function FacebookIntegration() {
       }
 
       setError("");
+      setAnalytics(null);
       fetchStatus();
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Error disconnecting Facebook";
@@ -137,17 +183,41 @@ export default function FacebookIntegration() {
             ))}
           </div>
         )}
+
+        {analytics && (
+          <div className="bg-slate-950/80 border border-cyan-400/30 rounded p-3 mb-4 text-sm space-y-2">
+            <p className="text-cyan-100 font-semibold">Facebook Analytics</p>
+            <p className="text-cyan-100/70">Page: {analytics.page?.name || "Unknown"}</p>
+            <p className="text-cyan-100/70">Followers: {analytics.page?.followersCount ?? "N/A"}</p>
+            <p className="text-cyan-100/70">Fans: {analytics.page?.fanCount ?? "N/A"}</p>
+            <p className="text-cyan-100/70">Daily Impressions: {analytics.insights?.pageImpressions ?? "N/A"}</p>
+            <p className="text-cyan-100/70">Daily Engaged Users: {analytics.insights?.pageEngagedUsers ?? "N/A"}</p>
+            {analytics.warning && (
+              <p className="text-amber-300 text-xs">{analytics.warning}</p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex gap-2">
         {facebookStatus?.connected ? (
-          <button
-            onClick={handleDisconnect}
-            disabled={loading}
-            className="rounded bg-red-700 px-4 py-2 font-bold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Disconnecting..." : "Disconnect"}
-          </button>
+          <>
+            <button
+              onClick={fetchAnalytics}
+              disabled={analyticsLoading}
+              className="rounded bg-cyan-700 px-4 py-2 font-bold hover:bg-cyan-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {analyticsLoading ? "Pulling..." : "Pull Analytics"}
+            </button>
+
+            <button
+              onClick={handleDisconnect}
+              disabled={loading}
+              className="rounded bg-red-700 px-4 py-2 font-bold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Disconnecting..." : "Disconnect"}
+            </button>
+          </>
         ) : (
           <button
             onClick={handleConnect}
