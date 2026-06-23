@@ -231,6 +231,35 @@ export async function GET(req: NextRequest) {
       console.error("Error fetching LinkedIn analytics:", err);
     }
 
+    // Fetch Pinterest analytics if connected
+    let pinterestMetrics: PlatformMetrics | null = null;
+    try {
+      const pnAnalyticsRes = await fetch(
+        `${process.env.NEXTAUTH_URL || "https://www.creatornexuspro.com"}/api/integrations/pinterest/analytics`,
+        {
+          headers: {
+            "x-user-id": userId || "",
+            "x-user-email": userEmail || "",
+          },
+        }
+      );
+
+      if (pnAnalyticsRes.ok) {
+        const pnData = await pnAnalyticsRes.json();
+        if (pnData.success && pnData.metrics) {
+          pinterestMetrics = {
+            platform: "Pinterest",
+            views: pnData.metrics.views || 0,
+            engagement: pnData.metrics.recent_engagement || 0,
+            followers: pnData.metrics.subscribers || 0,
+            trend: 19, // placeholder
+          };
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching Pinterest analytics:", err);
+    }
+
     // Mock data for other platforms (for now, these are placeholders)
     const mockPlatforms: PlatformMetrics[] = [
       {
@@ -265,6 +294,7 @@ export async function GET(req: NextRequest) {
       ...(twitterMetrics ? [twitterMetrics] : []),
       ...(twitchMetrics ? [twitchMetrics] : []),
       ...(linkedinMetrics ? [linkedinMetrics] : []),
+      ...(pinterestMetrics ? [pinterestMetrics] : []),
       ...mockPlatforms,
     ];
 

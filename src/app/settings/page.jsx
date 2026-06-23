@@ -31,6 +31,7 @@ import InstagramIntegration from "@/components/InstagramIntegration";
 import TwitterIntegration from "@/components/TwitterIntegration";
 import TwitchIntegration from "@/components/TwitchIntegration";
 import LinkedInIntegration from "@/components/LinkedInIntegration";
+import PinterestIntegration from "@/components/PinterestIntegration";
 import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function SettingsPage() {
@@ -1171,57 +1172,6 @@ function ProfileSettings() {
 }
 
 function ConnectedPlatforms() {
-  const otherPlatforms = [
-    {
-      name: "Instagram",
-      color: "bg-[#A45CFF]",
-      status: "Not Connected",
-      button: "Connect",
-    },
-    {
-      name: "TikTok",
-      color: "bg-[#3A7BFF]",
-      status: "Not Connected",
-      button: "Connect",
-    },
-    {
-      name: "YouTube",
-      color: "bg-[#FF0033]",
-      status: "Not Connected",
-      button: "Connect",
-    },
-    {
-      name: "Twitter / X",
-      color: "bg-[#00E5FF]",
-      status: "Not Connected",
-      button: "Connect",
-    },
-    {
-      name: "Twitch",
-      color: "bg-[#A45CFF]",
-      status: "Not Connected",
-      button: "Connect",
-    },
-    {
-      name: "LinkedIn",
-      color: "bg-[#3A7BFF]",
-      status: "Not Connected",
-      button: "Connect",
-    },
-    {
-      name: "Pinterest",
-      color: "bg-[#FF0033]",
-      status: "Not Connected",
-      button: "Connect",
-    },
-    {
-      name: "Reddit",
-      color: "bg-[#00E5FF]",
-      status: "Not Connected",
-      button: "Connect",
-    },
-  ];
-
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Connected Platforms</h1>
@@ -1254,25 +1204,8 @@ function ConnectedPlatforms() {
         {/* LinkedIn - Using Real Integration Component */}
         <LinkedInIntegration />
 
-        {/* Other Platforms - Coming Soon */}
-        {otherPlatforms.map((p) => (
-          <div
-            key={p.name}
-            className="flex flex-col justify-between rounded border border-cyan-400/40 bg-slate-900/50 p-6"
-          >
-            <div>
-              <div className={`mb-4 h-12 w-12 rounded-full icon-neon ${p.color}`}></div>
-
-              <h2 className="text-xl font-semibold mb-3">{p.name}</h2>
-
-              <p className="mb-4 text-cyan-100/70">
-                Status: <span className="font-bold text-[#FF0033]">{p.status}</span>
-              </p>
-            </div>
-
-            <button className="rounded bg-violet-700 px-4 py-2 font-bold hover:bg-violet-600">{p.button}</button>
-          </div>
-        ))}
+        {/* Pinterest - Using Real Integration Component */}
+        <PinterestIntegration />
       </div>
 
       {/* FUTURE INTEGRATIONS */}
