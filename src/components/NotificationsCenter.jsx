@@ -8,6 +8,8 @@ export default function NotificationsCenter() {
   const authContext = useUser();
   const user = authContext?.user;
   const [activeTab, setActiveTab] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [readNotifications, setReadNotifications] = useState(new Set());
   const [loading, setLoading] = useState(true);
@@ -136,11 +138,15 @@ export default function NotificationsCenter() {
     { id: "system", label: "System" },
   ];
 
+  const availableTypes = Array.from(
+    new Set(notifications.map((n) => n.type).filter(Boolean))
+  );
+
   // Filter notifications based on active tab
-  const filteredNotifications =
-    activeTab === "all"
-      ? notifications
-      : notifications.filter((n) => categorise(n) === activeTab);
+  const filteredNotifications = notifications
+    .filter((n) => (activeTab === "all" ? true : categorise(n) === activeTab))
+    .filter((n) => (typeFilter === "all" ? true : n.type === typeFilter))
+    .filter((n) => (showUnreadOnly ? !readNotifications.has(n.id) : true));
 
   const handleMarkAllAsRead = async () => {
     setReadNotifications(new Set(notifications.map((n) => n.id)));
@@ -162,6 +168,44 @@ export default function NotificationsCenter() {
         .update({ is_read: true })
         .eq("id", id)
         .eq("user_id", user.id);
+    }
+  };
+
+  const handleDeleteOne = async (id) => {
+    if (!supabase || !user) return;
+
+    const { error } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id);
+
+    if (!error) {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      const nextRead = new Set(readNotifications);
+      nextRead.delete(id);
+      setReadNotifications(nextRead);
+    }
+  };
+
+  const handleDeleteRead = async () => {
+    if (!supabase || !user) return;
+
+    const readIds = notifications
+      .filter((n) => readNotifications.has(n.id))
+      .map((n) => n.id);
+
+    if (readIds.length === 0) return;
+
+    const { error } = await supabase
+      .from("notifications")
+      .delete()
+      .in("id", readIds)
+      .eq("user_id", user.id);
+
+    if (!error) {
+      setNotifications((prev) => prev.filter((n) => !readNotifications.has(n.id)));
+      setReadNotifications(new Set());
     }
   };
 
@@ -198,6 +242,41 @@ export default function NotificationsCenter() {
       >
         Mark All as Read
       </button>
+
+      <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+        <label className="text-sm text-cyan-100">
+          Type
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-cyan-400/40 bg-black/80 px-3 py-2 text-cyan-100"
+          >
+            <option value="all">All types</option>
+            {availableTypes.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex items-end gap-2 text-sm text-cyan-100">
+          <input
+            type="checkbox"
+            checked={showUnreadOnly}
+            onChange={() => setShowUnreadOnly((v) => !v)}
+            className="h-4 w-4"
+          />
+          Show unread only
+        </label>
+
+        <button
+          onClick={handleDeleteRead}
+          className="rounded-lg border border-violet-400/45 bg-violet-500/10 px-3 py-2 text-sm text-violet-200 transition hover:bg-violet-500/20"
+        >
+          Delete Read
+        </button>
+      </div>
 
       {/* Notifications list */}
       <div className="space-y-4">
@@ -239,6 +318,13 @@ export default function NotificationsCenter() {
                 className="bg-black/80 border border-cyan-400/40 px-3 py-1 rounded-lg text-xs hover:shadow-[0_0_10px_rgba(0,229,255,0.35)] transition-all duration-200 whitespace-nowrap"
               >
                 {readNotifications.has(n.id) ? "Read" : "View"}
+              </button>
+
+              <button
+                onClick={() => handleDeleteOne(n.id)}
+                className="bg-black/80 border border-violet-400/40 px-3 py-1 rounded-lg text-xs text-violet-200 hover:shadow-[0_0_10px_rgba(168,85,247,0.35)] transition-all duration-200 whitespace-nowrap"
+              >
+                Delete
               </button>
             </div>
           ))
