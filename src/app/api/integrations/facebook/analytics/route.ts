@@ -1,5 +1,3 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { getPgClient } from "@/lib/pg";
 
@@ -25,12 +23,10 @@ async function resolveUserId(email: string, sessionUserId?: string) {
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
     const headerEmail = req.headers.get("x-user-email") || undefined;
     const headerUserId = req.headers.get("x-user-id") || undefined;
-    const email = session?.user?.email || headerEmail;
-    const userIdFromSession =
-      (session?.user as { id?: string } | undefined)?.id || headerUserId;
+    const email = headerEmail;
+    const userIdFromSession = headerUserId;
 
     if (!email && !userIdFromSession) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

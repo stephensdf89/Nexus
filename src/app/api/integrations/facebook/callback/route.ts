@@ -1,5 +1,3 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth-options";
 import { NextRequest, NextResponse } from "next/server";
 import { getPgClient } from "@/lib/pg";
 
@@ -92,12 +90,9 @@ async function upsertIntegration(
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    const sessionUserId = (session?.user as { id?: string } | undefined)?.id;
-    const sessionEmail = session?.user?.email;
     const cookieUserId = req.cookies.get("fb_user_id")?.value;
     const cookieEmail = req.cookies.get("fb_user_email")?.value;
-    const email = sessionEmail || cookieEmail;
+    const email = cookieEmail;
 
     // Get code and state from query params
     const { searchParams } = new URL(req.url);
@@ -160,7 +155,7 @@ export async function GET(req: NextRequest) {
 
     // Store integration in database
     const pg = await ensureIntegrationsTable();
-    let userId = sessionUserId || cookieUserId;
+    let userId = cookieUserId;
 
     if (!isUuid(userId)) {
       if (!email) {

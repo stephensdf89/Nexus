@@ -1,5 +1,3 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth-options";
 import { NextRequest, NextResponse } from "next/server";
 
 const FACEBOOK_APP_ID = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
@@ -63,12 +61,8 @@ function withIdentityCookies(response: NextResponse, userId?: string, email?: st
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId =
-      (session?.user as { id?: string } | undefined)?.id ||
-      req.nextUrl.searchParams.get("uid") ||
-      undefined;
-    const email = session?.user?.email || req.nextUrl.searchParams.get("email") || undefined;
+    const userId = req.nextUrl.searchParams.get("uid") || undefined;
+    const email = req.nextUrl.searchParams.get("email") || undefined;
 
     if (!userId && !email) {
       return NextResponse.redirect(new URL("/settings?tab=connected&error=unauthorized", req.url));
@@ -88,12 +82,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId =
-      (session?.user as { id?: string } | undefined)?.id ||
-      req.headers.get("x-user-id") ||
-      undefined;
-    const email = session?.user?.email || req.headers.get("x-user-email") || undefined;
+    const userId = req.headers.get("x-user-id") || undefined;
+    const email = req.headers.get("x-user-email") || undefined;
 
     if (!userId && !email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
