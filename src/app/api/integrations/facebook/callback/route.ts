@@ -1,0 +1,80 @@
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth-options";
+import { NextRequest, NextResponse } from "next/server";
+import { getPgClient } from "@/lib/pg";
+
+const FACEBOOK_APP_ID = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
+const FACEBOOK_APP_SECRET = process.env.FACEBOOK_CLIENT_SECRET || process.env.FACEBOOK_APP_SECRET;
+const REDIRECT_URI = `${process.env.NEXTAUTH_URL}/api/integrations/facebook/callback`;
+
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+
+    // Get code and state from query params
+    const { searchParams } = new URL(req.url);
+    const code = searchParams.get("code");
+    const state = searchParams.get("state");
+
+    // Verify state matches cookie
+    const storedState = req.cookies.get("fb_oauth_state")?.value;
+    if (!state || state !== storedState) {
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=state_mismatch", req.url));
+    }
+
+    if (!code) {
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=no_code", req.url));
+    }
+
+    // Exchange code for access token
+    const tokenResponse = await fetch(
+      `https://graph.facebook.com/v18.0/oauth/access_token?client_id=${FACEBOOK_APP_ID}&client_secret=${FACEBOOK_APP_SECRET}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&code=${code}`
+    );
+
+    const tokenData = await tokenResponse.json();
+
+    if (tokenData.error) {
+      console.error("Facebook token error:", tokenData.error);
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=token_failed", req.url));
+    }
+
+    // Get user's pages
+    const pagesResponse = await fetch(
+      `https://graph.facebook.com/me/accounts?access_token=${tokenData.access_token}`
+    );
+    const pagesData = await pagesResponse.json();
+
+    if (!pagesData.data || pagesData.data.length === 0) {
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=no_pages", req.url));
+    }
+
+    // Get first page (user can select others later)
+    const page = pagesData.data[0];
+
+    // Store integration in database
+    const pg = await getPgClient();
+    await pg.query(
+      `INSERT INTO integrations (user_email, platform, platform_id, page_name, access_token, page_access_token, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())
+       ON CONFLICT (user_email, platform, platform_id) 
+       DO UPDATE SET access_token = $5, page_access_token = $6, updated_at = NOW()`,
+      [
+        session.user.email,
+        "facebook",
+        page.id,
+        page.name,
+        tokenData.access_token,
+        page.access_token,
+      ]
+    );
+
+    // Redirect with success
+    return NextResponse.redirect(new URL("/settings?tab=connected&platform=facebook&status=connected", req.url));
+  } catch (error) {
+    console.error("Facebook callback error:", error);
+    return NextResponse.redirect(new URL("/settings?tab=connected&error=server_error", req.url));
+  }
+}
