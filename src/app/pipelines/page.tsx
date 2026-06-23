@@ -1,4 +1,5 @@
 import AppShell from "@/components/AppShell";
+import Navigation from "@/components/Navigation";
 
 const board = {
   Ideas: ["30-day creator challenge", "Livestream workflow breakdown"],
@@ -11,6 +12,9 @@ const board = {
 export default function PipelinesPage() {
   return (
     <AppShell>
+      <div className="px-8 py-3 bg-slate-950/60 border-b border-cyan-400/20">
+        <Navigation />
+      </div>
       <section className="space-y-6">
         <h1 className="text-3xl font-bold">Pipelines</h1>
 

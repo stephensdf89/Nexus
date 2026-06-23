@@ -1,4 +1,5 @@
 import AppShell from "@/components/AppShell";
+import Navigation from "@/components/Navigation";
 
 const platformData = [
   { platform: "YouTube", value: 78 },
@@ -10,6 +11,9 @@ const platformData = [
 export default function AnalyticsPage() {
   return (
     <AppShell>
+      <div className="px-8 py-3 bg-slate-950/60 border-b border-cyan-400/20">
+        <Navigation />
+      </div>
       <section className="space-y-6">
         <h1 className="text-3xl font-bold">Analytics</h1>
 

@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import Navigation from "@/components/Navigation";
 
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+      {/* NAVIGATION */}
+      <div className="px-8 py-3 bg-slate-950/60 border-b border-cyan-400/20">
+        <Navigation />
+      </div>
+
       {/* TOP BAR */}
       <header className="flex items-center justify-between px-8 py-4 border-b border-cyan-400/40 
                          shadow-[0_0_20px_rgba(0,229,255,0.1)] bg-slate-950/80 backdrop-blur-md">
