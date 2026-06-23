@@ -3,8 +3,17 @@ import { authOptions } from "@/lib/auth-options";
 import { NextRequest, NextResponse } from "next/server";
 
 const FACEBOOK_APP_ID = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
-const FACEBOOK_OAUTH_SCOPES =
-  process.env.FACEBOOK_OAUTH_SCOPES || "public_profile,email";
+const SAFE_FACEBOOK_SCOPES = new Set(["public_profile", "email"]);
+
+function getSanitizedScopes() {
+  const configured = process.env.FACEBOOK_OAUTH_SCOPES || "public_profile,email";
+  const sanitized = configured
+    .split(",")
+    .map((scope) => scope.trim())
+    .filter((scope) => SAFE_FACEBOOK_SCOPES.has(scope));
+
+  return sanitized.length > 0 ? sanitized.join(",") : "public_profile,email";
+}
 
 function getFacebookRedirectUri(req: NextRequest) {
   if (process.env.FACEBOOK_REDIRECT_URI) {
@@ -24,10 +33,11 @@ export async function POST(req: NextRequest) {
     // Generate state for CSRF protection
     const state = Math.random().toString(36).substring(7);
     const redirectUri = getFacebookRedirectUri(req);
+    const scopes = getSanitizedScopes();
 
     // Store state in session/cookie for verification
     const response = NextResponse.json({
-      authUrl: `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${encodeURIComponent(FACEBOOK_OAUTH_SCOPES)}&response_type=code`,
+      authUrl: `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${encodeURIComponent(scopes)}&response_type=code`,
     });
 
     // Set secure cookie with state
