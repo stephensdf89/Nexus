@@ -40,11 +40,10 @@ export default function SettingsLoader() {
     const active = getActiveSettings(useSettingsStore.getState());
 
     document.body.className = `
-      ${active.theme === "dark" ? "theme-dark" : "theme-light"}
+      theme-neon
       ${active.highContrast ? "hc-mode" : ""}
       ${active.textSize === "large" ? "text-lg" : active.textSize === "small" ? "text-sm" : ""}
       ${active.colorBlindMode !== "none" ? `cb-${active.colorBlindMode}` : ""}
-      ${active.disableNeon ? "no-neon" : ""}
       ${active.safeMode ? "safe-mode" : ""}
       ${active.reducedMotion ? "reduced-motion" : ""}
     `;

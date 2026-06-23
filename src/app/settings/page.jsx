@@ -117,7 +117,7 @@ export default function SettingsPage() {
       <div className="min-h-screen bg-slate-950 text-white flex">
         {/* SIDEBAR */}
         <aside className="w-64 bg-slate-900 border-r border-cyan-400/40 p-6 overflow-y-auto">
-          <h2 className="text-xl font-bold mb-6 text-cyan-200">Settings</h2>
+          <h2 className="text-xl font-semibold mb-3">Settings</h2>
 
           <nav className="space-y-2">
             {navItems.map((item) => (
@@ -126,7 +126,7 @@ export default function SettingsPage() {
                 onClick={() => setActive(item)}
                 className={`block w-full text-left px-4 py-2 rounded transition-all ${
                   active === item
-                    ? "bg-gradient-to-r from-cyan-500/30 to-violet-600/30 border border-cyan-400/40 text-cyan-200 font-semibold"
+                    ? "nav-active-neon font-semibold"
                     : "text-cyan-100/70 hover:bg-slate-800 hover:text-cyan-200"
                 }`}
               >
@@ -172,13 +172,7 @@ export default function SettingsPage() {
           )}
 
           {active === "dashboard" && (
-            <DashboardSettings
-              dashboardLayout={dashboardLayout}
-              showAnalyticsPreview={showAnalyticsPreview}
-              showCreatorToolsPreview={showCreatorToolsPreview}
-              update={update}
-              resetDashboard={() => confirmReset(resetDashboard, "Reset dashboard settings?")}
-            />
+            <DashboardLayoutSettings />
           )}
 
           {active === "notifications" && (
@@ -209,13 +203,13 @@ export default function SettingsPage() {
           {/* PLACEHOLDERS FOR FUTURE FEATURES */}
           {active === "account" && <AccountSettings />}
           {active === "profile" && <ProfileSettings />}
-          {active === "connected" && <Placeholder title="Connected Platforms (Coming Soon)" />}
-          {active === "language" && <Placeholder title="Language Settings" />}
-          {active === "security" && <Placeholder title="Security & Privacy (Coming Soon)" />}
-          {active === "integrations" && <Placeholder title="Integrations (Coming Soon)" />}
-          {active === "billing" && <Placeholder title="Billing & Subscription (Coming Soon)" />}
-          {active === "backup" && <Placeholder title="Backup & Sync (Coming Soon)" />}
-          {active === "about" && <Placeholder title="About / Support" />}
+          {active === "connected" && <ConnectedPlatforms />}
+          {active === "language" && <LanguageSettings />}
+          {active === "security" && <SecuritySettings />}
+          {active === "integrations" && <IntegrationsSettings />}
+          {active === "billing" && <BillingSettings />}
+          {active === "backup" && <BackupSyncSettings />}
+          {active === "about" && <AboutSupportSettings />}
         </main>
       </div>
 
@@ -231,7 +225,7 @@ export default function SettingsPage() {
           className={`rounded px-6 py-2 font-bold transition-all ${
             isSaving
               ? "bg-slate-700 text-cyan-100 cursor-not-allowed opacity-50"
-              : "bg-gradient-to-r from-cyan-500 to-violet-600 text-slate-950 hover:from-cyan-400 hover:to-violet-500"
+              : "glow-neon bg-gradient-to-r from-[#00E5FF] via-[#3A7BFF] to-[#A45CFF] text-slate-950"
           }`}
         >
           {isSaving ? "Saving..." : "Save Settings"}
@@ -246,8 +240,8 @@ export default function SettingsPage() {
 function Placeholder({ title }) {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-4 text-cyan-200">{title}</h1>
-      <p className="text-cyan-100/60">This section is not implemented yet.</p>
+      <h1 className="text-3xl font-bold mb-6">{title}</h1>
+      <p className="text-cyan-100/70">This section is not implemented yet.</p>
     </div>
   );
 }
@@ -255,8 +249,8 @@ function Placeholder({ title }) {
 function AppearanceSettings({ theme, compactMode, language, update, resetTheme }) {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-2 text-cyan-200">Appearance / Themes</h1>
-      <p className="text-cyan-100/60 mb-6">Customize the visual appearance of the app.</p>
+      <h1 className="text-3xl font-bold mb-6">Appearance / Themes</h1>
+      <p className="text-cyan-100/70 mb-6">Customize the visual appearance of the app.</p>
 
       <div className="space-y-4">
         <label className="block">
@@ -264,11 +258,10 @@ function AppearanceSettings({ theme, compactMode, language, update, resetTheme }
           <select
             value={theme}
             onChange={(e) => update("theme", e.target.value)}
-            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-50 w-full"
+            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-100 w-full"
+            disabled
           >
             <option value="neon">Neon</option>
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
           </select>
         </label>
 
@@ -277,7 +270,7 @@ function AppearanceSettings({ theme, compactMode, language, update, resetTheme }
           <select
             value={language}
             onChange={(e) => update("language", e.target.value)}
-            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-50 w-full"
+            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-100 w-full"
           >
             <option value="en">English</option>
             <option value="es">Spanish</option>
@@ -291,7 +284,7 @@ function AppearanceSettings({ theme, compactMode, language, update, resetTheme }
             type="checkbox"
             checked={compactMode}
             onChange={() => update("compactMode", !compactMode)}
-            className="w-4 h-4 rounded cursor-pointer"
+            className="w-4 h-4 rounded cursor-pointer toggle-neon"
           />
           <span className="ml-3 text-cyan-100">Compact Mode</span>
         </label>
@@ -319,8 +312,8 @@ function AccessibilitySettings({
 }) {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-2 text-cyan-200">Accessibility</h1>
-      <p className="text-cyan-100/60 mb-6">Customize accessibility options for your needs.</p>
+      <h1 className="text-3xl font-bold mb-6">Accessibility</h1>
+      <p className="text-cyan-100/70 mb-6">Customize accessibility options for your needs.</p>
 
       <div className="space-y-4">
         <label className="flex items-center cursor-pointer">
@@ -328,7 +321,7 @@ function AccessibilitySettings({
             type="checkbox"
             checked={highContrast}
             onChange={() => update("highContrast", !highContrast)}
-            className="w-4 h-4 rounded cursor-pointer"
+            className="w-4 h-4 rounded cursor-pointer toggle-neon"
           />
           <span className="ml-3 text-cyan-100">High Contrast Mode</span>
         </label>
@@ -338,7 +331,7 @@ function AccessibilitySettings({
           <select
             value={textSize}
             onChange={(e) => update("textSize", e.target.value)}
-            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-50 w-full"
+            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-100 w-full"
           >
             <option value="small">Small</option>
             <option value="medium">Default</option>
@@ -351,7 +344,7 @@ function AccessibilitySettings({
           <select
             value={colorBlindMode}
             onChange={(e) => update("colorBlindMode", e.target.value)}
-            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-50 w-full"
+            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-100 w-full"
           >
             <option value="none">None</option>
             <option value="protanopia">Protanopia (Red-Blind)</option>
@@ -364,10 +357,11 @@ function AccessibilitySettings({
           <input
             type="checkbox"
             checked={disableNeon}
-            onChange={() => update("disableNeon", !disableNeon)}
-            className="w-4 h-4 rounded cursor-pointer"
+            onChange={() => update("disableNeon", false)}
+            disabled
+            className="w-4 h-4 rounded cursor-pointer toggle-neon"
           />
-          <span className="ml-3 text-cyan-100">Disable Neon Effects</span>
+          <span className="ml-3 text-cyan-100">Disable Neon Effects (Locked Off)</span>
         </label>
 
         <label className="flex items-center cursor-pointer">
@@ -375,7 +369,7 @@ function AccessibilitySettings({
             type="checkbox"
             checked={safeMode}
             onChange={() => update("safeMode", !safeMode)}
-            className="w-4 h-4 rounded cursor-pointer"
+            className="w-4 h-4 rounded cursor-pointer toggle-neon"
           />
           <span className="ml-3 text-cyan-100">Seizure-Safe Mode</span>
         </label>
@@ -385,7 +379,7 @@ function AccessibilitySettings({
             type="checkbox"
             checked={reducedMotion}
             onChange={() => update("reducedMotion", !reducedMotion)}
-            className="w-4 h-4 rounded cursor-pointer"
+            className="w-4 h-4 rounded cursor-pointer toggle-neon"
           />
           <span className="ml-3 text-cyan-100">Reduced Motion</span>
         </label>
@@ -410,8 +404,8 @@ function DashboardSettings({
 }) {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-2 text-cyan-200">Dashboard Layout</h1>
-      <p className="text-cyan-100/60 mb-6">Customize your dashboard appearance and content.</p>
+      <h1 className="text-3xl font-bold mb-6">Dashboard Layout</h1>
+      <p className="text-cyan-100/70 mb-6">Customize your dashboard appearance and content.</p>
 
       <div className="space-y-4">
         <label className="block">
@@ -419,7 +413,7 @@ function DashboardSettings({
           <select
             value={dashboardLayout}
             onChange={(e) => update("dashboardLayout", e.target.value)}
-            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-50 w-full"
+            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-100 w-full"
           >
             <option value="default">Default</option>
             <option value="grid">Grid</option>
@@ -432,7 +426,7 @@ function DashboardSettings({
             type="checkbox"
             checked={showAnalyticsPreview}
             onChange={() => update("showAnalyticsPreview", !showAnalyticsPreview)}
-            className="w-4 h-4 rounded cursor-pointer"
+            className="w-4 h-4 rounded cursor-pointer toggle-neon"
           />
           <span className="ml-3 text-cyan-100">Show Analytics Preview</span>
         </label>
@@ -442,7 +436,7 @@ function DashboardSettings({
             type="checkbox"
             checked={showCreatorToolsPreview}
             onChange={() => update("showCreatorToolsPreview", !showCreatorToolsPreview)}
-            className="w-4 h-4 rounded cursor-pointer"
+            className="w-4 h-4 rounded cursor-pointer toggle-neon"
           />
           <span className="ml-3 text-cyan-100">Show Creator Tools Preview</span>
         </label>
@@ -458,6 +452,116 @@ function DashboardSettings({
   );
 }
 
+function DashboardLayoutSettings() {
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Dashboard Layout</h1>
+
+      {/* LAYOUT MODE */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Layout Mode</h2>
+
+        <label className="block mb-4">
+          Layout:
+          <select className="ml-2 bg-slate-950/80 border border-cyan-400/40 p-1">
+            <option value="default">Default</option>
+            <option value="grid">Grid</option>
+            <option value="list">List</option>
+            <option value="custom">Custom (Coming Soon)</option>
+          </select>
+        </label>
+
+        <p className="text-cyan-100/70">
+          Choose how your dashboard widgets are arranged.
+        </p>
+      </section>
+
+      {/* WIDGET TOGGLES */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Widgets</h2>
+
+        <p className="text-cyan-100/70 mb-4">
+          Enable or disable widgets on your dashboard.
+        </p>
+
+        {[
+          "Analytics Overview",
+          "Creator Tools",
+          "Recent Activity",
+          "Notifications",
+          "Tasks",
+          "Pipelines",
+          "Monetization",
+          "Audience Insights",
+          "Content Performance",
+          "Custom Widgets (Coming Soon)",
+        ].map((widget) => (
+          <label key={widget} className="block mb-3">
+            <input type="checkbox" /> {widget}
+          </label>
+        ))}
+      </section>
+
+      {/* DEVICE-SPECIFIC LAYOUT */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Device Layouts</h2>
+
+        <p className="text-cyan-100/70 mb-4">
+          Customize your dashboard layout for each device type.
+        </p>
+
+        <label className="block mb-3">
+          <input type="checkbox" /> Sync layout across all devices
+        </label>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          {["Desktop", "Tablet", "Mobile"].map((device) => (
+            <div
+              key={device}
+              className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded"
+            >
+              <h3 className="text-xl font-semibold mb-3">{device} Layout</h3>
+              <p className="text-cyan-100/70 mb-4">
+                Customize widget positions for {device.toLowerCase()} view.
+              </p>
+
+              <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-2">
+                Edit Layout (Coming Soon)
+              </button>
+
+              <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold">
+                Reset {device} Layout
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* PREVIEW AREA */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Layout Preview</h2>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-6 rounded h-64 flex items-center justify-center text-cyan-100/70">
+          Drag-and-drop layout builder coming soon.
+        </div>
+      </section>
+
+      {/* RESET ALL */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Reset Layout</h2>
+
+        <button className="bg-violet-800 hover:bg-violet-700 px-4 py-2 rounded font-bold">
+          Reset All Dashboard Layouts
+        </button>
+
+        <p className="text-cyan-100/70 mt-2">
+          This will reset widget positions and layout modes for all devices.
+        </p>
+      </section>
+    </div>
+  );
+}
+
 function NotificationSettings({
   notificationsEnabled,
   soundEnabled,
@@ -467,8 +571,8 @@ function NotificationSettings({
 }) {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-2 text-cyan-200">Notifications</h1>
-      <p className="text-cyan-100/60 mb-6">Manage notification preferences.</p>
+      <h1 className="text-3xl font-bold mb-6">Notifications</h1>
+      <p className="text-cyan-100/70 mb-6">Manage notification preferences.</p>
 
       <div className="space-y-4">
         <label className="flex items-center cursor-pointer">
@@ -476,7 +580,7 @@ function NotificationSettings({
             type="checkbox"
             checked={notificationsEnabled}
             onChange={() => update("notificationsEnabled", !notificationsEnabled)}
-            className="w-4 h-4 rounded cursor-pointer"
+            className="w-4 h-4 rounded cursor-pointer toggle-neon"
           />
           <span className="ml-3 text-cyan-100">Enable Notifications</span>
         </label>
@@ -486,7 +590,7 @@ function NotificationSettings({
             type="checkbox"
             checked={soundEnabled}
             onChange={() => update("soundEnabled", !soundEnabled)}
-            className="w-4 h-4 rounded cursor-pointer"
+            className="w-4 h-4 rounded cursor-pointer toggle-neon"
           />
           <span className="ml-3 text-cyan-100">Enable Sound</span>
         </label>
@@ -496,7 +600,7 @@ function NotificationSettings({
             type="checkbox"
             checked={vibrationEnabled}
             onChange={() => update("vibrationEnabled", !vibrationEnabled)}
-            className="w-4 h-4 rounded cursor-pointer"
+            className="w-4 h-4 rounded cursor-pointer toggle-neon"
           />
           <span className="ml-3 text-cyan-100">Enable Vibration</span>
         </label>
@@ -515,8 +619,8 @@ function NotificationSettings({
 function AISettings({ aiMode, update }) {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-2 text-cyan-200">AI Settings</h1>
-      <p className="text-cyan-100/60 mb-6">Configure AI behavior and mode.</p>
+      <h1 className="text-3xl font-bold mb-6">AI Settings</h1>
+      <p className="text-cyan-100/70 mb-6">Configure AI behavior and mode.</p>
 
       <div className="space-y-4">
         <label className="block">
@@ -524,7 +628,7 @@ function AISettings({ aiMode, update }) {
           <select
             value={aiMode}
             onChange={(e) => update("aiMode", e.target.value)}
-            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-50 w-full"
+            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-100 w-full"
           >
             <option value="standard">Standard</option>
             <option value="creative">Creative</option>
@@ -548,8 +652,8 @@ function DeviceOverridesSettings({
 }) {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-2 text-cyan-200">Device-Specific Overrides</h1>
-      <p className="text-cyan-100/60 mb-6">Manage settings per device type.</p>
+      <h1 className="text-3xl font-bold mb-6">Device-Specific Overrides</h1>
+      <p className="text-cyan-100/70 mb-6">Manage settings per device type.</p>
 
       <div className="space-y-4">
         <label className="block">
@@ -557,7 +661,7 @@ function DeviceOverridesSettings({
           <select
             value={device}
             onChange={(e) => update("device", e.target.value)}
-            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-50 w-full"
+            className="bg-slate-950/80 border border-cyan-400/60 px-3 py-2 rounded text-cyan-100 w-full"
           >
             <option value="desktop">Desktop</option>
             <option value="mobile">Mobile</option>
@@ -606,18 +710,18 @@ function DeviceOverridesSettings({
 function AccountSettings() {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-2 text-cyan-200">Account Settings</h1>
-      <p className="text-cyan-100/60 mb-6">Manage your account information and security.</p>
+      <h1 className="text-3xl font-bold mb-6">Account Settings</h1>
+      <p className="text-cyan-100/70 mb-6">Manage your account information and security.</p>
 
       {/* ACCOUNT INFO */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
-        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Account Information</h2>
+        <h2 className="text-2xl font-bold mb-4">Account Information</h2>
 
         <label className="block mb-4">
           <span className="text-cyan-100 font-semibold mb-2 block">Display Name:</span>
           <input
             type="text"
-            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100"
             placeholder="Your display name"
             disabled
           />
@@ -627,7 +731,7 @@ function AccountSettings() {
           <span className="text-cyan-100 font-semibold mb-2 block">Username:</span>
           <input
             type="text"
-            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100"
             placeholder="Your username"
             disabled
           />
@@ -637,7 +741,7 @@ function AccountSettings() {
           <span className="text-cyan-100 font-semibold mb-2 block">Email:</span>
           <input
             type="email"
-            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100"
             placeholder="your@email.com"
             disabled
           />
@@ -647,7 +751,7 @@ function AccountSettings() {
           <span className="text-cyan-100 font-semibold mb-2 block">Account ID:</span>
           <input
             type="text"
-            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100"
             placeholder="ID-000000"
             disabled
           />
@@ -656,13 +760,13 @@ function AccountSettings() {
 
       {/* PASSWORD */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
-        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Password</h2>
+        <h2 className="text-2xl font-bold mb-4">Password</h2>
 
         <button className="bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded font-bold mb-4 border border-violet-300/50 text-white">
           Change Password
         </button>
 
-        <p className="text-cyan-100/60 mb-4">
+        <p className="text-cyan-100/70 mb-4">
           A password reset email will be sent to your account.
         </p>
 
@@ -673,7 +777,7 @@ function AccountSettings() {
 
       {/* ACCOUNT STATUS */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
-        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Account Status</h2>
+        <h2 className="text-2xl font-bold mb-4">Account Status</h2>
 
         <p className="text-cyan-100 mb-2">
           <strong>Created:</strong> <span className="text-cyan-100/70">Placeholder</span>
@@ -682,20 +786,20 @@ function AccountSettings() {
           <strong>Last Login:</strong> <span className="text-cyan-100/70">Placeholder</span>
         </p>
 
-        <p className="text-cyan-100/60 mt-4">
+        <p className="text-cyan-100/70 mt-4">
           Device list and login history will appear here.
         </p>
       </section>
 
       {/* DANGER ZONE */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded border border-violet-400/40">
-        <h2 className="text-2xl font-bold mb-4 text-violet-400">Danger Zone</h2>
+        <h2 className="text-2xl font-bold mb-4">Danger Zone</h2>
 
         <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold mb-4 border border-violet-300/50 text-white">
           Delete Account
         </button>
 
-        <p className="text-cyan-100/60 mb-6">
+        <p className="text-cyan-100/70 mb-6">
           This action is permanent and cannot be undone.
         </p>
 
@@ -714,12 +818,12 @@ function AccountSettings() {
 function ProfileSettings() {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-2 text-cyan-200">Profile Settings</h1>
-      <p className="text-cyan-100/60 mb-6">Customize your creator profile and personal information.</p>
+      <h1 className="text-3xl font-bold mb-6">Profile Settings</h1>
+      <p className="text-cyan-100/70 mb-6">Customize your creator profile and personal information.</p>
 
       {/* PROFILE IMAGES */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
-        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Profile Images</h2>
+        <h2 className="text-2xl font-bold mb-4">Profile Images</h2>
 
         <div className="flex items-center gap-6 mb-6">
           {/* PROFILE PICTURE */}
@@ -742,13 +846,13 @@ function ProfileSettings() {
 
       {/* BASIC INFO */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
-        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Basic Information</h2>
+        <h2 className="text-2xl font-bold mb-4">Basic Information</h2>
 
         <label className="block mb-4">
           <span className="text-cyan-100 font-semibold mb-2 block">Display Name:</span>
           <input
             type="text"
-            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100"
             placeholder="Your display name"
           />
         </label>
@@ -757,7 +861,7 @@ function ProfileSettings() {
           <span className="text-cyan-100 font-semibold mb-2 block">Username / Handle:</span>
           <input
             type="text"
-            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100"
             placeholder="@yourhandle"
           />
         </label>
@@ -765,14 +869,14 @@ function ProfileSettings() {
         <label className="block mb-4">
           <span className="text-cyan-100 font-semibold mb-2 block">Bio:</span>
           <textarea
-            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50 h-24"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100 h-24"
             placeholder="Tell people about yourself..."
           ></textarea>
         </label>
 
         <label className="block mb-4">
           <span className="text-cyan-100 font-semibold mb-2 block">Pronouns:</span>
-          <select className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50">
+          <select className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100">
             <option value="none">Prefer not to say</option>
             <option value="he/him">He/Him</option>
             <option value="she/her">She/Her</option>
@@ -784,13 +888,13 @@ function ProfileSettings() {
 
       {/* SOCIAL LINKS */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
-        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Social Links</h2>
+        <h2 className="text-2xl font-bold mb-4">Social Links</h2>
 
         <label className="block mb-4">
           <span className="text-cyan-100 font-semibold mb-2 block">Website:</span>
           <input
             type="text"
-            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100"
             placeholder="https://yourwebsite.com"
           />
         </label>
@@ -799,7 +903,7 @@ function ProfileSettings() {
           <span className="text-cyan-100 font-semibold mb-2 block">Instagram:</span>
           <input
             type="text"
-            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100"
             placeholder="@username"
           />
         </label>
@@ -808,7 +912,7 @@ function ProfileSettings() {
           <span className="text-cyan-100 font-semibold mb-2 block">TikTok:</span>
           <input
             type="text"
-            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100"
             placeholder="@username"
           />
         </label>
@@ -817,7 +921,7 @@ function ProfileSettings() {
           <span className="text-cyan-100 font-semibold mb-2 block">YouTube:</span>
           <input
             type="text"
-            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100"
             placeholder="Channel URL"
           />
         </label>
@@ -826,7 +930,7 @@ function ProfileSettings() {
           <span className="text-cyan-100 font-semibold mb-2 block">Twitter / X:</span>
           <input
             type="text"
-            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100"
             placeholder="@username"
           />
         </label>
@@ -834,11 +938,11 @@ function ProfileSettings() {
 
       {/* CREATOR CATEGORY */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
-        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Creator Category</h2>
+        <h2 className="text-2xl font-bold mb-4">Creator Category</h2>
 
         <label className="block mb-4">
           <span className="text-cyan-100 font-semibold mb-2 block">Category:</span>
-          <select className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50">
+          <select className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-100">
             <option value="general">General Creator</option>
             <option value="gaming">Gaming</option>
             <option value="beauty">Beauty</option>
@@ -854,36 +958,1106 @@ function ProfileSettings() {
 
       {/* VISIBILITY */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
-        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Profile Visibility</h2>
+        <h2 className="text-2xl font-bold mb-4">Profile Visibility</h2>
 
         <label className="flex items-center cursor-pointer mb-3">
-          <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" />
+          <input type="checkbox" className="w-4 h-4 rounded cursor-pointer toggle-neon" />
           <span className="ml-3 text-cyan-100">Make my profile public</span>
         </label>
 
         <label className="flex items-center cursor-pointer mb-3">
-          <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" />
+          <input type="checkbox" className="w-4 h-4 rounded cursor-pointer toggle-neon" />
           <span className="ml-3 text-cyan-100">Show my social links</span>
         </label>
 
         <label className="flex items-center cursor-pointer">
-          <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" />
+          <input type="checkbox" className="w-4 h-4 rounded cursor-pointer toggle-neon" />
           <span className="ml-3 text-cyan-100">Allow profile discovery</span>
         </label>
       </section>
 
       {/* DANGER ZONE */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded border border-violet-400/40">
-        <h2 className="text-2xl font-bold mb-4 text-violet-400">Danger Zone</h2>
+        <h2 className="text-2xl font-bold mb-4">Danger Zone</h2>
 
         <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold mb-4 border border-violet-300/50 text-white">
           Reset Profile
         </button>
 
-        <p className="text-cyan-100/60">
+        <p className="text-cyan-100/70">
           This will reset your profile information but will not delete your account.
         </p>
       </section>
     </div>
   );
 }
+
+function ConnectedPlatforms() {
+  const platforms = [
+    {
+      name: "Facebook",
+      color: "bg-[#00E5FF]",
+      status: "Not Connected",
+      button: "Connect",
+    },
+    {
+      name: "Instagram",
+      color: "bg-[#A45CFF]",
+      status: "Not Connected",
+      button: "Connect",
+    },
+    {
+      name: "TikTok",
+      color: "bg-[#3A7BFF]",
+      status: "Not Connected",
+      button: "Connect",
+    },
+    {
+      name: "YouTube",
+      color: "bg-[#FF0033]",
+      status: "Not Connected",
+      button: "Connect",
+    },
+    {
+      name: "Twitter / X",
+      color: "bg-[#00E5FF]",
+      status: "Not Connected",
+      button: "Connect",
+    },
+    {
+      name: "Twitch",
+      color: "bg-[#A45CFF]",
+      status: "Not Connected",
+      button: "Connect",
+    },
+    {
+      name: "LinkedIn",
+      color: "bg-[#3A7BFF]",
+      status: "Not Connected",
+      button: "Connect",
+    },
+    {
+      name: "Pinterest",
+      color: "bg-[#FF0033]",
+      status: "Not Connected",
+      button: "Connect",
+    },
+    {
+      name: "Reddit",
+      color: "bg-[#00E5FF]",
+      status: "Not Connected",
+      button: "Connect",
+    },
+  ];
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Connected Platforms</h1>
+
+      <p className="text-cyan-100/70 mb-8">
+        Connect your social media accounts to enable analytics, scheduling,
+        insights, and creator tools. More integrations coming soon.
+      </p>
+
+      {/* PLATFORM GRID */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {platforms.map((p) => (
+          <div
+            key={p.name}
+            className="flex flex-col justify-between rounded border border-cyan-400/40 bg-slate-900/50 p-6"
+          >
+            <div>
+              <div className={`mb-4 h-12 w-12 rounded-full icon-neon ${p.color}`}></div>
+
+              <h2 className="text-xl font-semibold mb-3">{p.name}</h2>
+
+              <p className="mb-4 text-cyan-100/70">
+                Status: <span className="font-bold text-[#FF0033]">{p.status}</span>
+              </p>
+            </div>
+
+            <button className="rounded bg-violet-700 px-4 py-2 font-bold hover:bg-violet-600">{p.button}</button>
+          </div>
+        ))}
+      </div>
+
+      {/* FUTURE INTEGRATIONS */}
+      <section className="mt-12 rounded border border-cyan-400/40 bg-slate-900/50 p-6">
+        <h2 className="mb-4 text-2xl font-bold">Custom Integrations</h2>
+
+        <p className="mb-4 text-cyan-100/70">
+          API keys, webhooks, and custom platform integrations will appear here.
+        </p>
+
+        <button className="rounded bg-slate-800 px-4 py-2 hover:bg-slate-700">
+          Add Custom Integration (Coming Soon)
+        </button>
+      </section>
+
+      {/* PERMISSIONS */}
+      <section className="mt-10 rounded border border-cyan-400/40 bg-slate-900/50 p-6">
+        <h2 className="mb-4 text-2xl font-bold">Permissions</h2>
+
+        <p className="mb-4 text-cyan-100/70">
+          Once connected, you'll be able to manage permissions, scopes, and
+          access levels for each platform.
+        </p>
+
+        <button className="rounded bg-slate-800 px-4 py-2 hover:bg-slate-700">
+          Manage Permissions (Coming Soon)
+        </button>
+      </section>
+    </div>
+  );
+}
+
+function SecuritySettings() {
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Security & Privacy</h1>
+
+      {/* AUTHENTICATION */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Authentication</h2>
+
+        <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold mb-4">
+          Change Password
+        </button>
+
+        <p className="text-cyan-100/70 mb-6">
+          A password reset email will be sent to your account.
+        </p>
+
+        <h3 className="text-xl font-semibold mb-3">Two-Factor Authentication (2FA)</h3>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
+          Enable 2FA (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
+          View Backup Codes (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+          Manage Login Alerts (Coming Soon)
+        </button>
+      </section>
+
+      {/* DEVICE & SESSION MANAGEMENT */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Device & Session Management</h2>
+
+        <p className="text-cyan-100/70 mb-4">
+          View and manage devices currently logged into your account.
+        </p>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded mb-4">
+          <p className="text-cyan-100">No active sessions to display.</p>
+        </div>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
+          Refresh Sessions (Coming Soon)
+        </button>
+
+        <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold">
+          Log Out of All Devices
+        </button>
+      </section>
+
+      {/* PRIVACY CONTROLS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Privacy Controls</h2>
+
+        <label className="block mb-3">
+          <input type="checkbox" /> Allow personalized recommendations
+        </label>
+
+        <label className="block mb-3">
+          <input type="checkbox" /> Allow analytics tracking
+        </label>
+
+        <label className="block mb-3">
+          <input type="checkbox" /> Allow usage data collection
+        </label>
+
+        <p className="text-cyan-100/70 mt-4">
+          These settings control how your data is used to improve your experience.
+        </p>
+      </section>
+
+      {/* DATA MANAGEMENT */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Data Management</h2>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
+          Download My Data (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
+          Request Data Export (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+          Delete My Data (Coming Soon)
+        </button>
+      </section>
+
+      {/* DANGER ZONE */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Danger Zone</h2>
+
+        <button className="bg-violet-800 hover:bg-violet-700 px-4 py-2 rounded font-bold mb-4">
+          Delete Account
+        </button>
+
+        <p className="text-cyan-100/70">
+          This action is permanent and cannot be undone.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function BillingSettings() {
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Billing & Subscription</h1>
+
+      {/* CURRENT PLAN */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Current Plan</h2>
+
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <p className="text-xl font-semibold mb-3">Creator Nexus Free</p>
+            <p className="text-cyan-100/70">You are currently on the free plan.</p>
+          </div>
+
+          <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold">
+            Upgrade Plan
+          </button>
+        </div>
+
+        <p className="text-cyan-100/70">
+          Premium features, analytics, and automation tools will be available once you upgrade.
+        </p>
+      </section>
+
+      {/* PAYMENT METHODS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Payment Methods</h2>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded mb-4">
+          <p className="text-cyan-100">No payment methods added.</p>
+        </div>
+
+        <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold">
+          Add Payment Method
+        </button>
+      </section>
+
+      {/* BILLING HISTORY */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Billing History</h2>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded">
+          <p className="text-cyan-100">No invoices available.</p>
+        </div>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mt-4">
+          Refresh Billing History (Coming Soon)
+        </button>
+      </section>
+
+      {/* PLAN OPTIONS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Available Plans</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="rounded border border-cyan-400/30 bg-slate-950/80 p-4">
+            <h3 className="text-xl font-semibold mb-3">Free</h3>
+            <p className="text-cyan-100/70 mb-4">Perfect for getting started.</p>
+            <p className="text-2xl font-bold mb-4">$0/mo</p>
+            <button className="w-full rounded bg-slate-800 px-4 py-2 hover:bg-slate-700">
+              Current Plan
+            </button>
+          </div>
+
+          <div className="rounded border border-cyan-400/40 bg-slate-950/80 p-4">
+            <h3 className="text-xl font-semibold mb-3">Pro</h3>
+            <p className="text-cyan-100/70 mb-4">Advanced analytics and automation.</p>
+            <p className="text-2xl font-bold mb-4">$19/mo</p>
+            <button className="w-full rounded bg-violet-700 px-4 py-2 font-bold hover:bg-violet-600">
+              Upgrade to Pro
+            </button>
+          </div>
+
+          <div className="rounded border border-cyan-400/30 bg-slate-950/80 p-4">
+            <h3 className="text-xl font-semibold mb-3">Studio</h3>
+            <p className="text-cyan-100/70 mb-4">Teams, permissions, and priority support.</p>
+            <p className="text-2xl font-bold mb-4">$49/mo</p>
+            <button className="w-full rounded bg-slate-800 px-4 py-2 hover:bg-slate-700">
+              Contact Sales
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* SUBSCRIPTION MANAGEMENT */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Subscription Management</h2>
+
+        <p className="text-cyan-100/70 mb-4">
+          Manage renewals, cancel your plan, or apply coupon codes when available.
+        </p>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mr-3 mb-3">
+          Manage Subscription (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
+          Apply Coupon (Coming Soon)
+        </button>
+      </section>
+    </div>
+  );
+}
+
+function PipelinesSettings() {
+  const pipelines = [
+    {
+      name: "Welcome New Followers",
+      status: "Active",
+      lastRun: "2 hours ago",
+    },
+    {
+      name: "Daily Analytics Snapshot",
+      status: "Paused",
+      lastRun: "Yesterday",
+    },
+  ];
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Pipelines</h1>
+
+      <p className="text-cyan-100/70 mb-8">
+        Automate tasks, workflows, and creator actions using triggers and
+        actions. Full automation engine coming soon.
+      </p>
+
+      {/* PIPELINE LIST */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Your Pipelines</h2>
+
+          <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold">
+            Create New Pipeline
+          </button>
+        </div>
+
+        {pipelines.length === 0 ? (
+          <p className="text-cyan-100/70">No pipelines created yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {pipelines.map((p) => (
+              <div
+                key={p.name}
+                className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded flex justify-between items-center"
+              >
+                <div>
+                  <p className="text-xl font-semibold mb-3">{p.name}</p>
+                  <p className="text-cyan-100/70">
+                    Status: {p.status} • Last run: {p.lastRun}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button className="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded">
+                    Edit
+                  </button>
+                  <button className="bg-violet-700 hover:bg-violet-600 px-3 py-1 rounded font-bold">
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* CREATE PIPELINE (STATIC UI) */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Create Pipeline</h2>
+
+        <label className="block mb-4">
+          Pipeline Name:
+          <input
+            type="text"
+            className="w-full mt-1 p-2 bg-slate-950/80 border border-cyan-400/40 rounded"
+            placeholder="My Automation"
+          />
+        </label>
+
+        {/* TRIGGER */}
+        <label className="block mb-4">
+          Trigger:
+          <select className="w-full mt-1 bg-slate-950/80 border border-cyan-400/40 p-2 rounded">
+            <option value="">Select a trigger</option>
+            <option value="newFollower">New Follower</option>
+            <option value="newComment">New Comment</option>
+            <option value="newPost">New Video Posted</option>
+            <option value="scheduled">Scheduled Time</option>
+            <option value="manual">Manual Trigger</option>
+            <option value="webhook">Webhook (Coming Soon)</option>
+          </select>
+        </label>
+
+        {/* ACTION */}
+        <label className="block mb-4">
+          Action:
+          <select className="w-full mt-1 bg-slate-950/80 border border-cyan-400/40 p-2 rounded">
+            <option value="">Select an action</option>
+            <option value="sendNotification">Send Notification</option>
+            <option value="postContent">Post Content</option>
+            <option value="addTask">Add to Task List</option>
+            <option value="updateAnalytics">Update Analytics</option>
+            <option value="triggerPipeline">Trigger Another Pipeline</option>
+            <option value="sendWebhook">Send Webhook (Coming Soon)</option>
+          </select>
+        </label>
+
+        <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold">
+          Save Pipeline (Coming Soon)
+        </button>
+      </section>
+
+      {/* WORKFLOW BUILDER */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Workflow Builder</h2>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-6 rounded h-64 flex items-center justify-center text-cyan-100/70">
+          Drag-and-drop workflow builder coming soon.
+        </div>
+      </section>
+
+      {/* PIPELINE LOGS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Pipeline Logs</h2>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded">
+          <p className="text-cyan-100/70">No logs available.</p>
+        </div>
+      </section>
+
+      {/* DANGER ZONE */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Danger Zone</h2>
+
+        <button className="bg-violet-800 hover:bg-violet-700 px-4 py-2 rounded font-bold">
+          Reset All Pipelines
+        </button>
+
+        <p className="text-cyan-100/70 mt-2">
+          This will delete all pipelines and automation settings.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function BackupSyncSettings() {
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Backup & Sync</h1>
+
+      <p className="text-cyan-100/70 mb-8">
+        Manage how your settings, layouts, preferences, and pipelines are backed
+        up and synced across devices. Cloud sync coming soon.
+      </p>
+
+      {/* SYNC STATUS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Sync Status</h2>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded mb-4">
+          <p className="text-cyan-100">Cloud Sync: Disabled</p>
+          <p className="text-cyan-100/70">Last Sync: Never</p>
+        </div>
+
+        <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold mb-2">
+          Enable Cloud Sync (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+          Sync Now (Coming Soon)
+        </button>
+      </section>
+
+      {/* DEVICE SYNC */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Device Sync</h2>
+
+        <label className="block mb-3">
+          <input type="checkbox" /> Sync settings across all devices
+        </label>
+
+        <label className="block mb-3">
+          <input type="checkbox" /> Sync dashboard layouts
+        </label>
+
+        <label className="block mb-3">
+          <input type="checkbox" /> Sync pipelines
+        </label>
+
+        <label className="block mb-3">
+          <input type="checkbox" /> Sync connected platforms (Coming Soon)
+        </label>
+
+        <p className="text-cyan-100/70 mt-4">
+          Device-specific overrides will still apply when enabled.
+        </p>
+      </section>
+
+      {/* MANUAL BACKUP */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Manual Backup</h2>
+
+        <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold mb-3">
+          Create Backup (Coming Soon)
+        </button>
+
+        <p className="text-cyan-100/70">
+          This will generate a backup file containing your settings, layouts,
+          pipelines, and preferences.
+        </p>
+      </section>
+
+      {/* MANUAL RESTORE */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Restore From Backup</h2>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
+          Upload Backup File (Coming Soon)
+        </button>
+
+        <p className="text-cyan-100/70">
+          Restoring a backup will overwrite your current settings.
+        </p>
+      </section>
+
+      {/* EXPORT / IMPORT SETTINGS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Export / Import Settings</h2>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
+          Export Settings (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+          Import Settings (Coming Soon)
+        </button>
+
+        <p className="text-cyan-100/70 mt-4">
+          Export your settings to a file or import settings from another device.
+        </p>
+      </section>
+
+      {/* BACKUP HISTORY */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Backup History</h2>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded">
+          <p className="text-cyan-100/70">No backups available.</p>
+        </div>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mt-4">
+          Refresh Backup History (Coming Soon)
+        </button>
+      </section>
+
+      {/* DANGER ZONE */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Danger Zone</h2>
+
+        <button className="bg-violet-800 hover:bg-violet-700 px-4 py-2 rounded font-bold mb-4">
+          Reset Sync Settings
+        </button>
+
+        <p className="text-cyan-100/70">
+          This will disable sync and clear all sync-related data.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function AboutSupportSettings() {
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6">About & Support</h1>
+
+      <p className="text-cyan-100/70 mb-8">
+        Learn more about Creator Nexus, access support resources, and manage
+        app-related information.
+      </p>
+
+      {/* APP INFO */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">App Information</h2>
+
+        <p className="text-cyan-100 mb-2">
+          <strong>Version:</strong> 1.0.0 (Static)
+        </p>
+
+        <p className="text-cyan-100 mb-2">
+          <strong>Build:</strong> 2026.06.22 (Static)
+        </p>
+
+        <p className="text-cyan-100/70 mt-4">
+          Release notes and version history will appear here.
+        </p>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mt-4">
+          View Release Notes (Coming Soon)
+        </button>
+      </section>
+
+      {/* HELP CENTER */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Help Center</h2>
+
+        <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold mb-3">
+          Open Help Center (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
+          Documentation (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+          Tutorials & Guides (Coming Soon)
+        </button>
+      </section>
+
+      {/* CONTACT SUPPORT */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Contact Support</h2>
+
+        <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold mb-3">
+          Submit a Support Ticket (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
+          Report a Bug (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+          Request a Feature (Coming Soon)
+        </button>
+      </section>
+
+      {/* SYSTEM STATUS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">System Status</h2>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded mb-4">
+          <p className="text-cyan-100">All systems operational.</p>
+          <p className="text-cyan-100/70">Status page integration coming soon.</p>
+        </div>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+          View Status Page (Coming Soon)
+        </button>
+      </section>
+
+      {/* LEGAL */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Legal</h2>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
+          Terms of Service (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
+          Privacy Policy (Coming Soon)
+        </button>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+          Cookie Policy (Coming Soon)
+        </button>
+      </section>
+
+      {/* CREDITS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Credits</h2>
+
+        <p className="text-cyan-100 mb-2">Creator Nexus</p>
+        <p className="text-cyan-100/70 mb-4">Built with passion for creators.</p>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+          View Full Credits (Coming Soon)
+        </button>
+      </section>
+
+      {/* DANGER ZONE */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Danger Zone</h2>
+
+        <button className="bg-violet-800 hover:bg-violet-700 px-4 py-2 rounded font-bold mb-4">
+          Clear Local Cache
+        </button>
+
+        <p className="text-cyan-100/70 mb-6">
+          This will clear cached data and force the app to reload fresh settings.
+        </p>
+
+        <button className="bg-violet-800 hover:bg-violet-700 px-4 py-2 rounded font-bold">
+          Reset App Data
+        </button>
+
+        <p className="text-cyan-100/70 mt-2">
+          This will reset all local app data. Cloud data will remain untouched.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function IntegrationsSettings() {
+  const apiKeys = [
+    {
+      name: "Primary API Key",
+      created: "June 2026",
+      lastUsed: "2 days ago",
+      status: "Active",
+    },
+  ];
+
+  const webhooks = [
+    {
+      name: "New Follower Webhook",
+      url: "https://example.com/webhook",
+      status: "Active",
+      lastDelivery: "5 hours ago",
+    },
+  ];
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Integrations</h1>
+
+      <p className="text-cyan-100/70 mb-8">
+        Manage API keys, webhooks, developer apps, and external integrations.
+        Full developer platform coming soon.
+      </p>
+
+      {/* API KEYS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">API Keys</h2>
+
+          <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold">
+            Generate New Key
+          </button>
+        </div>
+
+        {apiKeys.length === 0 ? (
+          <p className="text-cyan-100/70">No API keys created yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {apiKeys.map((key) => (
+              <div
+                key={key.name}
+                className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded"
+              >
+                <p className="text-xl font-semibold mb-3">{key.name}</p>
+                <p className="text-cyan-100/70">
+                  Created: {key.created} • Last Used: {key.lastUsed}
+                </p>
+                <p className="text-cyan-100/70 mb-4">Status: {key.status}</p>
+
+                <div className="flex gap-3">
+                  <button className="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded">
+                    Copy Key
+                  </button>
+                  <button className="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded">
+                    Rotate Key
+                  </button>
+                  <button className="bg-violet-700 hover:bg-violet-600 px-3 py-1 rounded font-bold">
+                    Delete Key
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* WEBHOOKS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Webhooks</h2>
+
+          <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold">
+            Add Webhook
+          </button>
+        </div>
+
+        {webhooks.length === 0 ? (
+          <p className="text-cyan-100/70">No webhooks configured.</p>
+        ) : (
+          <div className="space-y-4">
+            {webhooks.map((hook) => (
+              <div
+                key={hook.name}
+                className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded"
+              >
+                <p className="text-xl font-semibold mb-3">{hook.name}</p>
+                <p className="text-cyan-100/70">URL: {hook.url}</p>
+                <p className="text-cyan-100/70">
+                  Status: {hook.status} • Last Delivery: {hook.lastDelivery}
+                </p>
+
+                <div className="flex gap-3 mt-4">
+                  <button className="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded">
+                    Test Delivery
+                  </button>
+                  <button className="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded">
+                    Edit
+                  </button>
+                  <button className="bg-violet-700 hover:bg-violet-600 px-3 py-1 rounded font-bold">
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* OAUTH APPS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">OAuth Apps</h2>
+
+          <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold">
+            Register New App
+          </button>
+        </div>
+
+        <p className="text-cyan-100/70 mb-4">
+          Create OAuth applications to allow external tools to authenticate with
+          Creator Nexus.
+        </p>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded">
+          <p className="text-cyan-100/70">No OAuth apps registered.</p>
+        </div>
+      </section>
+
+      {/* API USAGE */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">API Usage</h2>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded mb-4">
+          <p className="text-cyan-100">Requests This Month: 0</p>
+          <p className="text-cyan-100/70">Rate limits and usage analytics coming soon.</p>
+        </div>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+          View Usage Logs (Coming Soon)
+        </button>
+      </section>
+
+      {/* ERROR LOGS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Integration Error Logs</h2>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded">
+          <p className="text-cyan-100/70">No errors logged.</p>
+        </div>
+
+        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mt-4">
+          Refresh Logs (Coming Soon)
+        </button>
+      </section>
+
+      {/* DANGER ZONE */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Danger Zone</h2>
+
+        <button className="bg-violet-800 hover:bg-violet-700 px-4 py-2 rounded font-bold mb-4">
+          Reset All Integrations
+        </button>
+
+        <p className="text-cyan-100/70">
+          This will delete all API keys, webhooks, and OAuth apps.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function LanguageSettings() {
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Language & Region</h1>
+
+      <p className="text-cyan-100/70 mb-8">
+        Customize your language, region, date formats, and localization
+        preferences. Full localization support coming soon.
+      </p>
+
+      {/* LANGUAGE */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Language</h2>
+
+        <label className="block mb-4">
+          App Language:
+          <select className="w-full mt-1 bg-slate-950/80 border border-cyan-400/40 p-2 rounded">
+            <option value="en">English (US)</option>
+            <option value="en-uk">English (UK)</option>
+            <option value="es">Spanish (Coming Soon)</option>
+            <option value="fr">French (Coming Soon)</option>
+            <option value="de">German (Coming Soon)</option>
+            <option value="jp">Japanese (Coming Soon)</option>
+            <option value="custom">Add Custom Language (Coming Soon)</option>
+          </select>
+        </label>
+
+        <p className="text-cyan-100/70">
+          More languages will be added as localization expands.
+        </p>
+      </section>
+
+      {/* REGION */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Region</h2>
+
+        <label className="block mb-4">
+          Region:
+          <select className="w-full mt-1 bg-slate-950/80 border border-cyan-400/40 p-2 rounded">
+            <option value="us">United States</option>
+            <option value="uk">United Kingdom</option>
+            <option value="eu">European Union</option>
+            <option value="ca">Canada</option>
+            <option value="au">Australia</option>
+            <option value="custom">Custom Region (Coming Soon)</option>
+          </select>
+        </label>
+
+        <p className="text-cyan-100/70">
+          Region affects currency, formatting, and localization defaults.
+        </p>
+      </section>
+
+      {/* DATE & TIME FORMATS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Date & Time Format</h2>
+
+        <label className="block mb-4">
+          Date Format:
+          <select className="w-full mt-1 bg-slate-950/80 border border-cyan-400/40 p-2 rounded">
+            <option value="mmddyyyy">MM/DD/YYYY</option>
+            <option value="ddmmyyyy">DD/MM/YYYY</option>
+            <option value="yyyy-mm-dd">YYYY-MM-DD</option>
+          </select>
+        </label>
+
+        <label className="block mb-4">
+          Time Format:
+          <select className="w-full mt-1 bg-slate-950/80 border border-cyan-400/40 p-2 rounded">
+            <option value="12h">12-Hour</option>
+            <option value="24h">24-Hour</option>
+          </select>
+        </label>
+
+        <label className="block mb-4">
+          Time Zone:
+          <select className="w-full mt-1 bg-slate-950/80 border border-cyan-400/40 p-2 rounded">
+            <option value="auto">Auto-detect</option>
+            <option value="cst">Central Time (US)</option>
+            <option value="est">Eastern Time (US)</option>
+            <option value="pst">Pacific Time (US)</option>
+            <option value="gmt">GMT</option>
+            <option value="cet">CET</option>
+            <option value="ist">IST</option>
+            <option value="custom">Custom Time Zone (Coming Soon)</option>
+          </select>
+        </label>
+      </section>
+
+      {/* NUMBER & CURRENCY FORMATS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Number & Currency Format</h2>
+
+        <label className="block mb-4">
+          Number Format:
+          <select className="w-full mt-1 bg-slate-950/80 border border-cyan-400/40 p-2 rounded">
+            <option value="us">1,234.56</option>
+            <option value="eu">1.234,56</option>
+            <option value="space">1 234,56</option>
+          </select>
+        </label>
+
+        <label className="block mb-4">
+          Currency:
+          <select className="w-full mt-1 bg-slate-950/80 border border-cyan-400/40 p-2 rounded">
+            <option value="usd">USD ($)</option>
+            <option value="eur">EUR (€)</option>
+            <option value="gbp">GBP (£)</option>
+            <option value="cad">CAD ($)</option>
+            <option value="aud">AUD ($)</option>
+            <option value="custom">Custom Currency (Coming Soon)</option>
+          </select>
+        </label>
+      </section>
+
+      {/* LOCALIZATION PREVIEW */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Localization Preview</h2>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded">
+          <p className="text-cyan-100">Date Example: June 22, 2026</p>
+          <p className="text-cyan-100">Time Example: 8:14 PM</p>
+          <p className="text-cyan-100">Number Example: 1,234.56</p>
+          <p className="text-cyan-100">Currency Example: $49.99</p>
+        </div>
+
+        <p className="text-cyan-100/70 mt-4">
+          This preview updates automatically when localization features are
+          implemented.
+        </p>
+      </section>
+
+      {/* TRANSLATION STATUS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Translation Status</h2>
+
+        <div className="bg-slate-950/80 border border-cyan-400/40 p-4 rounded">
+          <p className="text-cyan-100">English: 100%</p>
+          <p className="text-cyan-100">Spanish: 0% (Coming Soon)</p>
+          <p className="text-cyan-100">French: 0% (Coming Soon)</p>
+          <p className="text-cyan-100">German: 0% (Coming Soon)</p>
+        </div>
+      </section>
+
+      {/* DANGER ZONE */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Danger Zone</h2>
+
+        <button className="bg-violet-800 hover:bg-violet-700 px-4 py-2 rounded font-bold">
+          Reset Language Settings
+        </button>
+
+        <p className="text-cyan-100/70 mt-2">
+          This will reset all language, region, and formatting preferences.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+
+

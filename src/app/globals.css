@@ -2,14 +2,18 @@
 
 :root {
   color-scheme: dark;
+  --electric-cyan: #00E5FF;
+  --pulse-purple: #A45CFF;
+  --nexus-blue: #3A7BFF;
+  --neon-red: #FF0033;
   --brand-bg-start: #10235f;
   --brand-bg-mid: #173b8f;
   --brand-bg-end: #4a1b9b;
   --brand-surface: rgba(7, 16, 48, 0.72);
   --brand-surface-soft: rgba(10, 20, 58, 0.45);
-  --brand-border: rgba(0, 194, 255, 0.45);
-  --brand-primary: #00c2ff;
-  --brand-secondary: #a64dff;
+  --brand-border: rgba(0, 229, 255, 0.45);
+  --brand-primary: var(--electric-cyan);
+  --brand-secondary: var(--pulse-purple);
   --brand-text: #eaf1ff;
 }
 
@@ -29,6 +33,12 @@ body {
     linear-gradient(145deg, var(--brand-bg-start) 0%, var(--brand-bg-mid) 55%, var(--brand-bg-end) 100%);
   color: var(--brand-text);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.theme-neon {
+  background: radial-gradient(circle at 20% 15%, #2a49b5 0%, var(--brand-bg-start) 45%),
+    linear-gradient(145deg, var(--brand-bg-start) 0%, var(--brand-bg-mid) 55%, var(--brand-bg-end) 100%);
+  color: var(--brand-text);
 }
 
 a {
@@ -76,7 +86,7 @@ a {
 
 /* Neon brand focus glow */
 .input-glow:focus {
-  box-shadow: 0 0 14px rgba(0, 194, 255, 0.65), 0 0 24px rgba(166, 77, 255, 0.35);
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.65), 0 0 24px rgba(164, 92, 255, 0.4);
   border-color: var(--brand-primary);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -102,8 +112,34 @@ a {
 /* Button hover pulse */
 .btn-pulse:hover {
   transform: scale(1.03);
-  box-shadow: 0 0 14px rgba(0, 194, 255, 0.55), 0 0 28px rgba(166, 77, 255, 0.35);
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.55), 0 0 28px rgba(164, 92, 255, 0.4);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Neon UI utility classes */
+.nav-active-neon {
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.24), rgba(164, 92, 255, 0.26));
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  color: var(--electric-cyan);
+  box-shadow: 0 0 12px rgba(58, 123, 255, 0.25), inset 0 0 20px rgba(164, 92, 255, 0.12);
+}
+
+.toggle-neon {
+  accent-color: var(--electric-cyan);
+}
+
+.toggle-neon:focus-visible {
+  outline: 2px solid var(--nexus-blue);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.25);
+}
+
+.icon-neon {
+  box-shadow: 0 0 14px rgba(58, 123, 255, 0.45), 0 0 22px rgba(164, 92, 255, 0.25);
+}
+
+.glow-neon {
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.45), 0 0 22px rgba(164, 92, 255, 0.35);
 }
 
 /* Reduced motion support */

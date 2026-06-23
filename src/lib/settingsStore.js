@@ -33,6 +33,14 @@ const BASE_SETTINGS = {
   aiMode: "standard",
 };
 
+function enforceNeonDefaults(settings) {
+  return {
+    ...settings,
+    theme: "neon",
+    disableNeon: false,
+  };
+}
+
 function pickBaseSettings(source) {
   const picked = {};
   for (const key of Object.keys(BASE_SETTINGS)) {
@@ -71,25 +79,28 @@ function getPersistedShape(state) {
 }
 
 function hydrateStateFromPayload(payload, detectedDevice) {
-  const globalSettings = {
+  const globalSettings = enforceNeonDefaults({
     ...BASE_SETTINGS,
     ...(payload?.globalSettings && typeof payload.globalSettings === "object"
       ? payload.globalSettings
       : pickBaseSettings(payload || {})),
-  };
+  });
 
-  const desktopSettings =
+  const desktopSettings = enforceNeonDefaults(
     payload?.desktopSettings && typeof payload.desktopSettings === "object"
       ? payload.desktopSettings
-      : {};
-  const mobileSettings =
+      : {}
+  );
+  const mobileSettings = enforceNeonDefaults(
     payload?.mobileSettings && typeof payload.mobileSettings === "object"
       ? payload.mobileSettings
-      : {};
-  const tabletSettings =
+      : {}
+  );
+  const tabletSettings = enforceNeonDefaults(
     payload?.tabletSettings && typeof payload.tabletSettings === "object"
       ? payload.tabletSettings
-      : {};
+      : {}
+  );
 
   const bucketState = {
     globalSettings,
@@ -213,31 +224,34 @@ export const useSettingsStore = create((set) => ({
 
   update: (key, value) =>
     set((state) => {
+      const normalizedValue =
+        key === "theme" ? "neon" : key === "disableNeon" ? false : value;
+
       const updated = {
         ...state,
-        [key]: value,
+        [key]: normalizedValue,
         globalSettings: {
           ...state.globalSettings,
-          [key]: value,
+          [key]: normalizedValue,
         },
       };
 
       if (state.device === "desktop") {
         updated.desktopSettings = {
           ...state.desktopSettings,
-          [key]: value,
+          [key]: normalizedValue,
         };
       }
       if (state.device === "mobile") {
         updated.mobileSettings = {
           ...state.mobileSettings,
-          [key]: value,
+          [key]: normalizedValue,
         };
       }
       if (state.device === "tablet") {
         updated.tabletSettings = {
           ...state.tabletSettings,
-          [key]: value,
+          [key]: normalizedValue,
         };
       }
 
