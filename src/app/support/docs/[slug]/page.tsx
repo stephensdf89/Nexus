@@ -22,7 +22,18 @@ export default async function SupportDocPage({
   try {
     content = await fs.readFile(filePath, "utf8");
   } catch {
-    content = `# ${doc.title}\n\nThe file ${doc.fileName} is not available in this deployment artifact yet.\n\nIf you recently created this document locally, commit and redeploy to publish it.`;
+    try {
+      const githubRepo = process.env.NEXT_PUBLIC_GITHUB_REPO || "stephensdf89/Nexus";
+      const rawUrl = `https://raw.githubusercontent.com/${githubRepo}/main/${doc.fileName}`;
+      const res = await fetch(rawUrl, { cache: "no-store" });
+      if (res.ok) {
+        content = await res.text();
+      } else {
+        content = `# ${doc.title}\n\nThe file ${doc.fileName} could not be loaded from deployment storage or GitHub raw content.`;
+      }
+    } catch {
+      content = `# ${doc.title}\n\nThe file ${doc.fileName} could not be loaded from deployment storage or GitHub raw content.`;
+    }
   }
 
   return (
