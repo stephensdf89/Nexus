@@ -73,20 +73,31 @@ export default function LoginPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error("Login error:", error);
         setError(error.message);
         setIsLoading(false);
         return;
       }
 
-      router.push("/dashboard");
+      if (data?.session) {
+        // Session created successfully - force redirect with a small delay
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 300);
+      } else {
+        setError("Login succeeded but no session created. Please try again.");
+        setIsLoading(false);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      const errorMsg = err instanceof Error ? err.message : "Login failed";
+      console.error("Login exception:", err);
+      setError(errorMsg);
       setIsLoading(false);
     }
   };
