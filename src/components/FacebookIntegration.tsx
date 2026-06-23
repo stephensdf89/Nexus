@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useUser } from "@/contexts/AuthContext";
 
 interface FacebookPage {
   platform_id: string;
@@ -31,6 +32,8 @@ interface FacebookAnalytics {
 }
 
 export default function FacebookIntegration() {
+  const authContext = useUser();
+  const user = authContext?.user;
   const [facebookStatus, setFacebookStatus] = useState<FacebookStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -39,13 +42,20 @@ export default function FacebookIntegration() {
 
   // Fetch Facebook connection status on mount
   useEffect(() => {
-    fetchStatus();
-  }, []);
+    if (user?.id || user?.email) {
+      fetchStatus();
+    }
+  }, [user?.id, user?.email]);
 
   const fetchStatus = async () => {
     try {
       setError("");
-      const res = await fetch("/api/integrations/facebook/status");
+      const res = await fetch("/api/integrations/facebook/status", {
+        headers: {
+          "x-user-id": user?.id || "",
+          "x-user-email": user?.email || "",
+        },
+      });
       
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -67,6 +77,11 @@ export default function FacebookIntegration() {
   };
 
   const handleConnect = () => {
+    if (!user?.id && !user?.email) {
+      setError("You must be signed in before connecting Facebook.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -76,7 +91,11 @@ export default function FacebookIntegration() {
     }, 12000);
 
     try {
-      window.location.assign("/api/integrations/facebook/auth");
+      const params = new URLSearchParams({
+        uid: user?.id || "",
+        email: user?.email || "",
+      });
+      window.location.assign(`/api/integrations/facebook/auth?${params.toString()}`);
     } catch (err) {
       window.clearTimeout(timeoutId);
       const errorMsg = err instanceof Error ? err.message : "Error initiating Facebook auth";
@@ -89,7 +108,12 @@ export default function FacebookIntegration() {
   const fetchAnalytics = async () => {
     try {
       setAnalyticsLoading(true);
-      const response = await fetch("/api/integrations/facebook/analytics");
+      const response = await fetch("/api/integrations/facebook/analytics", {
+        headers: {
+          "x-user-id": user?.id || "",
+          "x-user-email": user?.email || "",
+        },
+      });
 
       if (!response.ok) {
         const message = response.status === 404
@@ -116,7 +140,11 @@ export default function FacebookIntegration() {
       setError("");
       const response = await fetch("/api/integrations/facebook/disconnect", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user?.id || "",
+          "x-user-email": user?.email || "",
+        },
         body: JSON.stringify({
           platformId: facebookStatus.pages[0].platform_id,
         }),

@@ -39,17 +39,47 @@ function withStateCookie(response: NextResponse, state: string) {
   return response;
 }
 
+function withIdentityCookies(response: NextResponse, userId?: string, email?: string) {
+  if (userId) {
+    response.cookies.set("fb_user_id", userId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 600,
+    });
+  }
+
+  if (email) {
+    response.cookies.set("fb_user_email", email, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 600,
+    });
+  }
+
+  return response;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.redirect(new URL("/login", req.url));
+    const userId =
+      (session?.user as { id?: string } | undefined)?.id ||
+      req.nextUrl.searchParams.get("uid") ||
+      undefined;
+    const email = session?.user?.email || req.nextUrl.searchParams.get("email") || undefined;
+
+    if (!userId && !email) {
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=unauthorized", req.url));
     }
 
     const state = Math.random().toString(36).substring(7);
     const authUrl = buildFacebookAuthUrl(req, state);
     const response = NextResponse.redirect(authUrl);
-    return withStateCookie(response, state);
+    withStateCookie(response, state);
+    withIdentityCookies(response, userId, email);
+    return response;
   } catch (error) {
     console.error("Facebook auth GET error:", error);
     return NextResponse.redirect(new URL("/settings?tab=connected&error=auth_init_failed", req.url));
@@ -59,7 +89,13 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const userId =
+      (session?.user as { id?: string } | undefined)?.id ||
+      req.headers.get("x-user-id") ||
+      undefined;
+    const email = session?.user?.email || req.headers.get("x-user-email") || undefined;
+
+    if (!userId && !email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -67,7 +103,9 @@ export async function POST(req: NextRequest) {
     const authUrl = buildFacebookAuthUrl(req, state);
 
     const response = NextResponse.json({ authUrl });
-    return withStateCookie(response, state);
+    withStateCookie(response, state);
+    withIdentityCookies(response, userId, email);
+    return response;
   } catch (error) {
     console.error("Facebook auth error:", error);
     return NextResponse.json(

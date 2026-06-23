@@ -22,9 +22,11 @@ function getFacebookRedirectUri(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.redirect(new URL("/login", req.url));
-    }
+    const sessionUserId = (session?.user as { id?: string } | undefined)?.id;
+    const sessionEmail = session?.user?.email;
+    const cookieUserId = req.cookies.get("fb_user_id")?.value;
+    const cookieEmail = req.cookies.get("fb_user_email")?.value;
+    const email = sessionEmail || cookieEmail;
 
     // Get code and state from query params
     const { searchParams } = new URL(req.url);
@@ -87,12 +89,16 @@ export async function GET(req: NextRequest) {
 
     // Store integration in database
     const pg = await getPgClient();
-    let userId = (session.user as { id?: string }).id;
+    let userId = sessionUserId || cookieUserId;
 
     if (!isUuid(userId)) {
+      if (!email) {
+        return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_identity", req.url));
+      }
+
       const userLookup = await pg.query(
         "SELECT id FROM auth.users WHERE email = $1 LIMIT 1",
-        [session.user.email]
+        [email]
       );
       userId = userLookup.rows[0]?.id;
     }

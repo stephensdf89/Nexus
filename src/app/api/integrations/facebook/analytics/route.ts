@@ -23,16 +23,22 @@ async function resolveUserId(email: string, sessionUserId?: string) {
   return { pg, userId: userLookup.rows[0]?.id as string | undefined };
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const headerEmail = req.headers.get("x-user-email") || undefined;
+    const headerUserId = req.headers.get("x-user-id") || undefined;
+    const email = session?.user?.email || headerEmail;
+    const userIdFromSession =
+      (session?.user as { id?: string } | undefined)?.id || headerUserId;
+
+    if (!email && !userIdFromSession) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { pg, userId } = await resolveUserId(
-      session.user.email,
-      (session.user as { id?: string }).id
+      email || "",
+      userIdFromSession
     );
 
     if (!isUuid(userId)) {

@@ -8,20 +8,24 @@ function isUuid(value?: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const headerEmail = req.headers.get("x-user-email") || undefined;
+    const headerUserId = req.headers.get("x-user-id") || undefined;
+    const email = session?.user?.email || headerEmail;
+
+    if (!email && !headerUserId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const pg = await getPgClient();
-    let userId = (session.user as { id?: string }).id;
+    let userId = (session?.user as { id?: string } | undefined)?.id || headerUserId;
 
     if (!isUuid(userId)) {
       const userLookup = await pg.query(
         "SELECT id FROM auth.users WHERE email = $1 LIMIT 1",
-        [session.user.email]
+        [email]
       );
       userId = userLookup.rows[0]?.id;
     }

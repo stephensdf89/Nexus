@@ -11,7 +11,11 @@ function isUuid(value?: string) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const headerEmail = req.headers.get("x-user-email") || undefined;
+    const headerUserId = req.headers.get("x-user-id") || undefined;
+    const email = session?.user?.email || headerEmail;
+
+    if (!email && !headerUserId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -23,12 +27,16 @@ export async function POST(req: NextRequest) {
 
     // Delete the integration from database
     const pg = await getPgClient();
-    let userId = (session.user as { id?: string }).id;
+    let userId = (session?.user as { id?: string } | undefined)?.id || headerUserId;
 
     if (!isUuid(userId)) {
+      if (!email) {
+        return NextResponse.json({ error: "Missing user identity" }, { status: 400 });
+      }
+
       const userLookup = await pg.query(
         "SELECT id FROM auth.users WHERE email = $1 LIMIT 1",
-        [session.user.email]
+        [email]
       );
       userId = userLookup.rows[0]?.id;
     }
