@@ -1736,43 +1736,47 @@ function AboutSupportSettings() {
           Release notes and version history will appear here.
         </p>
 
-        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mt-4">
-          View Release Notes (Coming Soon)
-        </button>
+        <Link href="/about" className="inline-block bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mt-4">
+          Open About Page
+        </Link>
       </section>
 
       {/* HELP CENTER */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
         <h2 className="text-2xl font-bold mb-4">Help Center</h2>
 
-        <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold mb-3">
-          Open Help Center (Coming Soon)
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/support" className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold">
+            Open Support Hub
+          </Link>
 
-        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
-          Documentation (Coming Soon)
-        </button>
+          <Link href="/support/docs/quick-start" className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+            Quick Start Guide
+          </Link>
 
-        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
-          Tutorials & Guides (Coming Soon)
-        </button>
+          <Link href="/support/docs/deployment-checklist" className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+            Deployment Checklist
+          </Link>
+        </div>
       </section>
 
       {/* CONTACT SUPPORT */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
         <h2 className="text-2xl font-bold mb-4">Contact Support</h2>
 
-        <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold mb-3">
-          Submit a Support Ticket (Coming Soon)
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <a href="mailto:support@creatornexuspro.com" className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold">
+            Email Support
+          </a>
 
-        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
-          Report a Bug (Coming Soon)
-        </button>
+          <a href="mailto:bugs@creatornexuspro.com?subject=Bug%20Report%20-%20Creator%20Nexus" className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+            Report a Bug
+          </a>
 
-        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
-          Request a Feature (Coming Soon)
-        </button>
+          <a href="mailto:ideas@creatornexuspro.com?subject=Feature%20Request%20-%20Creator%20Nexus" className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+            Request a Feature
+          </a>
+        </div>
       </section>
 
       {/* SYSTEM STATUS */}
@@ -1784,26 +1788,28 @@ function AboutSupportSettings() {
           <p className="text-cyan-100/70">Status page integration coming soon.</p>
         </div>
 
-        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
-          View Status Page (Coming Soon)
-        </button>
+        <Link href="/support" className="inline-block bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+          View Status & Support Hub
+        </Link>
       </section>
 
       {/* LEGAL */}
       <section className="mb-10 bg-slate-900/50 p-6 rounded-xl border border-cyan-400/40 shadow-lg">
         <h2 className="text-2xl font-bold mb-4">Legal</h2>
 
-        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
-          Terms of Service (Coming Soon)
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/terms" className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+            Terms of Service
+          </Link>
 
-        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded mb-3">
-          Privacy Policy (Coming Soon)
-        </button>
+          <Link href="/privacy" className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+            Privacy Policy
+          </Link>
 
-        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
-          Cookie Policy (Coming Soon)
-        </button>
+          <Link href="/data-deletion" className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+            Data Deletion Policy
+          </Link>
+        </div>
       </section>
 
       {/* CREDITS */}
@@ -1813,9 +1819,9 @@ function AboutSupportSettings() {
         <p className="text-cyan-100 mb-2">Creator Nexus</p>
         <p className="text-cyan-100/70 mb-4">Built with passion for creators.</p>
 
-        <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
-          View Full Credits (Coming Soon)
-        </button>
+        <Link href="/about" className="inline-block bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded">
+          View About & Credits
+        </Link>
       </section>
 
       {/* DANGER ZONE */}

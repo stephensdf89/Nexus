@@ -20,6 +20,13 @@ export default function HomePage() {
             Create Account
           </Link>
         </div>
+
+        <div className="mt-6 flex flex-wrap gap-4 text-sm text-cyan-100/75">
+          <Link href="/about" className="hover:text-cyan-200">About</Link>
+          <Link href="/support" className="hover:text-cyan-200">Support</Link>
+          <Link href="/terms" className="hover:text-cyan-200">Terms</Link>
+          <Link href="/privacy" className="hover:text-cyan-200">Privacy</Link>
+        </div>
       </section>
     </main>
   );
