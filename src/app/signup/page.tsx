@@ -1,7 +1,9 @@
 "use client";
 import { useState, type FormEvent, type ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function SignUpPage() {
   const getPasswordStrength = (password: string): number => {
@@ -56,6 +58,8 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -91,25 +95,58 @@ export default function SignUpPage() {
     }
 
     setErrors({});
+    setIsLoading(true);
 
-    const res = await fetch("/api/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.name,
-        username: form.username,
-        email: form.email,
-        password: form.password,
-      }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      setErrors({ api: data.error });
+    if (!supabase) {
+      setErrors({ api: "Supabase is not configured" });
+      setIsLoading(false);
       return;
     }
 
-    setSubmitted(true);
+    try {
+      // Sign up with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: {
+            display_name: form.name,
+            username: form.username,
+          },
+        },
+      });
+
+      if (error) {
+        setErrors({ api: error.message });
+        setIsLoading(false);
+        return;
+      }
+
+      // Create user_settings record
+      if (data.user) {
+        const { error: settingsError } = await supabase
+          .from("user_settings")
+          .insert({
+            user_id: data.user.id,
+            theme: "neon",
+            language: "en",
+            region: "US",
+          });
+
+        if (settingsError) {
+          console.error("Failed to create user settings:", settingsError);
+        }
+      }
+
+      setSubmitted(true);
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1000);
+    } catch (err) {
+      setErrors({ api: err instanceof Error ? err.message : "An error occurred" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -323,15 +360,15 @@ export default function SignUpPage() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={!acceptedTerms}
-            className="w-full bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 py-3 rounded font-semibold transition btn-pulse"
+            disabled={!acceptedTerms || isLoading}
+            className="w-full bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 py-3 rounded font-semibold transition btn-pulse disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Create Account
+            {isLoading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
         {errors.api && (
-          <p className="text-violet-300 text-sm error-shake">{errors.api}</p>
+          <p className="text-violet-300 text-sm error-shake mt-4 p-3 rounded bg-violet-900/35 border border-violet-400/50">{errors.api}</p>
         )}
 
         <p className="text-center text-gray-300 mt-4">

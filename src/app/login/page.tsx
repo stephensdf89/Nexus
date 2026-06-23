@@ -1,56 +1,56 @@
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
+import { useUser } from "@/contexts/AuthContext";
 import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function LoginPage() {
   const router = useRouter();
+  const authContext = useUser();
+  const user = authContext?.user;
   const a11y = useSettingsStore();
   const [showMenu, setShowMenu] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     a11y.load();
-
-    const savedEmail = localStorage.getItem("loginEmail");
-    const savedPassword = localStorage.getItem("loginPassword");
-    if (savedEmail) {
-      setEmail(savedEmail);
-      setPassword(savedPassword || "");
-      setRememberMe(true);
-    }
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      router.push("/dashboard");
+    }
+  }, [user, router]);
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
-    if (rememberMe) {
-      localStorage.setItem("loginEmail", email);
-      localStorage.setItem("loginPassword", password);
-    } else {
-      localStorage.removeItem("loginEmail");
-      localStorage.removeItem("loginPassword");
+    if (!supabase) {
+      setError("Supabase is not configured");
+      setIsLoading(false);
+      return;
     }
 
-    const result = await signIn("credentials", { redirect: false, email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (result?.error) {
-      setError("Invalid email or password");
-    } else {
-      router.push("/dashboard");
+    if (error) {
+      setError(error.message);
+      setIsLoading(false);
+      return;
     }
 
-    setIsLoading(false);
+    router.push("/dashboard");
   };
 
   return (
@@ -115,20 +115,9 @@ export default function LoginPage() {
               <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white">{showPassword ? "hide" : "show"}</button>
             </div>
           </div>
-          <div className="flex items-center">
-            <input id="rememberMe" type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 rounded cursor-pointer" aria-label="Remember me on this device" />
-            <label htmlFor="rememberMe" className="ml-2 cursor-pointer text-sm">Remember me</label>
-          </div>
           <button type="submit" disabled={isLoading} className={`w-full py-3 rounded font-semibold transition-all duration-200 bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-400 ${!a11y.reducedMotion && !a11y.safeMode ? "btn-pulse" : ""}`} aria-busy={isLoading}>{isLoading ? "Signing in..." : "Sign In"}</button>
         </div>
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center border-t border-gray-700" />
-          <div className="relative flex justify-center text-sm">
-            <span className="px-3 bg-slate-950/60 text-cyan-100/80">or</span>
-          </div>
-        </div>
-        <button type="button" onClick={() => signIn("facebook", { callbackUrl: "/dashboard" })} className="w-full py-3 rounded font-semibold transition-all duration-200 bg-violet-600 hover:bg-violet-700 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500">Continue with Facebook</button>
-        <p className="text-center mt-4 text-sm">Don&apos;t have an account? <Link href="/signup" className="font-semibold underline transition-colors text-cyan-300 hover:text-violet-300">Sign up</Link></p>
+        <p className="text-center mt-4 text-sm">Don&apos;t have an account? <a href="/signup" className="font-semibold underline transition-colors text-cyan-300 hover:text-violet-300">Sign up</a></p>
       </form>
     </div>
   );
