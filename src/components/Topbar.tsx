@@ -81,26 +81,26 @@ export default function Topbar() {
   };
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-zinc-800 bg-zinc-950 px-6">
+    <header className="flex h-16 items-center justify-between border-b border-cyan-400/30 bg-[rgba(10,20,58,0.86)] px-6 backdrop-blur-sm">
       <div>
-        <p className="text-sm text-zinc-400">Creator Dashboard</p>
+        <p className="text-sm text-cyan-100/75">Creator Dashboard</p>
         <h2 className="text-lg font-semibold">Welcome back</h2>
       </div>
 
       <div className="flex items-center gap-3">
         <button
           type="button"
-          className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-300 transition hover:border-zinc-500"
+          className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/20"
         >
           Notifications
         </button>
 
         <div className="hidden text-right md:block">
           <p className="text-sm">{session.email || "Creator account"}</p>
-          <p className="text-xs text-zinc-500">Active session</p>
+          <p className="text-xs text-cyan-100/60">Active session</p>
         </div>
 
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ff0033] text-sm font-bold">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-violet-600 text-sm font-bold text-[#05163b]">
           {session.initial}
         </div>
 
@@ -108,7 +108,7 @@ export default function Topbar() {
           type="button"
           onClick={handleSignOut}
           disabled={isSigningOut}
-          className="rounded-lg border border-[#ff0033] px-4 py-2 text-sm font-medium text-[#ff6680] transition hover:bg-[#ff0033] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg border border-cyan-400/45 bg-violet-500/15 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:bg-gradient-to-r hover:from-cyan-500 hover:to-violet-600 hover:text-[#05163b] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSigningOut ? "Signing Out..." : "Logout"}
         </button>

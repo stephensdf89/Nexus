@@ -15,8 +15,8 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-72 flex-col border-r border-zinc-800 bg-zinc-950 p-6">
-      <p className="text-xs uppercase tracking-[0.3em] text-[#ff0033]">Creator OS</p>
+    <aside className="flex w-72 flex-col border-r border-cyan-400/35 bg-[rgba(10,20,58,0.82)] p-6 backdrop-blur-sm">
+      <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">Creator OS</p>
       <h1 className="mt-2 text-2xl font-bold">Content Creator Nexus</h1>
 
       <nav className="mt-8 flex flex-1 flex-col gap-2">
@@ -28,8 +28,8 @@ export default function Sidebar() {
               href={item.href}
               className={`rounded-lg px-4 py-3 text-sm font-medium transition ${
                 isActive
-                  ? "bg-[#ff0033] text-white shadow-[0_8px_20px_rgba(255,0,51,0.35)]"
-                  : "text-zinc-300 hover:bg-zinc-900 hover:text-white"
+                  ? "bg-gradient-to-r from-cyan-500 to-violet-600 text-[#05163b] shadow-[0_8px_20px_rgba(0,194,255,0.35)]"
+                  : "text-cyan-100/85 hover:bg-cyan-500/12 hover:text-cyan-200"
               }`}
             >
               {item.label}
@@ -38,7 +38,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-sm text-zinc-400">
+      <div className="rounded-xl border border-cyan-400/35 bg-[rgba(13,30,76,0.75)] p-4 text-sm text-cyan-100/80">
         Protected creator workspace
       </div>
     </aside>

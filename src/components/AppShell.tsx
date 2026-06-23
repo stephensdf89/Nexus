@@ -5,7 +5,7 @@ import Topbar from "@/components/Topbar";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-[#0d0d0d] text-white">
+    <div className="flex min-h-screen bg-transparent text-white">
       <Sidebar />
       <div className="flex min-h-screen flex-1 flex-col">
         <Topbar />

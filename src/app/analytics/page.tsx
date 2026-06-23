@@ -19,24 +19,24 @@ export default function AnalyticsPage() {
             { label: "Engagement Rate", value: "6.7%" },
             { label: "Follower Growth", value: "+3.2%" },
           ].map((metric) => (
-            <article key={metric.label} className="rounded-xl border border-zinc-800 bg-zinc-950 p-5 shadow-lg">
-              <p className="text-sm text-zinc-400">{metric.label}</p>
-              <p className="mt-2 text-3xl font-bold text-[#ff3360]">{metric.value}</p>
+            <article key={metric.label} className="rounded-xl border border-cyan-400/40 bg-[rgba(9,25,66,0.82)] p-5 shadow-lg shadow-cyan-500/10">
+              <p className="text-sm text-cyan-100/75">{metric.label}</p>
+              <p className="mt-2 text-3xl font-bold text-cyan-300">{metric.value}</p>
             </article>
           ))}
         </div>
 
-        <article className="rounded-xl border border-zinc-800 bg-zinc-950 p-5 shadow-lg">
+        <article className="rounded-xl border border-cyan-400/40 bg-[rgba(9,25,66,0.82)] p-5 shadow-lg shadow-cyan-500/10">
           <h2 className="text-lg font-semibold">Platform Performance</h2>
           <div className="mt-4 space-y-4">
             {platformData.map((entry) => (
               <div key={entry.platform}>
                 <div className="mb-2 flex items-center justify-between text-sm">
                   <span>{entry.platform}</span>
-                  <span className="text-zinc-400">{entry.value}%</span>
+                  <span className="text-cyan-100/70">{entry.value}%</span>
                 </div>
-                <div className="h-3 overflow-hidden rounded-full bg-zinc-800">
-                  <div className="h-full bg-[#ff0033]" style={{ width: `${entry.value}%` }} />
+                <div className="h-3 overflow-hidden rounded-full bg-cyan-500/15">
+                  <div className="h-full bg-gradient-to-r from-cyan-500 to-violet-600" style={{ width: `${entry.value}%` }} />
                 </div>
               </div>
             ))}
