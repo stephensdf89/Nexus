@@ -208,7 +208,7 @@ export default function SettingsPage() {
 
           {/* PLACEHOLDERS FOR FUTURE FEATURES */}
           {active === "account" && <AccountSettings />}
-          {active === "profile" && <Placeholder title="Profile Settings" />}
+          {active === "profile" && <ProfileSettings />}
           {active === "connected" && <Placeholder title="Connected Platforms (Coming Soon)" />}
           {active === "language" && <Placeholder title="Language Settings" />}
           {active === "security" && <Placeholder title="Security & Privacy (Coming Soon)" />}
@@ -706,6 +706,183 @@ function AccountSettings() {
         <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded font-semibold border border-slate-600/40 text-cyan-100">
           Disable Account (Coming Soon)
         </button>
+      </section>
+    </div>
+  );
+}
+
+function ProfileSettings() {
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-2 text-cyan-200">Profile Settings</h1>
+      <p className="text-cyan-100/60 mb-6">Customize your creator profile and personal information.</p>
+
+      {/* PROFILE IMAGES */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
+        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Profile Images</h2>
+
+        <div className="flex items-center gap-6 mb-6">
+          {/* PROFILE PICTURE */}
+          <div className="text-center">
+            <div className="w-24 h-24 rounded-full bg-slate-800 border border-cyan-400/60 mb-3"></div>
+            <button className="bg-violet-600 hover:bg-violet-500 px-3 py-2 rounded font-bold border border-violet-300/50 text-white text-sm">
+              Change Photo
+            </button>
+          </div>
+
+          {/* BANNER */}
+          <div className="flex-1">
+            <div className="w-full h-24 bg-slate-800 border border-cyan-400/60 mb-3 rounded"></div>
+            <button className="bg-violet-600 hover:bg-violet-500 px-3 py-2 rounded font-bold border border-violet-300/50 text-white text-sm">
+              Change Banner
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* BASIC INFO */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
+        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Basic Information</h2>
+
+        <label className="block mb-4">
+          <span className="text-cyan-100 font-semibold mb-2 block">Display Name:</span>
+          <input
+            type="text"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            placeholder="Your display name"
+          />
+        </label>
+
+        <label className="block mb-4">
+          <span className="text-cyan-100 font-semibold mb-2 block">Username / Handle:</span>
+          <input
+            type="text"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            placeholder="@yourhandle"
+          />
+        </label>
+
+        <label className="block mb-4">
+          <span className="text-cyan-100 font-semibold mb-2 block">Bio:</span>
+          <textarea
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50 h-24"
+            placeholder="Tell people about yourself..."
+          ></textarea>
+        </label>
+
+        <label className="block mb-4">
+          <span className="text-cyan-100 font-semibold mb-2 block">Pronouns:</span>
+          <select className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50">
+            <option value="none">Prefer not to say</option>
+            <option value="he/him">He/Him</option>
+            <option value="she/her">She/Her</option>
+            <option value="they/them">They/Them</option>
+            <option value="custom">Custom</option>
+          </select>
+        </label>
+      </section>
+
+      {/* SOCIAL LINKS */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
+        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Social Links</h2>
+
+        <label className="block mb-4">
+          <span className="text-cyan-100 font-semibold mb-2 block">Website:</span>
+          <input
+            type="text"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            placeholder="https://yourwebsite.com"
+          />
+        </label>
+
+        <label className="block mb-4">
+          <span className="text-cyan-100 font-semibold mb-2 block">Instagram:</span>
+          <input
+            type="text"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            placeholder="@username"
+          />
+        </label>
+
+        <label className="block mb-4">
+          <span className="text-cyan-100 font-semibold mb-2 block">TikTok:</span>
+          <input
+            type="text"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            placeholder="@username"
+          />
+        </label>
+
+        <label className="block mb-4">
+          <span className="text-cyan-100 font-semibold mb-2 block">YouTube:</span>
+          <input
+            type="text"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            placeholder="Channel URL"
+          />
+        </label>
+
+        <label className="block mb-4">
+          <span className="text-cyan-100 font-semibold mb-2 block">Twitter / X:</span>
+          <input
+            type="text"
+            className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50"
+            placeholder="@username"
+          />
+        </label>
+      </section>
+
+      {/* CREATOR CATEGORY */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
+        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Creator Category</h2>
+
+        <label className="block mb-4">
+          <span className="text-cyan-100 font-semibold mb-2 block">Category:</span>
+          <select className="w-full p-3 bg-slate-950/80 border border-cyan-400/60 rounded text-cyan-50">
+            <option value="general">General Creator</option>
+            <option value="gaming">Gaming</option>
+            <option value="beauty">Beauty</option>
+            <option value="fitness">Fitness</option>
+            <option value="education">Education</option>
+            <option value="music">Music</option>
+            <option value="lifestyle">Lifestyle</option>
+            <option value="tech">Tech</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+      </section>
+
+      {/* VISIBILITY */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded border border-cyan-400/40">
+        <h2 className="text-2xl font-bold mb-4 text-cyan-200">Profile Visibility</h2>
+
+        <label className="flex items-center cursor-pointer mb-3">
+          <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" />
+          <span className="ml-3 text-cyan-100">Make my profile public</span>
+        </label>
+
+        <label className="flex items-center cursor-pointer mb-3">
+          <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" />
+          <span className="ml-3 text-cyan-100">Show my social links</span>
+        </label>
+
+        <label className="flex items-center cursor-pointer">
+          <input type="checkbox" className="w-4 h-4 rounded cursor-pointer" />
+          <span className="ml-3 text-cyan-100">Allow profile discovery</span>
+        </label>
+      </section>
+
+      {/* DANGER ZONE */}
+      <section className="mb-10 bg-slate-900/50 p-6 rounded border border-violet-400/40">
+        <h2 className="text-2xl font-bold mb-4 text-violet-400">Danger Zone</h2>
+
+        <button className="bg-violet-700 hover:bg-violet-600 px-4 py-2 rounded font-bold mb-4 border border-violet-300/50 text-white">
+          Reset Profile
+        </button>
+
+        <p className="text-cyan-100/60">
+          This will reset your profile information but will not delete your account.
+        </p>
       </section>
     </div>
   );
