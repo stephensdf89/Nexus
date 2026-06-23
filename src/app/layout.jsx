@@ -1,4 +1,6 @@
 import "./globals.css";
+import { Suspense } from "react";
+import HistoryNavigation from "@/components/HistoryNavigation";
 import Providers from "@/components/Providers";
 import SettingsLoader from "@/components/SettingsLoader";
 
@@ -13,6 +15,9 @@ export default function RootLayout({ children }) {
       <body>
         <Providers>
           <SettingsLoader />
+          <Suspense fallback={null}>
+            <HistoryNavigation />
+          </Suspense>
           {children}
         </Providers>
       </body>
