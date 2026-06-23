@@ -11,7 +11,11 @@ export async function GET() {
     }
 
     const pg = await getPgClient();
-    const userId = (session.user as { id?: string }).id || session.user.email; // Use ID if available, fallback to email
+    const userId = (session.user as { id?: string }).id;
+    if (!userId) {
+      return NextResponse.json({ error: "Missing user id in session" }, { status: 400 });
+    }
+
     const result = await pg.query(
       `SELECT platform_id, page_name, access_token, created_at 
        FROM integrations 

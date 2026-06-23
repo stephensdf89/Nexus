@@ -5,7 +5,14 @@ import { getPgClient } from "@/lib/pg";
 
 const FACEBOOK_APP_ID = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
 const FACEBOOK_APP_SECRET = process.env.FACEBOOK_CLIENT_SECRET || process.env.FACEBOOK_APP_SECRET;
-const REDIRECT_URI = `${process.env.NEXTAUTH_URL}/api/integrations/facebook/callback`;
+
+function getFacebookRedirectUri(req: NextRequest) {
+  if (process.env.FACEBOOK_REDIRECT_URI) {
+    return process.env.FACEBOOK_REDIRECT_URI;
+  }
+
+  return `${req.nextUrl.origin}/api/integrations/facebook/callback`;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -29,9 +36,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL("/settings?tab=connected&error=no_code", req.url));
     }
 
+    const redirectUri = getFacebookRedirectUri(req);
+
     // Exchange code for access token
     const tokenResponse = await fetch(
-      `https://graph.facebook.com/v18.0/oauth/access_token?client_id=${FACEBOOK_APP_ID}&client_secret=${FACEBOOK_APP_SECRET}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&code=${code}`
+      `https://graph.facebook.com/v18.0/oauth/access_token?client_id=${FACEBOOK_APP_ID}&client_secret=${FACEBOOK_APP_SECRET}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
     );
 
     const tokenData = await tokenResponse.json();
@@ -56,7 +65,11 @@ export async function GET(req: NextRequest) {
 
     // Store integration in database
     const pg = await getPgClient();
-    const userId = (session.user as { id?: string }).id || session.user.email; // Use ID if available, fallback to email
+    const userId = (session.user as { id?: string }).id;
+    if (!userId) {
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_user_id", req.url));
+    }
+
     await pg.query(
       `INSERT INTO integrations (user_id, platform, platform_id, page_name, access_token, page_access_token, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, NOW())
