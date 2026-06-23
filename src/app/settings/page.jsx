@@ -25,6 +25,7 @@ import {
 import AppShell from "@/components/AppShell";
 import ConfirmModal from "@/components/ConfirmModal";
 import FacebookIntegration from "@/components/FacebookIntegration";
+import YouTubeIntegration from "@/components/YouTubeIntegration";
 import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function SettingsPage() {
@@ -1229,6 +1230,9 @@ function ConnectedPlatforms() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         {/* Facebook - Using Real Integration Component */}
         <FacebookIntegration />
+
+        {/* YouTube - Using Real Integration Component */}
+        <YouTubeIntegration />
 
         {/* Other Platforms - Coming Soon */}
         {otherPlatforms.map((p) => (

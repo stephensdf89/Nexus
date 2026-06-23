@@ -57,6 +57,35 @@ export async function GET(req: NextRequest) {
       console.error("Error fetching Facebook analytics:", err);
     }
 
+    // Fetch YouTube analytics if connected
+    let youtubeMetrics: PlatformMetrics | null = null;
+    try {
+      const ytAnalyticsRes = await fetch(
+        `${process.env.NEXTAUTH_URL || "https://www.creatornexuspro.com"}/api/integrations/youtube/analytics`,
+        {
+          headers: {
+            "x-user-id": userId || "",
+            "x-user-email": userEmail || "",
+          },
+        }
+      );
+
+      if (ytAnalyticsRes.ok) {
+        const ytData = await ytAnalyticsRes.json();
+        if (ytData.success && ytData.metrics) {
+          youtubeMetrics = {
+            platform: "YouTube",
+            views: ytData.metrics.views || 0,
+            engagement: ytData.metrics.recent_engagement || 0,
+            followers: ytData.metrics.subscribers || 0,
+            trend: 18, // placeholder
+          };
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching YouTube analytics:", err);
+    }
+
     // Mock data for other platforms (for now, these are placeholders)
     const mockPlatforms: PlatformMetrics[] = [
       {
@@ -83,9 +112,11 @@ export async function GET(req: NextRequest) {
     ];
 
     // Combine platforms
-    const allPlatforms = facebookMetrics
-      ? [facebookMetrics, ...mockPlatforms]
-      : mockPlatforms;
+    const allPlatforms = [
+      ...(facebookMetrics ? [facebookMetrics] : []),
+      ...(youtubeMetrics ? [youtubeMetrics] : []),
+      ...mockPlatforms,
+    ];
 
     // Calculate totals
     const totalViews = allPlatforms.reduce((sum, p) => sum + p.views, 0);
