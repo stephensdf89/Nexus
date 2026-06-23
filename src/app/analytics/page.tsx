@@ -3,6 +3,7 @@
 import { useState } from "react";
 import AppShell from "@/components/AppShell";
 import RealtimeAnalyticsWidget from "@/components/RealtimeAnalyticsWidget";
+import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import {
   ViewsOverTimeChart,
@@ -174,6 +175,14 @@ export default function AnalyticsPage() {
             )}
           </article>
         </div>
+
+        {/* ADVANCED ANALYTICS DASHBOARD */}
+        <article className="rounded-xl border border-cyan-400/40 bg-[rgba(9,25,66,0.82)] p-5 shadow-lg shadow-cyan-500/10">
+          <h2 className="text-lg font-semibold text-cyan-100 mb-4">
+            Advanced Analytics
+          </h2>
+          <AdvancedAnalyticsDashboard />
+        </article>
       </section>
     </AppShell>
   );
