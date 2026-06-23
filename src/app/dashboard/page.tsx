@@ -1,6 +1,8 @@
 "use client";
 
 import AppShell from "@/components/AppShell";
+import CreatorToolsPanel from "@/components/CreatorToolsPanel";
+import NotificationsCenter from "@/components/NotificationsCenter";
 
 export default function DashboardPage() {
   return (
@@ -74,18 +76,11 @@ export default function DashboardPage() {
           </DashboardWidget>
 
           <DashboardWidget title="Creator Tools">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <QuickTool label="Content Planner" />
-              <QuickTool label="Task Manager" />
-              <QuickTool label="Idea Inbox" />
-              <QuickTool label="Template Library" />
-            </div>
+            <CreatorToolsPanel />
           </DashboardWidget>
 
           <DashboardWidget title="Notifications">
-            <PlaceholderBlock>
-              Centralized notifications from all platforms coming soon.
-            </PlaceholderBlock>
+            <NotificationsCenter />
           </DashboardWidget>
 
           <DashboardWidget title="Pipelines Overview" span="lg:col-span-2">
@@ -149,15 +144,6 @@ function PlaceholderBlock({ children }: { children: React.ReactNode }) {
                     shadow-[0_0_12px_rgba(0,229,255,0.15)]">
       {children}
     </div>
-  );
-}
-
-function QuickTool({ label }: { label: string }) {
-  return (
-    <button className="bg-slate-950/80 border border-cyan-400/30 rounded-lg px-3 py-2 text-xs text-gray-200 
-                       hover:shadow-[0_0_10px_rgba(0,229,255,0.3)] transition-all duration-200">
-      {label}
-    </button>
   );
 }
 
