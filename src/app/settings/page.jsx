@@ -6,7 +6,6 @@ import {
   Bell,
   CloudUpload,
   CreditCard,
-  ChevronDown,
   Globe,
   IdCard,
   Info,
@@ -29,14 +28,7 @@ export default function SettingsPage() {
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [focusedIndex, setFocusedIndex] = useState(0);
-  const [sidebarOpen] = useState(true);
-  const [open, setOpen] = useState({
-    account: true,
-    creator: true,
-    system: true,
-    advanced: false,
-    support: true,
-  });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState(null);
   const [modalMessage, setModalMessage] = useState("");
@@ -178,24 +170,6 @@ export default function SettingsPage() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [focusedIndex, sidebarOrder]);
 
-  const navItems = [
-    "account",
-    "profile",
-    "connected",
-    "notifications",
-    "ai",
-    "appearance",
-    "language",
-    "pipelines",
-    "dashboard",
-    "accessibility",
-    "security",
-    "integrations",
-    "billing",
-    "backup",
-    "about",
-  ];
-
   const searchIndex = {
     account: ["account", "email", "username", "password", "delete"],
     profile: ["profile", "bio", "avatar", "banner", "social", "handle"],
@@ -249,10 +223,6 @@ export default function SettingsPage() {
     about: Info,
   };
 
-  const toggleSection = (section) => {
-    setOpen((prev) => ({ ...prev, [section]: !prev[section] }));
-  };
-
   const renderButton = (key, label, Icon, index) => {
     const isFocused = index === focusedIndex;
     const isMatch = filtered.length === 0 || filtered.includes(key);
@@ -260,27 +230,30 @@ export default function SettingsPage() {
     return (
       <button
         key={key}
-        onClick={() => setActive(key)}
+        onClick={() => {
+          setActive(key);
+          setSidebarOpen(false);
+        }}
         className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg transition-all duration-200
         ${
           active === key
-            ? "bg-red-700 text-white shadow-[0_0_12px_rgba(255,0,0,0.7)]"
+            ? "glow-neon bg-gradient-to-r from-[#00E5FF] via-[#3A7BFF] to-[#A45CFF] text-slate-950"
             : isFocused
-            ? "bg-gray-800 text-white shadow-[0_0_10px_rgba(255,0,0,0.5)]"
+            ? "bg-slate-800 text-cyan-50 shadow-[0_0_10px_rgba(0,229,255,0.35)]"
             : isMatch
-            ? "hover:bg-gray-800 text-gray-300"
+            ? "text-cyan-100 hover:bg-slate-800"
             : "opacity-20 cursor-not-allowed"
         }
       `}
       >
-        <Icon className="w-5 h-5 text-red-500 drop-shadow-[0_0_6px_rgba(255,0,0,0.7)]" />
+        <Icon className="w-5 h-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(0,229,255,0.45)]" />
         {label}
       </button>
     );
   };
 
   return (
-    <AppShell>
+    <AppShell showSidebar={false} contentClassName="flex-1 p-0">
       <ConfirmModal
         open={modalOpen}
         message={modalMessage}
@@ -292,47 +265,53 @@ export default function SettingsPage() {
       />
 
       <div className="min-h-screen bg-slate-950 text-white flex">
-        <button className="md:hidden fixed top-4 left-4 z-50 text-red-500 drop-shadow-[0_0_6px_rgba(255,0,0,0.7)]">
+        <button
+          onClick={() => setSidebarOpen((prev) => !prev)}
+          className="fixed left-4 top-4 z-50 text-cyan-300 drop-shadow-[0_0_6px_rgba(0,229,255,0.45)] md:hidden"
+        >
           <Menu />
         </button>
 
         {/* SIDEBAR */}
         <aside
-          className={`fixed inset-y-0 left-0 w-72 transform 
-            ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
-            transition-transform duration-300`}
+          className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-cyan-400/30 bg-slate-950/95 backdrop-blur-md transform transition-transform duration-300 ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } md:translate-x-0`}
         >
-          <h2 className="text-xl font-semibold mb-3">Settings</h2>
+          <div className="p-6">
+            <h2 className="mb-3 text-xl font-semibold text-cyan-100">Settings</h2>
 
-          {/* SEARCH BAR */}
-          <div className="mb-6">
-            <input
-              type="text"
-              placeholder="Search settings..."
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && filtered.length > 0) {
-                  setActive(filtered[0]);
-                }
-              }}
-              className="w-full p-2 bg-black border border-red-600 rounded-lg text-white placeholder-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:shadow-[0_0_12px_rgba(255,0,0,0.6)] transition-all duration-200"
-            />
+            {/* SEARCH BAR */}
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Search settings..."
+                value={search}
+                onChange={(e) => handleSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && filtered.length > 0) {
+                    setActive(filtered[0]);
+                    setSidebarOpen(false);
+                  }
+                }}
+                className="w-full rounded-lg border border-cyan-400/40 bg-slate-950/80 p-2 text-cyan-100 placeholder-cyan-300/70 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:shadow-[0_0_12px_rgba(0,229,255,0.35)]"
+              />
+            </div>
+
+            <nav className="space-y-2">
+              {sidebarOrder.map((key, index) => {
+                return renderButton(key, labelMap[key], iconMap[key], index);
+              })}
+              {search && filtered.length === 0 && (
+                <div className="mt-2 text-sm text-cyan-300 drop-shadow-[0_0_6px_rgba(0,229,255,0.35)]">
+                  No matching settings found.
+                </div>
+              )}
+            </nav>
           </div>
-
-          <nav className="space-y-2">
-            {sidebarOrder.map((key, index) => {
-              return renderButton(key, labelMap[key], iconMap[key], index);
-            })}
-            {search && filtered.length === 0 && (
-              <div className="text-red-500 text-sm mt-2 drop-shadow-[0_0_6px_rgba(255,0,0,0.7)]">
-                No matching settings found.
-              </div>
-            )}
-          </nav>
         </aside>
 
-        <div className="flex-1 p-10 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-10 pb-32 md:ml-72">
           <Breadcrumbs active={active} />
           <PageHeader active={active} />
 
@@ -355,7 +334,7 @@ export default function SettingsPage() {
       </div>
 
       {/* FIXED FOOTER SAVE BUTTON */}
-      <div className="fixed bottom-0 left-0 right-0 border-t border-cyan-400/40 bg-slate-900/95 backdrop-blur p-6 flex items-center justify-between">
+      <div className="fixed bottom-0 left-0 right-0 flex items-center justify-between border-t border-cyan-400/40 bg-slate-900/95 p-6 backdrop-blur md:left-72">
         <div>
           {isSaving && <span className="font-semibold text-cyan-300">Saving settings...</span>}
           {saveSuccess && !isSaving && <span className="font-semibold text-emerald-300">Settings saved to cloud!</span>}
@@ -407,10 +386,10 @@ function Breadcrumbs({ active }) {
   };
 
   return (
-    <div className="mb-6 flex items-center gap-2 text-gray-400 text-sm drop-shadow-[0_0_6px_rgba(255,0,0,0.4)]">
-      <span className="text-red-500">Settings</span>
-      <span className="text-red-600">/</span>
-      <span className="text-gray-300">{labels[active]}</span>
+    <div className="mb-6 flex items-center gap-2 text-sm text-cyan-300/70 drop-shadow-[0_0_6px_rgba(0,229,255,0.2)]">
+      <span className="text-cyan-300">Settings</span>
+      <span className="text-cyan-500/70">/</span>
+      <span className="text-cyan-100">{labels[active]}</span>
     </div>
   );
 }
@@ -435,7 +414,7 @@ function PageHeader({ active }) {
   };
 
   return (
-    <h1 className="text-3xl font-bold mb-6 text-red-500 drop-shadow-[0_0_8px_rgba(255,0,0,0.7)]">
+    <h1 className="mb-6 text-3xl font-bold text-cyan-100 drop-shadow-[0_0_8px_rgba(0,229,255,0.25)]">
       {titles[active]}
     </h1>
   );
