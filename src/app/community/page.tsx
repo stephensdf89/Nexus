@@ -25,10 +25,10 @@ export default function CommunityPage() {
         <h1 className="text-3xl font-bold">Community</h1>
         <div className="space-y-4">
           {posts.map((post) => (
-            <article key={post.title} className="rounded-xl border border-zinc-800 bg-zinc-950 p-5 shadow-lg">
-              <p className="text-xs uppercase tracking-[0.12em] text-zinc-500">{post.author}</p>
+            <article key={post.title} className="rounded-xl border border-cyan-400/40 bg-[rgba(9,25,66,0.82)] p-5 shadow-lg shadow-cyan-500/10">
+              <p className="text-xs uppercase tracking-[0.12em] text-cyan-100/65">{post.author}</p>
               <h2 className="mt-2 text-xl font-semibold">{post.title}</h2>
-              <p className="mt-3 text-sm text-zinc-400">{post.body}</p>
+              <p className="mt-3 text-sm text-cyan-100/80">{post.body}</p>
             </article>
           ))}
         </div>

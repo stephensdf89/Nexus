@@ -16,11 +16,11 @@ export default function PipelinesPage() {
 
         <div className="grid gap-4 xl:grid-cols-5">
           {Object.entries(board).map(([column, cards]) => (
-            <article key={column} className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 shadow-lg">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-zinc-400">{column}</h2>
+            <article key={column} className="rounded-xl border border-cyan-400/40 bg-[rgba(9,25,66,0.82)] p-4 shadow-lg shadow-cyan-500/10">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-cyan-100/70">{column}</h2>
               <div className="mt-4 space-y-3">
                 {cards.map((card) => (
-                  <div key={card} className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-sm">
+                  <div key={card} className="rounded-lg border border-cyan-400/35 bg-[rgba(14,33,82,0.78)] p-3 text-sm text-cyan-50">
                     {card}
                   </div>
                 ))}
