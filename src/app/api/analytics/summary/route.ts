@@ -202,6 +202,35 @@ export async function GET(req: NextRequest) {
       console.error("Error fetching Twitch analytics:", err);
     }
 
+    // Fetch LinkedIn analytics if connected
+    let linkedinMetrics: PlatformMetrics | null = null;
+    try {
+      const liAnalyticsRes = await fetch(
+        `${process.env.NEXTAUTH_URL || "https://www.creatornexuspro.com"}/api/integrations/linkedin/analytics`,
+        {
+          headers: {
+            "x-user-id": userId || "",
+            "x-user-email": userEmail || "",
+          },
+        }
+      );
+
+      if (liAnalyticsRes.ok) {
+        const liData = await liAnalyticsRes.json();
+        if (liData.success && liData.metrics) {
+          linkedinMetrics = {
+            platform: "LinkedIn",
+            views: liData.metrics.views || 0,
+            engagement: liData.metrics.recent_engagement || 0,
+            followers: liData.metrics.subscribers || 0,
+            trend: 8, // placeholder
+          };
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching LinkedIn analytics:", err);
+    }
+
     // Mock data for other platforms (for now, these are placeholders)
     const mockPlatforms: PlatformMetrics[] = [
       {
@@ -235,6 +264,7 @@ export async function GET(req: NextRequest) {
       ...(instagramMetrics ? [instagramMetrics] : []),
       ...(twitterMetrics ? [twitterMetrics] : []),
       ...(twitchMetrics ? [twitchMetrics] : []),
+      ...(linkedinMetrics ? [linkedinMetrics] : []),
       ...mockPlatforms,
     ];
 

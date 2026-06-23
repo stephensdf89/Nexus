@@ -30,6 +30,7 @@ import TikTokIntegration from "@/components/TikTokIntegration";
 import InstagramIntegration from "@/components/InstagramIntegration";
 import TwitterIntegration from "@/components/TwitterIntegration";
 import TwitchIntegration from "@/components/TwitchIntegration";
+import LinkedInIntegration from "@/components/LinkedInIntegration";
 import { useSettingsStore } from "@/lib/settingsStore";
 
 export default function SettingsPage() {
@@ -1249,6 +1250,9 @@ function ConnectedPlatforms() {
 
         {/* Twitch - Using Real Integration Component */}
         <TwitchIntegration />
+
+        {/* LinkedIn - Using Real Integration Component */}
+        <LinkedInIntegration />
 
         {/* Other Platforms - Coming Soon */}
         {otherPlatforms.map((p) => (
