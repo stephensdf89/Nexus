@@ -11,6 +11,7 @@ export default function NotificationsCenter() {
   const [notifications, setNotifications] = useState([]);
   const [readNotifications, setReadNotifications] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     if (!user || !supabase) {
@@ -20,6 +21,7 @@ export default function NotificationsCenter() {
 
     const load = async () => {
       setLoading(true);
+      setLoadError("");
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -27,11 +29,37 @@ export default function NotificationsCenter() {
         .order("created_at", { ascending: false });
 
       if (!error && data) {
-        setNotifications(data);
-        const alreadyRead = new Set(
-          data.filter((n) => n.is_read).map((n) => n.id)
-        );
-        setReadNotifications(alreadyRead);
+        if (data.length === 0) {
+          const { data: seeded, error: seedError } = await supabase
+            .from("notifications")
+            .insert({
+              user_id: user.id,
+              type: "system",
+              category: "system",
+              message: "Welcome to Creator Nexus notifications.",
+              is_read: false,
+            })
+            .select("*")
+            .single();
+
+          if (!seedError && seeded) {
+            setNotifications([seeded]);
+            setReadNotifications(new Set());
+          } else {
+            setNotifications([]);
+            if (seedError) {
+              setLoadError("Could not create starter notification.");
+            }
+          }
+        } else {
+          setNotifications(data);
+          const alreadyRead = new Set(
+            data.filter((n) => n.is_read).map((n) => n.id)
+          );
+          setReadNotifications(alreadyRead);
+        }
+      } else if (error) {
+        setLoadError("Failed to load notifications.");
       }
       setLoading(false);
     };
@@ -159,6 +187,9 @@ export default function NotificationsCenter() {
 
       {/* Notifications list */}
       <div className="space-y-4">
+        {loadError && (
+          <p className="text-violet-300 text-center py-3">{loadError}</p>
+        )}
         {loading ? (
           <p className="text-gray-400 text-center py-8">Loading notifications...</p>
         ) : filteredNotifications.length === 0 ? (
