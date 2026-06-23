@@ -14,7 +14,7 @@ export const useSettingsStore = create((set) => ({
   safeMode: false,
 
   // UI / THEME
-  theme: "dark", // dark, light, system
+  theme: "neon",
   compactMode: false,
   language: "en",
   sidebarCollapsed: false,
@@ -180,7 +180,7 @@ export const useSettingsStore = create((set) => ({
     set((state) => {
       const updated = {
         ...state,
-        theme: "dark",
+        theme: "neon",
         compactMode: false,
         language: "en",
       };
@@ -201,7 +201,7 @@ export const useSettingsStore = create((set) => ({
         disableNeon: false,
         safeMode: false,
 
-        theme: "dark",
+        theme: "neon",
         compactMode: false,
         language: "en",
         sidebarCollapsed: false,

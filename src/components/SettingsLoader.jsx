@@ -31,7 +31,7 @@ export default function SettingsLoader() {
   useEffect(() => {
     // Apply settings to <body>
     document.body.className = `
-      ${theme === "dark" ? "theme-dark" : theme === "light" ? "theme-light" : ""}
+      theme-neon
       ${highContrast ? "hc-mode" : ""}
       ${textSize === "large" ? "text-lg" : textSize === "small" ? "text-sm" : ""}
       ${colorBlindMode !== "none" ? `cb-${colorBlindMode}` : ""}

@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSettingsStore } from "@/lib/settingsStore";
-import ConfirmModal from "@/components/ConfirmModal";
+import { useState } from "react";
 import AppShell from "@/components/AppShell";
+import ConfirmModal from "@/components/ConfirmModal";
+import { useSettingsStore } from "@/lib/settingsStore";
+
+const sectionClass = "mb-10 rounded-xl border border-cyan-400/40 bg-slate-900/80 p-6 text-cyan-50";
+const selectClass = "ml-2 rounded bg-slate-950/80 border border-cyan-400/60 px-2 py-1 text-cyan-50";
+const resetButtonClass = "mt-4 rounded px-3 py-1 font-bold bg-violet-600 hover:bg-violet-500 text-white border border-violet-300/50";
 
 export default function SettingsPage() {
   const {
@@ -13,7 +17,6 @@ export default function SettingsPage() {
     reducedMotion,
     disableNeon,
     safeMode,
-    theme,
     compactMode,
     language,
     sidebarCollapsed,
@@ -26,6 +29,10 @@ export default function SettingsPage() {
     aiMode,
     update,
     resetAll,
+    resetAccessibility,
+    resetDashboard,
+    resetNotifications,
+    resetTheme,
     syncToDb,
   } = useSettingsStore();
 
@@ -46,12 +53,12 @@ export default function SettingsPage() {
     await syncToDb();
     setIsSaving(false);
     setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000); // Hide after 3 seconds
+    setTimeout(() => setSaveSuccess(false), 3000);
   };
 
   return (
     <AppShell>
-      <div className="bg-black text-white">
+      <div className="text-white">
         <ConfirmModal
           open={modalOpen}
           message={modalMessage}
@@ -62,302 +69,165 @@ export default function SettingsPage() {
           }}
         />
 
-        <h1 className="text-4xl font-bold mb-8">Settings</h1>
+        <h1 className="mb-8 text-4xl font-bold text-cyan-200">Settings</h1>
 
-      {/* THEME SETTINGS */}
-      <section className="mb-10 bg-gray-900 p-6 rounded border border-red-600">
-        <h2 className="text-2xl font-bold mb-4">Theme</h2>
+        <section className={sectionClass}>
+          <h2 className="mb-4 text-2xl font-bold">Theme</h2>
+          <p className="mb-4 text-cyan-100/80">Theme profile: Neon (fixed)</p>
 
-        <label className="block mb-3">
-          Theme:
-          <select
-            value={theme}
-            onChange={(e) => update("theme", e.target.value)}
-            className="ml-2 bg-black border border-red-600 p-1"
+          <label className="mb-3 block">
+            <input type="checkbox" checked={compactMode} onChange={() => update("compactMode", !compactMode)} /> Compact Mode
+          </label>
+
+          <label className="mb-3 block">
+            Language:
+            <select value={language} onChange={(e) => update("language", e.target.value)} className={selectClass}>
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+            </select>
+          </label>
+
+          <button onClick={() => confirmReset(resetTheme, "Reset neon theme preferences?")} className={resetButtonClass}>
+            Reset Theme Settings
+          </button>
+        </section>
+
+        <section className={sectionClass}>
+          <h2 className="mb-4 text-2xl font-bold">Accessibility</h2>
+
+          <label className="mb-3 block">
+            <input type="checkbox" checked={highContrast} onChange={() => update("highContrast", !highContrast)} /> High Contrast Mode
+          </label>
+
+          <label className="mb-3 block">
+            Text Size:
+            <select value={textSize} onChange={(e) => update("textSize", e.target.value)} className={selectClass}>
+              <option value="small">Small</option>
+              <option value="medium">Default</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+
+          <label className="mb-3 block">
+            Color Blind Mode:
+            <select value={colorBlindMode} onChange={(e) => update("colorBlindMode", e.target.value)} className={selectClass}>
+              <option value="none">None</option>
+              <option value="protanopia">Protanopia</option>
+              <option value="deuteranopia">Deuteranopia</option>
+              <option value="tritanopia">Tritanopia</option>
+            </select>
+          </label>
+
+          <label className="mb-3 block">
+            <input type="checkbox" checked={disableNeon} onChange={() => update("disableNeon", !disableNeon)} /> Disable Neon Effects
+          </label>
+
+          <label className="mb-3 block">
+            <input type="checkbox" checked={safeMode} onChange={() => update("safeMode", !safeMode)} /> Seizure-Safe Mode
+          </label>
+
+          <label className="mb-3 block">
+            <input type="checkbox" checked={reducedMotion} onChange={() => update("reducedMotion", !reducedMotion)} /> Reduced Motion
+          </label>
+
+          <button onClick={() => confirmReset(resetAccessibility, "Reset all accessibility settings?")} className={resetButtonClass}>
+            Reset Accessibility Settings
+          </button>
+        </section>
+
+        <section className={sectionClass}>
+          <h2 className="mb-4 text-2xl font-bold">Dashboard</h2>
+
+          <label className="mb-3 block">
+            Layout:
+            <select value={dashboardLayout} onChange={(e) => update("dashboardLayout", e.target.value)} className={selectClass}>
+              <option value="default">Default</option>
+              <option value="grid">Grid</option>
+              <option value="list">List</option>
+            </select>
+          </label>
+
+          <label className="mb-3 block">
+            <input type="checkbox" checked={showAnalyticsPreview} onChange={() => update("showAnalyticsPreview", !showAnalyticsPreview)} /> Show Analytics Preview
+          </label>
+
+          <label className="mb-3 block">
+            <input type="checkbox" checked={showCreatorToolsPreview} onChange={() => update("showCreatorToolsPreview", !showCreatorToolsPreview)} /> Show Creator Tools Preview
+          </label>
+
+          <label className="mb-3 block">
+            <input type="checkbox" checked={sidebarCollapsed} onChange={() => update("sidebarCollapsed", !sidebarCollapsed)} /> Collapse Sidebar
+          </label>
+
+          <button onClick={() => confirmReset(resetDashboard, "Reset dashboard layout and widgets?")} className={resetButtonClass}>
+            Reset Dashboard Settings
+          </button>
+        </section>
+
+        <section className={sectionClass}>
+          <h2 className="mb-4 text-2xl font-bold">Notifications</h2>
+
+          <label className="mb-3 block">
+            <input type="checkbox" checked={notificationsEnabled} onChange={() => update("notificationsEnabled", !notificationsEnabled)} /> Enable Notifications
+          </label>
+
+          <label className="mb-3 block">
+            <input type="checkbox" checked={soundEnabled} onChange={() => update("soundEnabled", !soundEnabled)} /> Enable Sound
+          </label>
+
+          <label className="mb-3 block">
+            <input type="checkbox" checked={vibrationEnabled} onChange={() => update("vibrationEnabled", !vibrationEnabled)} /> Enable Vibration
+          </label>
+
+          <button onClick={() => confirmReset(resetNotifications, "Reset all notification settings?")} className={resetButtonClass}>
+            Reset Notification Settings
+          </button>
+        </section>
+
+        <section className={sectionClass}>
+          <h2 className="mb-4 text-2xl font-bold">AI Behavior</h2>
+          <label className="mb-3 block">
+            AI Mode:
+            <select value={aiMode} onChange={(e) => update("aiMode", e.target.value)} className={selectClass}>
+              <option value="standard">Standard</option>
+              <option value="creative">Creative</option>
+              <option value="strict">Strict</option>
+            </select>
+          </label>
+        </section>
+
+        <section className={sectionClass}>
+          <h2 className="mb-4 text-2xl font-bold">Reset</h2>
+          <button
+            onClick={() => confirmReset(() => resetAll(), "Reset ALL settings across the entire site?")}
+            className="rounded px-4 py-2 font-bold bg-violet-700 hover:bg-violet-600 text-white border border-violet-300/50"
           >
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-            <option value="system">System</option>
-          </select>
-        </label>
+            Reset ALL Settings
+          </button>
+          <p className="mt-2 text-cyan-100/70">Restores all settings to their default values.</p>
+        </section>
 
-        <label className="block mb-3">
-          <input
-            type="checkbox"
-            checked={compactMode}
-            onChange={() => update("compactMode", !compactMode)}
-          />{" "}
-          Compact Mode
-        </label>
-
-        <label className="block mb-3">
-          Language:
-          <select
-            value={language}
-            onChange={(e) => update("language", e.target.value)}
-            className="ml-2 bg-black border border-red-600 p-1"
+        <section className="fixed bottom-0 left-0 right-0 border-t border-cyan-400/40 bg-slate-900/95 p-6 flex items-center justify-between">
+          <div>
+            {isSaving && <span className="font-semibold text-cyan-300">Saving settings...</span>}
+            {saveSuccess && !isSaving && <span className="font-semibold text-emerald-300">Settings saved to cloud!</span>}
+          </div>
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className={`rounded px-6 py-2 font-bold ${
+              isSaving
+                ? "bg-slate-700 text-cyan-100 cursor-not-allowed opacity-50"
+                : "bg-gradient-to-r from-cyan-500 to-violet-600 text-slate-950 hover:from-cyan-400 hover:to-violet-500"
+            }`}
           >
-            <option value="en">English</option>
-            <option value="es">Spanish</option>
-            <option value="fr">French</option>
-            <option value="de">German</option>
-          </select>
-        </label>
+            {isSaving ? "Saving..." : "Save Settings"}
+          </button>
+        </section>
 
-        <button
-          onClick={() =>
-            confirmReset(resetTheme, "Reset all theme and UI settings?")
-          }
-          className="bg-red-700 hover:bg-red-800 px-3 py-1 rounded font-bold mt-4"
-        >
-          Reset Theme Settings
-        </button>
-      </section>
-
-      {/* ACCESSIBILITY SETTINGS */}
-      <section className="mb-10 bg-gray-900 p-6 rounded border border-red-600">
-        <h2 className="text-2xl font-bold mb-4">Accessibility</h2>
-
-        <label className="block mb-3">
-          <input
-            type="checkbox"
-            checked={highContrast}
-            onChange={() => update("highContrast", !highContrast)}
-          />{" "}
-          High Contrast Mode
-        </label>
-
-        <label className="block mb-3">
-          Text Size:
-          <select
-            value={textSize}
-            onChange={(e) => update("textSize", e.target.value)}
-            className="ml-2 bg-black border border-red-600 p-1"
-          >
-            <option value="small">Small</option>
-            <option value="medium">Default</option>
-            <option value="large">Large</option>
-          </select>
-        </label>
-
-        <label className="block mb-3">
-          Color Blind Mode:
-          <select
-            value={colorBlindMode}
-            onChange={(e) => update("colorBlindMode", e.target.value)}
-            className="ml-2 bg-black border border-red-600 p-1"
-          >
-            <option value="none">None</option>
-            <option value="protanopia">Protanopia</option>
-            <option value="deuteranopia">Deuteranopia</option>
-            <option value="tritanopia">Tritanopia</option>
-          </select>
-        </label>
-
-        <label className="block mb-3">
-          <input
-            type="checkbox"
-            checked={disableNeon}
-            onChange={() => update("disableNeon", !disableNeon)}
-          />{" "}
-          Disable Neon Effects
-        </label>
-
-        <label className="block mb-3">
-          <input
-            type="checkbox"
-            checked={safeMode}
-            onChange={() => update("safeMode", !safeMode)}
-          />{" "}
-          Seizure-Safe Mode
-        </label>
-
-        <label className="block mb-3">
-          <input
-            type="checkbox"
-            checked={reducedMotion}
-            onChange={() => update("reducedMotion", !reducedMotion)}
-          />{" "}
-          Reduced Motion
-        </label>
-
-        <button
-          onClick={() =>
-            confirmReset(resetAccessibility, "Reset all accessibility settings?")
-          }
-          className="bg-red-700 hover:bg-red-800 px-3 py-1 rounded font-bold mt-4"
-        >
-          Reset Accessibility Settings
-        </button>
-      </section>
-
-      {/* DASHBOARD SETTINGS */}
-      <section className="mb-10 bg-gray-900 p-6 rounded border border-red-600">
-        <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
-
-        <label className="block mb-3">
-          Layout:
-          <select
-            value={dashboardLayout}
-            onChange={(e) => update("dashboardLayout", e.target.value)}
-            className="ml-2 bg-black border border-red-600 p-1"
-          >
-            <option value="default">Default</option>
-            <option value="grid">Grid</option>
-            <option value="list">List</option>
-          </select>
-        </label>
-
-        <label className="block mb-3">
-          <input
-            type="checkbox"
-            checked={showAnalyticsPreview}
-            onChange={() =>
-              update("showAnalyticsPreview", !showAnalyticsPreview)
-            }
-          />{" "}
-          Show Analytics Preview
-        </label>
-
-        <label className="block mb-3">
-          <input
-            type="checkbox"
-            checked={showCreatorToolsPreview}
-            onChange={() =>
-              update("showCreatorToolsPreview", !showCreatorToolsPreview)
-            }
-          />{" "}
-          Show Creator Tools Preview
-        </label>
-
-        <label className="block mb-3">
-          <input
-            type="checkbox"
-            checked={sidebarCollapsed}
-            onChange={() => update("sidebarCollapsed", !sidebarCollapsed)}
-          />{" "}
-          Collapse Sidebar
-        </label>
-
-        <button
-          onClick={() =>
-            confirmReset(resetDashboard, "Reset dashboard layout and widgets?")
-          }
-          className="bg-red-700 hover:bg-red-800 px-3 py-1 rounded font-bold mt-4"
-        >
-          Reset Dashboard Settings
-        </button>
-      </section>
-
-      {/* NOTIFICATIONS */}
-      <section className="mb-10 bg-gray-900 p-6 rounded border border-red-600">
-        <h2 className="text-2xl font-bold mb-4">Notifications</h2>
-
-        <label className="block mb-3">
-          <input
-            type="checkbox"
-            checked={notificationsEnabled}
-            onChange={() => update("notificationsEnabled", !notificationsEnabled)}
-          />{" "}
-          Enable Notifications
-        </label>
-
-        <label className="block mb-3">
-          <input
-            type="checkbox"
-            checked={soundEnabled}
-            onChange={() => update("soundEnabled", !soundEnabled)}
-          />{" "}
-          Enable Sound
-        </label>
-
-        <label className="block mb-3">
-          <input
-            type="checkbox"
-            checked={vibrationEnabled}
-            onChange={() => update("vibrationEnabled", !vibrationEnabled)}
-          />{" "}
-          Enable Vibration
-        </label>
-
-        <button
-          onClick={() =>
-            confirmReset(resetNotifications, "Reset all notification settings?")
-          }
-          className="bg-red-700 hover:bg-red-800 px-3 py-1 rounded font-bold mt-4"
-        >
-          Reset Notification Settings
-        </button>
-      </section>
-
-      {/* AI SETTINGS */}
-      <section className="mb-10 bg-gray-900 p-6 rounded border border-red-600">
-        <h2 className="text-2xl font-bold mb-4">AI Behavior</h2>
-
-        <label className="block mb-3">
-          AI Mode:
-          <select
-            value={aiMode}
-            onChange={(e) => update("aiMode", e.target.value)}
-            className="ml-2 bg-black border border-red-600 p-1"
-          >
-            <option value="standard">Standard</option>
-            <option value="creative">Creative</option>
-            <option value="strict">Strict</option>
-          </select>
-        </label>
-      </section>
-
-      {/* RESET ALL SETTINGS */}
-      <section className="mb-10 bg-gray-900 p-6 rounded border border-red-600">
-        <h2 className="text-2xl font-bold mb-4">Reset</h2>
-
-        <button
-          onClick={() =>
-            confirmReset(
-              () => resetAll(),
-              "Reset ALL settings across the entire site?"
-            )
-          }
-          className="bg-red-800 hover:bg-red-900 px-4 py-2 rounded font-bold"
-        >
-          Reset ALL Settings
-        </button>
-
-        <p className="text-gray-400 mt-2">
-          Restores all settings to their default values.
-        </p>
-      </section>
-
-      {/* SAVE BUTTON FOOTER */}
-      <section className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-red-600 p-6 flex items-center justify-between">
-        <div>
-          {isSaving && (
-            <span className="text-yellow-400 font-semibold">
-              💾 Saving settings...
-            </span>
-          )}
-          {saveSuccess && !isSaving && (
-            <span className="text-green-400 font-semibold">
-              ✓ Settings saved to cloud!
-            </span>
-          )}
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className={`px-6 py-2 rounded font-bold ${
-            isSaving
-              ? "bg-gray-600 cursor-not-allowed opacity-50"
-              : "bg-cyan-600 hover:bg-cyan-700"
-          }`}
-        >
-          {isSaving ? "Saving..." : "Save Settings"}
-        </button>
-      </section>
-
-      {/* Spacer for fixed footer */}
-      <div className="h-24" />
+        <div className="h-24" />
       </div>
     </AppShell>
   );

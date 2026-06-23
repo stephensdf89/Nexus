@@ -11,7 +11,7 @@ const DEFAULT_SETTINGS = {
   reducedMotion: false,
   disableNeon: false,
   safeMode: false,
-  theme: 'dark',
+  theme: 'neon',
   compactMode: false,
   language: 'en',
   sidebarCollapsed: false,
