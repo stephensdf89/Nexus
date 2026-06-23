@@ -138,10 +138,21 @@ export default function SignUpPage() {
         }
       }
 
+      const hasSession = Boolean(data.session);
+
       setSubmitted(true);
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1000);
+      if (hasSession) {
+        setTimeout(() => {
+          window.location.assign("/dashboard");
+        }, 1000);
+      } else {
+        setErrors({
+          api: "Account created. Check your email to confirm your account, then sign in.",
+        });
+        setTimeout(() => {
+          router.push("/login");
+        }, 1500);
+      }
     } catch (err) {
       setErrors({ api: err instanceof Error ? err.message : "An error occurred" });
     } finally {

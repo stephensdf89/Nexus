@@ -19,6 +19,41 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const withTimeout = async <T,>(promise: Promise<T>, timeoutMs = 15000): Promise<T> => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        reject(new Error("Sign-in request timed out. Please try again."));
+      }, timeoutMs);
+    });
+
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    }
+  };
+
+  const waitForSession = async (maxAttempts = 10) => {
+    if (!supabase) {
+      return null;
+    }
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const { data } = await withTimeout(supabase.auth.getSession(), 4000);
+      if (data.session) {
+        return data.session;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    }
+
+    return null;
+  };
+
   useEffect(() => {
     a11y.load();
   }, [a11y]);
@@ -73,31 +108,38 @@ export default function LoginPage() {
     }
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        }),
+        15000
+      );
 
       if (error) {
         console.error("Login error:", error);
         setError(error.message);
-        setIsLoading(false);
         return;
       }
 
       if (data?.session) {
-        // Session created successfully - force redirect with a small delay
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 300);
+        window.location.assign("/dashboard");
+        return;
       } else {
-        setError("Login succeeded but no session created. Please try again.");
-        setIsLoading(false);
+        const session = await waitForSession();
+
+        if (session) {
+          window.location.assign("/dashboard");
+          return;
+        }
+
+        setError("Login succeeded but no session was stored. Please try again.");
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Login failed";
       console.error("Login exception:", err);
       setError(errorMsg);
+    } finally {
       setIsLoading(false);
     }
   };

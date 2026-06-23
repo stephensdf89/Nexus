@@ -8,6 +8,7 @@ import { supabase } from "../lib/supabaseClient";
 export function AuthGuard({ children }: { children: ReactNode }) {
   const authContext = useUser();
   const [supabaseLoaded, setSupabaseLoaded] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
   
   if (!authContext) {
     return (
@@ -21,6 +22,12 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    if (user) {
+      setSessionChecked(true);
+    }
+  }, [user]);
+
+  useEffect(() => {
     // Check Supabase session directly as fallback
     const checkSession = async () => {
       if (supabase) {
@@ -31,6 +38,8 @@ export function AuthGuard({ children }: { children: ReactNode }) {
           }
         } catch (error) {
           console.error("Session check failed:", error);
+        } finally {
+          setSessionChecked(true);
         }
       }
     };
@@ -41,13 +50,13 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   }, [user, loading]);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && sessionChecked && !user) {
       router.push("/login");
     }
-  }, [loading, user, router]);
+  }, [loading, sessionChecked, user, router]);
 
   // Show loading screen with timeout
-  if (loading && !supabaseLoaded) {
+  if ((loading || !sessionChecked) && !supabaseLoaded) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
