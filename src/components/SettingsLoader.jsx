@@ -15,7 +15,7 @@ export default function SettingsLoader() {
     safeMode,
     theme,
     load,
-    syncFromDb,
+    syncFromServer,
   } = useSettingsStore();
 
   useEffect(() => {
@@ -24,9 +24,9 @@ export default function SettingsLoader() {
 
     // If user is authenticated, sync from database
     if (session?.user) {
-      syncFromDb();
+      syncFromServer();
     }
-  }, [session, load, syncFromDb]);
+  }, [session, load, syncFromServer]);
 
   useEffect(() => {
     // Apply settings to <body>

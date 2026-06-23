@@ -33,7 +33,7 @@ export default function SettingsPage() {
     resetDashboard,
     resetNotifications,
     resetTheme,
-    syncToDb,
+    syncToServer,
   } = useSettingsStore();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -50,7 +50,7 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    await syncToDb();
+    await syncToServer();
     setIsSaving(false);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);

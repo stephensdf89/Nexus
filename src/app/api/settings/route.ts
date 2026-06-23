@@ -59,7 +59,8 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = session.user.name;
-    const { settings } = await req.json();
+    const body = await req.json();
+    const settings = body?.settings && typeof body.settings === 'object' ? body.settings : body;
 
     if (!settings || typeof settings !== 'object') {
       return NextResponse.json(

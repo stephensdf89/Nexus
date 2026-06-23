@@ -46,30 +46,26 @@ export const useSettingsStore = create((set) => ({
     }
   },
 
-  syncFromDb: async () => {
+  syncFromServer: async () => {
     if (typeof window === "undefined") return;
     try {
-      const response = await fetch("/api/settings", {
-        method: "GET",
+      const res = await fetch("/api/settings", {
         credentials: "include",
       });
+      if (!res.ok) return;
 
-      if (!response.ok) {
-        console.warn("Failed to sync from database, using localStorage fallback");
-        return;
-      }
-
-      const { settings } = await response.json();
-      if (settings && Object.keys(settings).length > 0) {
-        set(settings);
-        localStorage.setItem("global-settings", JSON.stringify(settings));
+      const payload = await res.json();
+      const serverSettings = payload?.settings ?? payload;
+      if (serverSettings && Object.keys(serverSettings).length > 0) {
+        set(serverSettings);
+        localStorage.setItem("global-settings", JSON.stringify(serverSettings));
       }
     } catch (error) {
-      console.error("Failed to sync settings from database:", error);
+      console.error("Failed to sync settings from server:", error);
     }
   },
 
-  syncToDb: async () => {
+  syncToServer: async () => {
     if (isSyncing || typeof window === "undefined") return;
     isSyncing = true;
 
@@ -95,18 +91,20 @@ export const useSettingsStore = create((set) => ({
         aiMode: state.aiMode,
       };
 
-      const response = await fetch("/api/settings", {
+      const res = await fetch("/api/settings", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ settings }),
+        body: JSON.stringify(settings),
       });
 
-      if (!response.ok) {
-        console.error("Failed to sync to database");
-      }
+      if (!res.ok) return;
+
+      const savedPayload = await res.json();
+      const saved = savedPayload?.settings ?? savedPayload;
+      localStorage.setItem("global-settings", JSON.stringify(saved));
     } catch (error) {
-      console.error("Failed to sync settings to database:", error);
+      console.error("Failed to sync settings to server:", error);
     } finally {
       isSyncing = false;
     }
@@ -118,12 +116,13 @@ export const useSettingsStore = create((set) => ({
       if (typeof window !== "undefined") {
         try {
           localStorage.setItem("global-settings", JSON.stringify(updated));
+          useSettingsStore.getState().syncToServer();
         } catch (error) {
           console.error("Failed to save settings:", error);
         }
+      } else {
+        useSettingsStore.getState().syncToServer();
       }
-      // Sync to database (async, non-blocking)
-      useSettingsStore.getState().syncToDb();
       return updated;
     }),
 
@@ -141,7 +140,7 @@ export const useSettingsStore = create((set) => ({
       if (typeof window !== "undefined") {
         localStorage.setItem("global-settings", JSON.stringify(updated));
       }
-      useSettingsStore.getState().syncToDb();
+      useSettingsStore.getState().syncToServer();
       return updated;
     }),
 
@@ -157,7 +156,7 @@ export const useSettingsStore = create((set) => ({
       if (typeof window !== "undefined") {
         localStorage.setItem("global-settings", JSON.stringify(updated));
       }
-      useSettingsStore.getState().syncToDb();
+      useSettingsStore.getState().syncToServer();
       return updated;
     }),
 
@@ -172,7 +171,7 @@ export const useSettingsStore = create((set) => ({
       if (typeof window !== "undefined") {
         localStorage.setItem("global-settings", JSON.stringify(updated));
       }
-      useSettingsStore.getState().syncToDb();
+      useSettingsStore.getState().syncToServer();
       return updated;
     }),
 
@@ -187,7 +186,7 @@ export const useSettingsStore = create((set) => ({
       if (typeof window !== "undefined") {
         localStorage.setItem("global-settings", JSON.stringify(updated));
       }
-      useSettingsStore.getState().syncToDb();
+      useSettingsStore.getState().syncToServer();
       return updated;
     }),
 
@@ -221,8 +220,8 @@ export const useSettingsStore = create((set) => ({
         localStorage.setItem("global-settings", JSON.stringify(defaults));
       }
 
-      // Sync to database after reset
-      useSettingsStore.getState().syncToDb();
+      // Sync to server after reset
+      useSettingsStore.getState().syncToServer();
 
       return defaults;
     }),
