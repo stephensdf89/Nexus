@@ -1,0 +1,61 @@
+# Netlify Environment Variables Setup
+
+Below are the exact environment variable NAMES you need to add to your Netlify deployment.
+The values are already in your .env.local file.
+
+**To add these to Netlify:**
+1. Go to: https://app.netlify.com
+2. Select your site
+3. Go to: **Site settings** → **Build & deploy** → **Environment**
+4. Click: **Edit variables**
+5. Add each variable name below with its corresponding value from .env.local
+
+## Environment Variables to Add:
+
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+DATABASE_URL
+FACEBOOK_CLIENT_ID
+FACEBOOK_CLIENT_SECRET
+NEXTAUTH_SECRET
+NEXTAUTH_URL
+```
+
+## How to Get the Values:
+
+1. Open `.env.local` in your project root
+2. Copy the value for each variable name above
+3. Paste into Netlify
+
+## Steps in Netlify:
+
+1. Click **Edit variables**
+2. For each variable above:
+   - Key: Copy from list above (e.g., `NEXT_PUBLIC_SUPABASE_URL`)
+   - Value: Copy the value from `.env.local` (after the `=` sign)
+   - Click **Add variable**
+3. Click **Save** when done
+4. Netlify will auto-redeploy
+
+## What These Do:
+
+- `NEXT_PUBLIC_SUPABASE_URL` - Connects to Supabase database
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Browser authentication with Supabase
+- `DATABASE_URL` - Server-side database connection
+- `FACEBOOK_CLIENT_ID` - Facebook OAuth app ID
+- `FACEBOOK_CLIENT_SECRET` - Facebook OAuth app secret
+- `NEXTAUTH_SECRET` - Session encryption key
+- `NEXTAUTH_URL` - Production URL for authentication
+
+## Verify Setup:
+
+After adding variables:
+1. Netlify will show build progress
+2. Check the build log for any errors
+3. Once deployed, test at: https://www.creatornexuspro.com/signup
+
+✅ All done!
+
+⚠️ IMPORTANT: Never commit .env.local to Git (it's already in .gitignore)
+
