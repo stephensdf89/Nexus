@@ -21,6 +21,16 @@ TO authenticated
 USING ((select auth.uid()) = "userId")
 WITH CHECK ((select auth.uid()) = "userId");
 
+-- profiles
+ALTER TABLE IF EXISTS public.profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can access their own profile" ON public.profiles;
+CREATE POLICY "Users can access their own profile"
+ON public.profiles
+FOR ALL
+TO authenticated
+USING ((select auth.uid()) = id)
+WITH CHECK ((select auth.uid()) = id);
+
 -- pipelines
 ALTER TABLE IF EXISTS public.pipelines ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can access their own data" ON public.pipelines;

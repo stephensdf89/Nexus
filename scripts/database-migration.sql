@@ -253,6 +253,46 @@ CREATE TABLE IF NOT EXISTS public.user_settings (
 ALTER TABLE IF EXISTS public.user_settings ADD COLUMN IF NOT EXISTS settings JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 -- ============================================================================
+-- TABLE: profiles
+-- Purpose: Store public profile details per authenticated user
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT,
+  username TEXT UNIQUE,
+  bio TEXT,
+  twitter TEXT,
+  instagram TEXT,
+  avatar_url TEXT,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Backfill missing columns for legacy profiles table variants
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS username TEXT;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS twitter TEXT;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS instagram TEXT;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_username_unique ON public.profiles(username) WHERE username IS NOT NULL;
+
+CREATE OR REPLACE FUNCTION public.set_profiles_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS set_profiles_updated_at ON public.profiles;
+CREATE TRIGGER set_profiles_updated_at
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.set_profiles_updated_at();
+
+-- ============================================================================
 -- TABLE: scheduled_posts
 -- Purpose: Store content scheduled for future publishing
 -- ============================================================================
@@ -477,6 +517,7 @@ CREATE INDEX IF NOT EXISTS idx_access_audit_logs_created_at ON public.access_aud
 
 ALTER TABLE public.integrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.scheduled_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.planner_events ENABLE ROW LEVEL SECURITY;
@@ -529,6 +570,35 @@ CREATE POLICY "Users can update their own settings"
   ON public.user_settings FOR UPDATE
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
+
+-- ============================================================================
+-- ROW LEVEL SECURITY POLICIES: profiles table
+-- ============================================================================
+
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
+CREATE POLICY "Users can view their own profile"
+  ON public.profiles FOR SELECT
+  TO authenticated
+  USING ((select auth.uid()) = id);
+
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+CREATE POLICY "Users can insert their own profile"
+  ON public.profiles FOR INSERT
+  TO authenticated
+  WITH CHECK ((select auth.uid()) = id);
+
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+CREATE POLICY "Users can update their own profile"
+  ON public.profiles FOR UPDATE
+  TO authenticated
+  USING ((select auth.uid()) = id)
+  WITH CHECK ((select auth.uid()) = id);
+
+DROP POLICY IF EXISTS "Users can delete their own profile" ON public.profiles;
+CREATE POLICY "Users can delete their own profile"
+  ON public.profiles FOR DELETE
+  TO authenticated
+  USING ((select auth.uid()) = id);
 
 -- ============================================================================
 -- ROW LEVEL SECURITY POLICIES: scheduled_posts table
@@ -723,7 +793,7 @@ SELECT
   (SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = tables.table_name) as column_count
 FROM information_schema.tables as tables
 WHERE table_schema = 'public' 
-  AND table_name IN ('integrations', 'user_settings', 'scheduled_posts', 'notifications', 'planner_events', 'ai_threads', 'ai_messages', 'user_access', 'access_audit_logs')
+  AND table_name IN ('integrations', 'user_settings', 'profiles', 'scheduled_posts', 'notifications', 'planner_events', 'ai_threads', 'ai_messages', 'user_access', 'access_audit_logs')
 ORDER BY table_name;
 
 -- Expected output:
@@ -732,6 +802,7 @@ ORDER BY table_name;
 -- ai_messages        | 7 columns
 -- notifications      | 9 columns
 -- planner_events     | 7 columns
+-- profiles           | 8 columns
 -- scheduled_posts    | 9 columns  
 -- user_settings      | 6 columns
 -- user_access        | 7 columns

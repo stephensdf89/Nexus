@@ -28,12 +28,6 @@ const UPDATE_MEMBER_SCHEMA: ValidationSchema = {
   },
 };
 
-function normalizeAccessLevel(value: unknown): AccessLevel {
-  const role = String(value || "user").toLowerCase();
-  if (role === "pro" || role === "admin") return role;
-  return "user";
-}
-
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireAccess(req, "admin", "/api/admin/members");

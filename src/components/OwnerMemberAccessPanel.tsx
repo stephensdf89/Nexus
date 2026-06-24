@@ -13,6 +13,7 @@ export default function OwnerMemberAccessPanel() {
   const [members, setMembers] = useState<MemberRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [canAdmin, setCanAdmin] = useState(false);
   const [savingId, setSavingId] = useState("");
   const [grantEmail, setGrantEmail] = useState("");
@@ -82,8 +83,30 @@ export default function OwnerMemberAccessPanel() {
 
   const updateRole = async (userId: string) => {
     const accessLevel = roleByUserId[userId] || "user";
+    const member = members.find((m) => m.id === userId);
+    const previousLevel = member?.access_level || "user";
+
+    if (accessLevel === previousLevel) {
+      return;
+    }
+
+    if (accessLevel === "admin") {
+      const confirmed = window.confirm(
+        `Grant admin access to ${member?.email || userId}? This allows app-wide control changes.`
+      );
+      if (!confirmed) return;
+    }
+
+    if (previousLevel === "admin" && accessLevel !== "admin") {
+      const confirmed = window.confirm(
+        `Remove admin access from ${member?.email || userId}? They will lose app-wide controls.`
+      );
+      if (!confirmed) return;
+    }
+
     setSavingId(userId);
     setError("");
+    setNotice("");
 
     try {
       const res = await fetch("/api/admin/members", {
@@ -98,6 +121,7 @@ export default function OwnerMemberAccessPanel() {
       }
 
       setMembers((prev) => prev.map((m) => (m.id === userId ? { ...m, access_level: accessLevel } : m)));
+      setNotice(`Updated ${member?.email || userId} to ${accessLevel}.`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to update member access";
       setError(msg);
@@ -113,8 +137,16 @@ export default function OwnerMemberAccessPanel() {
       return;
     }
 
+    if (grantAccessLevel === "admin") {
+      const confirmed = window.confirm(
+        `Grant admin access to ${email}? This allows app-wide control changes.`
+      );
+      if (!confirmed) return;
+    }
+
     setGranting(true);
     setError("");
+    setNotice("");
 
     try {
       const res = await fetch("/api/admin/members", {
@@ -141,6 +173,7 @@ export default function OwnerMemberAccessPanel() {
       }
 
       setGrantEmail("");
+      setNotice(`Granted ${grantAccessLevel} access to ${email}.`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to update member access";
       setError(msg);
@@ -168,7 +201,7 @@ export default function OwnerMemberAccessPanel() {
       <p className="text-sm text-violet-100/70 mt-1">
         Signed in as owner: <span className="font-semibold text-violet-200">{ownerEmail || "Configured owner"}</span>
       </p>
-      <p className="text-xs text-violet-100/60 mt-1">Upgrade members to Pro/Admin. This panel is hidden for non-owners.</p>
+      <p className="text-xs text-violet-100/60 mt-1">Upgrade members to Pro/Admin with confirmation on sensitive role changes.</p>
 
       <div className="mt-4 rounded-lg border border-violet-300/20 bg-violet-500/5 p-3">
         <p className="text-sm font-medium text-violet-100">Grant access by email</p>
@@ -203,6 +236,7 @@ export default function OwnerMemberAccessPanel() {
       </div>
 
       {error && <p className="text-sm text-rose-300 mt-3">{error}</p>}
+      {notice && <p className="text-sm text-emerald-300 mt-3">{notice}</p>}
 
       <div className="mt-4 space-y-3 max-h-80 overflow-y-auto pr-1">
         {visibleMembers.length === 0 ? (
@@ -236,7 +270,7 @@ export default function OwnerMemberAccessPanel() {
               <button
                 type="button"
                 onClick={() => updateRole(member.id)}
-                disabled={savingId === member.id}
+                disabled={savingId === member.id || (roleByUserId[member.id] || "user") === member.access_level}
                 className="rounded-md bg-violet-500/80 px-3 py-1 text-sm font-medium text-slate-950 hover:bg-violet-400 disabled:opacity-60"
               >
                 {savingId === member.id ? "Saving..." : "Apply"}

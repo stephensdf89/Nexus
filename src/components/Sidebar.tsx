@@ -12,6 +12,7 @@ const navItems = [
   { href: "/assistant", label: "Assistant" },
   { href: "/pipelines", label: "Pipelines" },
   { href: "/community", label: "Community" },
+  { href: "/profile", label: "Profile" },
   { href: "/settings", label: "Settings" },
 ];
 

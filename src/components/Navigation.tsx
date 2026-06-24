@@ -13,6 +13,7 @@ export default function Navigation() {
     { href: "/analytics", label: "Analytics" },
     { href: "/pipelines", label: "Pipelines" },
     { href: "/community", label: "Community" },
+    { href: "/profile", label: "Profile" },
     { href: "/settings", label: "Settings" },
     ...(canAdmin ? [{ href: "/admin", label: "Admin" }] : []),
   ];

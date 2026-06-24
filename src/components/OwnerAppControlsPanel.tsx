@@ -20,9 +20,11 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 export default function OwnerAppControlsPanel() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [savedSettings, setSavedSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [canAdmin, setCanAdmin] = useState(false);
 
   useEffect(() => {
@@ -52,7 +54,9 @@ export default function OwnerAppControlsPanel() {
           throw new Error(data?.error || "Failed to load app settings");
         }
 
-        setSettings({ ...DEFAULT_SETTINGS, ...(data.settings || {}) });
+        const nextSettings = { ...DEFAULT_SETTINGS, ...(data.settings || {}) };
+        setSettings(nextSettings);
+        setSavedSettings(nextSettings);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Failed to load app settings";
         setError(msg);
@@ -69,8 +73,26 @@ export default function OwnerAppControlsPanel() {
   };
 
   const save = async () => {
+    const turningOnMaintenance = !savedSettings.maintenanceMode && settings.maintenanceMode;
+    const disablingSignups = savedSettings.allowSignups && !settings.allowSignups;
+
+    if (turningOnMaintenance) {
+      const confirmed = window.confirm(
+        "Enable maintenance mode? Non-owner users will be blocked from using the app."
+      );
+      if (!confirmed) return;
+    }
+
+    if (disablingSignups) {
+      const confirmed = window.confirm(
+        "Disable new signups? New account creation will be blocked."
+      );
+      if (!confirmed) return;
+    }
+
     setSaving(true);
     setError("");
+    setNotice("");
 
     try {
       const res = await fetch("/api/admin/app-settings", {
@@ -84,7 +106,10 @@ export default function OwnerAppControlsPanel() {
         throw new Error(data?.error || "Failed to save app settings");
       }
 
-      setSettings({ ...DEFAULT_SETTINGS, ...(data.settings || settings) });
+      const nextSettings = { ...DEFAULT_SETTINGS, ...(data.settings || settings) };
+      setSettings(nextSettings);
+      setSavedSettings(nextSettings);
+      setNotice("App settings saved.");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to save app settings";
       setError(msg);
@@ -106,12 +131,16 @@ export default function OwnerAppControlsPanel() {
     return null;
   }
 
+  const hasUnsavedChanges = JSON.stringify(settings) !== JSON.stringify(savedSettings);
+
   return (
     <div className="bg-slate-900/80 border border-violet-400/35 rounded-xl p-5 shadow-[0_0_18px_rgba(167,139,250,0.15)]">
       <h2 className="text-lg font-bold text-violet-300">App Controls</h2>
       <p className="text-xs text-violet-100/60 mt-1">Global switches for the whole app. Changes are audited.</p>
 
       {error && <p className="text-sm text-rose-300 mt-3">{error}</p>}
+      {notice && <p className="text-sm text-emerald-300 mt-3">{notice}</p>}
+      {hasUnsavedChanges && <p className="text-xs text-amber-300 mt-2">You have unsaved changes.</p>}
 
       <div className="mt-4 space-y-4">
         <ToggleRow
@@ -162,7 +191,7 @@ export default function OwnerAppControlsPanel() {
         <button
           type="button"
           onClick={save}
-          disabled={saving}
+          disabled={saving || !hasUnsavedChanges}
           className="rounded-md bg-violet-500/80 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-violet-400 disabled:opacity-60"
         >
           {saving ? "Saving..." : "Save app settings"}
