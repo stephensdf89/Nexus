@@ -121,9 +121,20 @@ export default function Topbar() {
       void loadSession();
     });
 
+    const handleProfileUpdated = () => {
+      void loadSession();
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("profile-updated", handleProfileUpdated);
+    }
+
     return () => {
       isMounted = false;
       subscription.unsubscribe();
+      if (typeof window !== "undefined") {
+        window.removeEventListener("profile-updated", handleProfileUpdated);
+      }
     };
   }, []);
 

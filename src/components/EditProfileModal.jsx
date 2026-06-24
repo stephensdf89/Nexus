@@ -214,7 +214,7 @@ export default function EditProfileModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm md:items-center md:p-6">
-      <div className="my-4 w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-scroll overscroll-contain rounded-xl border border-red-600 bg-[#111] p-8 pb-28 shadow-[0_0_25px_rgba(255,0,0,0.4)] md:max-h-[calc(100dvh-3rem)]" style={{ WebkitOverflowScrolling: "touch" }}>
+      <div className="my-4 w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-scroll overscroll-contain rounded-xl border border-red-600 bg-[#111] p-8 shadow-[0_0_25px_rgba(255,0,0,0.4)] md:max-h-[calc(100dvh-3rem)]" style={{ WebkitOverflowScrolling: "touch" }}>
         <h2 className="mb-6 text-2xl font-bold text-white">Edit Profile</h2>
 
         <div className="mb-6">
@@ -422,7 +422,7 @@ export default function EditProfileModal({
 
         {error ? <p className="mb-4 text-sm text-red-300">{error}</p> : null}
 
-        <div className="sticky bottom-0 z-10 -mx-8 mt-6 flex justify-end gap-4 border-t border-red-900/60 bg-[#111] px-8 py-4">
+        <div className="mt-6 flex justify-end gap-4">
           <button
             onClick={onClose}
             className="rounded bg-gray-700 px-4 py-2 hover:bg-gray-600"

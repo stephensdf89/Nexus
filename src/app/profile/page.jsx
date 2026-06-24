@@ -10,7 +10,7 @@ import { useUser } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import uploadProfilePhoto from "@/lib/uploadProfilePhoto";
-import { saveProfileFields, saveProfilePhotoToDB } from "@/lib/uploadProfilePhoto";
+import { saveProfilePhotoToDB } from "@/lib/uploadProfilePhoto";
 import enhanceImage from "@/utils/enhanceImage";
 
 const TAB_OPTIONS = ["posts", "drafts", "saved", "analytics"];
@@ -315,15 +315,25 @@ function ProfileContent() {
         avatarUrl: uploadedAvatarUrl || finalImage || "",
       };
 
-      // Persist to profile table so profile page fields always reflect latest edits.
-      await saveProfileFields(user.id, {
-        name: values.displayName,
-        username: values.username,
-        bio: values.bio,
-        twitter: values.twitter,
-        instagram: values.instagram,
-        avatar_url: uploadedAvatarUrl || finalImage || null,
-      });
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            id: user.id,
+            name: values.displayName,
+            username: values.username,
+            bio: values.bio,
+            twitter: values.twitter,
+            instagram: values.instagram,
+            avatar_url: uploadedAvatarUrl || finalImage || null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" }
+        );
+
+      if (profileError) {
+        throw new Error(profileError.message || "Failed to save profile");
+      }
 
       if (accessToken) {
         headers["x-supabase-auth"] = accessToken;
@@ -337,7 +347,7 @@ function ProfileContent() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save profile settings");
+        console.warn("Settings sync failed; profile table save succeeded.");
       }
 
       setProfile((current) => ({
@@ -351,6 +361,11 @@ function ProfileContent() {
         twitter: values.twitter || "",
         instagram: values.instagram || "",
       });
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("profile-updated"));
+      }
+
       setIsEditing(false);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Failed to save profile settings");
