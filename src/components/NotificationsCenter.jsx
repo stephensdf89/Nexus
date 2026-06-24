@@ -16,6 +16,10 @@ export default function NotificationsCenter() {
   const [loadError, setLoadError] = useState("");
   const seededForUser = useRef(null);
 
+  function getSeedKey(userId) {
+    return `notifications-seeded-${userId}`;
+  }
+
   useEffect(() => {
     if (!user || !supabase) {
       setLoading(false);
@@ -34,7 +38,11 @@ export default function NotificationsCenter() {
       if (!error && data) {
         if (data.length === 0) {
           // Guard against duplicate inserts when effects run more than once.
-          if (seededForUser.current !== user.id) {
+          const seedKey = getSeedKey(user.id);
+          const alreadySeeded =
+            typeof window !== "undefined" && window.localStorage.getItem(seedKey) === "1";
+
+          if (seededForUser.current !== user.id && !alreadySeeded) {
             seededForUser.current = user.id;
 
             const { error: seedError } = await supabase
@@ -49,6 +57,8 @@ export default function NotificationsCenter() {
 
             if (seedError) {
               setLoadError("Could not create starter notification.");
+            } else if (typeof window !== "undefined") {
+              window.localStorage.setItem(seedKey, "1");
             }
           }
 
@@ -269,17 +279,36 @@ export default function NotificationsCenter() {
   const handleDeleteOne = async (id) => {
     if (!supabase || !user) return;
 
+    const deletedNotification = notifications.find((n) => n.id === id) || null;
+    const wasRead = readNotifications.has(id);
+
+    // Optimistic UI update so the card disappears immediately.
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setReadNotifications((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+
     const { error } = await supabase
       .from("notifications")
       .delete()
       .eq("id", id)
       .eq("user_id", user.id);
 
-    if (!error) {
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      const nextRead = new Set(readNotifications);
-      nextRead.delete(id);
-      setReadNotifications(nextRead);
+    if (error) {
+      // Rollback optimistic deletion if DB delete fails.
+      if (deletedNotification) {
+        setNotifications((prev) => [deletedNotification, ...prev]);
+      }
+      if (wasRead) {
+        setReadNotifications((prev) => {
+          const next = new Set(prev);
+          next.add(id);
+          return next;
+        });
+      }
+      setLoadError("Failed to delete notification.");
     }
   };
 
