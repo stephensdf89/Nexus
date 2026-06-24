@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import platformFieldTemplates from "../utils/platformFieldTemplates";
-import analyticsEngine from "../utils/analyticsEngine";
 import thumbnailAnalyzer from "../utils/thumbnailAnalyzer";
-import postingHelper from "../utils/postingHelper";
 import type { PipelineCard } from "../hooks/usePipelineData";
 
 type Props = {
@@ -21,20 +19,7 @@ export default function CardDetailsPanel({ card, close }: Props) {
     analytics: card.analytics || {},
   });
   const [saving, setSaving] = useState(false);
-  const platforms = analyticsEngine.getPlatformStats(localCard);
-  const totals = analyticsEngine.getPipelineTotals([localCard]);
-  const growth30 = analyticsEngine.getGrowth([localCard], 30);
   const suggestions = thumbnailAnalyzer.analyze(localCard, [localCard]);
-
-  // Sync when card changes
-  useEffect(() => {
-    setLocalCard({
-      ...card,
-      platforms: card.platforms || [],
-      platform_fields: card.platform_fields || {},
-      analytics: card.analytics || {},
-    });
-  }, [card]);
 
   // -----------------------------
   // AUTO-SAVE

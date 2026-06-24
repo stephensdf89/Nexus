@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import StageColumn from "./components/StageColumn";
 import CardDetailsPanel from "./components/CardDetailsPanel";
 import StageSettingsModal from "./components/StageSettingsModal";
@@ -52,6 +51,7 @@ export default function PipelinePage() {
 
       {selectedCard && (
         <CardDetailsPanel
+          key={selectedCard.id}
           card={selectedCard}
           close={() => setSelectedCard(null)}
         />

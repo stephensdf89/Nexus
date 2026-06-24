@@ -1,4 +1,3 @@
-import analyticsEngine from "./analyticsEngine";
 import performanceInsights from "./performanceInsights";
 
 const optimizationEngine = {
@@ -70,8 +69,6 @@ const optimizationEngine = {
     // 4. SHORTS OPTIMIZATION
     // -----------------------------------------
     if (card.platforms.includes("shorts")) {
-      const sh = card.platform_fields?.shorts || {};
-
       if (card.duration && card.duration > 20) {
         suggestions.push("Shorten your YouTube Short — aim for a tighter, punchier delivery.");
       }

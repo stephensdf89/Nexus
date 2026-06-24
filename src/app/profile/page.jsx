@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import AppShell from "@/components/AppShell";
@@ -26,13 +25,6 @@ const SOCIAL_HOSTS = {
   linkedin: "https://www.linkedin.com/in/",
   facebook: "https://www.facebook.com/",
   pinterest: "https://www.pinterest.com/",
-};
-
-const icons = {
-  twitter: "🐦",
-  instagram: "📸",
-  tiktok: "🎵",
-  youtube: "▶️",
 };
 
 const iconStyle =
@@ -70,15 +62,6 @@ function makeUsername(displayName, email, metadataUsername) {
   return `@${slug || "creator"}`;
 }
 
-function initialsFromName(name) {
-  return String(name || "Creator")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || "")
-    .join("");
-}
-
 function titleCase(value) {
   return String(value || "")
     .split(/[_\s-]+/)
@@ -114,16 +97,6 @@ function readAccessToken() {
     .find((entry) => entry.startsWith("sb-access-token="));
 
   return cookie ? decodeURIComponent(cookie.split("=")[1] || "") : "";
-}
-
-function StatCard({ label, value, helper }) {
-  return (
-    <div className="rounded-2xl border border-red-500/25 bg-black/55 p-4 shadow-[0_0_24px_rgba(255,0,0,0.12)] backdrop-blur-sm">
-      <p className="text-xs uppercase tracking-[0.28em] text-red-300/70">{label}</p>
-      <p className="mt-3 text-3xl font-semibold text-white">{value}</p>
-      <p className="mt-2 text-sm text-zinc-400">{helper}</p>
-    </div>
-  );
 }
 
 function EmptyState({ title, copy }) {
@@ -172,7 +145,9 @@ function ProfileContent() {
   }
 
   useEffect(() => {
-    loadProfile();
+    queueMicrotask(() => {
+      void loadProfile();
+    });
   }, []);
 
   useEffect(() => {
@@ -188,7 +163,6 @@ function ProfileContent() {
       const supabase = getSupabaseClient();
       const authMetadata = user.user_metadata || {};
       const displayName = authMetadata.display_name || user.email?.split("@")[0] || "Creator";
-      const username = makeUsername(displayName, user.email, authMetadata.username);
 
       const settingsPromise = supabase
         ? supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle()

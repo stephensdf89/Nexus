@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import defaultStages from "../utils/defaultStages";
 
@@ -35,12 +35,20 @@ export default function usePipelineData() {
   const [selectedCard, setSelectedCard] = useState<PipelineCard | null>(null);
   const [selectedStage, setSelectedStage] = useState<PipelineStage | null>(null);
 
-  // Load stages + cards
-  useEffect(() => {
-    loadPipeline();
+  const seedDefaultStages = useCallback(async (userId: string) => {
+    const rows = defaultStages.map((s, index) => ({
+      user_id: userId,
+      name: s.name,
+      order: index,
+      is_default: true,
+      is_required: s.is_required,
+      is_hidden: false,
+    }));
+
+    await supabase.from("pipeline_stages").insert(rows);
   }, []);
 
-  async function loadPipeline() {
+  const loadPipeline = useCallback(async () => {
     setLoading(true);
 
     const {
@@ -79,20 +87,13 @@ export default function usePipelineData() {
     setStages((stageData || []) as PipelineStage[]);
     setCards((cardData || []) as PipelineCard[]);
     setLoading(false);
-  }
+  }, [seedDefaultStages]);
 
-  async function seedDefaultStages(userId: string) {
-    const rows = defaultStages.map((s, index) => ({
-      user_id: userId,
-      name: s.name,
-      order: index,
-      is_default: true,
-      is_required: s.is_required,
-      is_hidden: false,
-    }));
-
-    await supabase.from("pipeline_stages").insert(rows);
-  }
+  // Load stages + cards
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadPipeline();
+  }, [loadPipeline]);
 
   // Add card
   async function addCard(stageId: string) {

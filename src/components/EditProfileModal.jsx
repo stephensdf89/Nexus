@@ -21,7 +21,6 @@ export default function EditProfileModal({
   isOpen,
   onClose,
   initialValues,
-  onSave = () => {},
   isSaving = false,
   error = "",
   autoEnhance = false,
@@ -43,7 +42,6 @@ export default function EditProfileModal({
     twitter: null,
     instagram: null,
   });
-  const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -71,7 +69,7 @@ export default function EditProfileModal({
 
     for (let i = 0; i < 6; i++) {
       const ending = endings[Math.floor(Math.random() * endings.length)];
-      suggestions.push(`${adjectives[i]}${clean}`);
+      suggestions.push(`${adjectives[i]}${clean}${ending}`);
     }
 
     return suggestions;
@@ -138,12 +136,12 @@ export default function EditProfileModal({
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setName(initialValues?.displayName || "");
     setUsername((initialValues?.username || "").replace(/^@+/, ""));
     setBio(initialValues?.bio || "");
     setTwitter(initialValues?.twitter || "");
     setInstagram(initialValues?.instagram || "");
-    setImage(null);
     setPreview(initialValues?.avatarUrl || null);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
@@ -157,15 +155,10 @@ export default function EditProfileModal({
     if (!file) return;
 
     const url = URL.createObjectURL(file);
-    setImage(file);
     setPreview(url);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setShowCropper(true);
-  };
-
-  const handleCropComplete = (_croppedArea, nextCroppedAreaPixels) => {
-    setCroppedAreaPixels(nextCroppedAreaPixels);
   };
 
   const saveProfile = async () => {
@@ -345,8 +338,10 @@ export default function EditProfileModal({
 
           {socialPreview.twitter && (
             <div className="mt-3 flex items-center gap-3 p-3 bg-black/40 border border-red-600 rounded-lg shadow-[0_0_15px_rgba(255,0,0,0.3)]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={socialPreview.twitter}
+                alt="Twitter profile preview"
                 className="w-12 h-12 rounded-full border border-red-600"
               />
               <div>
