@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPgClient } from "@/lib/pg";
-import { requireOwner } from "@/lib/serverAccess";
+import { requireAccess } from "@/lib/serverAccess";
 import { writeAccessAuditLog } from "@/lib/serverAccess";
 import {
   validateRequestBody,
@@ -36,7 +36,7 @@ function normalizeAccessLevel(value: unknown): AccessLevel {
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireOwner(req);
+    const auth = await requireAccess(req, "admin", "/api/admin/members");
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireOwner(req);
+    const auth = await requireAccess(req, "admin", "/api/admin/members");
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (userId === auth.user.id) {
+    if (userId === auth.user.id && auth.isOwner) {
       return NextResponse.json(
         { error: "Owner access is managed by environment settings" },
         { status: 400 }
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       resolvedUserId = String(userLookup.rows[0].id);
     }
 
-    if (resolvedUserId === auth.user.id) {
+    if (resolvedUserId === auth.user.id && auth.isOwner) {
       return NextResponse.json(
         { error: "Owner access is managed by environment settings" },
         { status: 400 }

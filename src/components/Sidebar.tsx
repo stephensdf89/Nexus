@@ -18,25 +18,28 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed, setSidebarCollapsed } = useSidebarCollapse();
-  const [isOwner, setIsOwner] = useState(false);
+  const [canAdmin, setCanAdmin] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetch("/api/access/me");
-        if (!res.ok) return;
+        if (!res.ok) {
+          setCanAdmin(false);
+          return;
+        }
 
         const data = await res.json();
-        setIsOwner(Boolean(data?.isOwner));
+        setCanAdmin(Boolean(data?.isOwner) || data?.accessLevel === "admin");
       } catch {
-        setIsOwner(false);
+        setCanAdmin(false);
       }
     };
 
     load();
   }, []);
 
-  const items = [...navItems, ...(isOwner ? [{ href: "/admin", label: "Admin" }] : [])];
+  const items = [...navItems, ...(canAdmin ? [{ href: "/admin", label: "Admin" }] : [])];
 
   return (
     <aside className={`flex flex-col border-r border-cyan-400/35 bg-[rgba(10,20,58,0.82)] backdrop-blur-sm transition-all duration-300 ${

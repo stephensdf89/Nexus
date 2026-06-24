@@ -8,19 +8,19 @@ import OwnerAuditLogPanel from "@/components/OwnerAuditLogPanel";
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
-  const [isOwner, setIsOwner] = useState(false);
+  const [canAdmin, setCanAdmin] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetch("/api/access/me");
         if (!res.ok) {
-          setIsOwner(false);
+          setCanAdmin(false);
           return;
         }
 
         const data = await res.json();
-        setIsOwner(Boolean(data?.isOwner));
+        setCanAdmin(Boolean(data?.isOwner) || data?.accessLevel === "admin");
       } finally {
         setLoading(false);
       }
@@ -37,13 +37,13 @@ export default function AdminPage() {
     );
   }
 
-  if (!isOwner) {
+  if (!canAdmin) {
     return (
       <AppShell>
         <div className="max-w-2xl rounded-2xl border border-red-500/30 bg-black/80 p-6 shadow-[0_0_24px_rgba(255,0,0,0.18)]">
           <h1 className="text-2xl font-bold text-red-400">Admin Center</h1>
           <p className="mt-2 text-sm text-gray-300">
-            You do not have owner access for this workspace.
+            You do not have admin access for this workspace.
           </p>
         </div>
       </AppShell>

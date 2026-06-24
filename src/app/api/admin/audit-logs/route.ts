@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPgClient } from "@/lib/pg";
-import { requireOwner } from "@/lib/serverAccess";
+import { requireAccess } from "@/lib/serverAccess";
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireOwner(req);
+    const auth = await requireAccess(req, "admin", "/api/admin/audit-logs");
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPgClient } from "@/lib/pg";
-import { requireOwner, writeAccessAuditLog } from "@/lib/serverAccess";
+import { requireAccess, writeAccessAuditLog } from "@/lib/serverAccess";
 import {
   validateRequestBody,
   createValidationErrorResponse,
@@ -43,7 +43,7 @@ function normalizeSettings(value: unknown) {
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireOwner(req);
+    const auth = await requireAccess(req, "admin", "/api/admin/app-settings");
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireOwner(req);
+    const auth = await requireAccess(req, "admin", "/api/admin/app-settings");
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

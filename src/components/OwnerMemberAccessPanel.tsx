@@ -13,7 +13,7 @@ export default function OwnerMemberAccessPanel() {
   const [members, setMembers] = useState<MemberRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isOwner, setIsOwner] = useState(false);
+  const [canAdmin, setCanAdmin] = useState(false);
   const [savingId, setSavingId] = useState("");
   const [grantEmail, setGrantEmail] = useState("");
   const [grantAccessLevel, setGrantAccessLevel] = useState<"user" | "pro" | "admin">("admin");
@@ -31,18 +31,19 @@ export default function OwnerMemberAccessPanel() {
         const accessRes = await fetch("/api/access/me");
         if (!accessRes.ok) {
           setMembers([]);
-          setIsOwner(false);
+          setCanAdmin(false);
           return;
         }
 
         const accessData = await accessRes.json();
-        if (!accessData?.isOwner) {
+        const allowed = Boolean(accessData?.isOwner) || accessData?.accessLevel === "admin";
+        if (!allowed) {
           setMembers([]);
-          setIsOwner(false);
+          setCanAdmin(false);
           return;
         }
 
-        setIsOwner(true);
+        setCanAdmin(true);
 
         const res = await fetch("/api/admin/members");
 
@@ -157,7 +158,7 @@ export default function OwnerMemberAccessPanel() {
     );
   }
 
-  if (!isOwner) {
+  if (!canAdmin) {
     return null;
   }
 

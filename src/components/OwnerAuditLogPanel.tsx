@@ -18,7 +18,7 @@ type AuditLog = {
 export default function OwnerAuditLogPanel() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isOwner, setIsOwner] = useState(false);
+  const [canAdmin, setCanAdmin] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -27,18 +27,19 @@ export default function OwnerAuditLogPanel() {
         const accessRes = await fetch("/api/access/me");
         if (!accessRes.ok) {
           setLogs([]);
-          setIsOwner(false);
+          setCanAdmin(false);
           return;
         }
 
         const accessData = await accessRes.json();
-        if (!accessData?.isOwner) {
+        const allowed = Boolean(accessData?.isOwner) || accessData?.accessLevel === "admin";
+        if (!allowed) {
           setLogs([]);
-          setIsOwner(false);
+          setCanAdmin(false);
           return;
         }
 
-        setIsOwner(true);
+        setCanAdmin(true);
 
         const res = await fetch("/api/admin/audit-logs?limit=40");
         if (!res.ok) {
@@ -71,7 +72,7 @@ export default function OwnerAuditLogPanel() {
     return null;
   }
 
-  if (!isOwner) {
+  if (!canAdmin) {
     return null;
   }
 

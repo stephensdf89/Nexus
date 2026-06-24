@@ -23,7 +23,7 @@ export default function OwnerAppControlsPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [isOwner, setIsOwner] = useState(false);
+  const [canAdmin, setCanAdmin] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -33,17 +33,18 @@ export default function OwnerAppControlsPanel() {
       try {
         const accessRes = await fetch("/api/access/me");
         if (!accessRes.ok) {
-          setIsOwner(false);
+          setCanAdmin(false);
           return;
         }
 
         const accessData = await accessRes.json();
-        if (!accessData?.isOwner) {
-          setIsOwner(false);
+        const allowed = Boolean(accessData?.isOwner) || accessData?.accessLevel === "admin";
+        if (!allowed) {
+          setCanAdmin(false);
           return;
         }
 
-        setIsOwner(true);
+        setCanAdmin(true);
 
         const res = await fetch("/api/admin/app-settings");
         const data = await res.json();
@@ -101,7 +102,7 @@ export default function OwnerAppControlsPanel() {
     );
   }
 
-  if (!isOwner) {
+  if (!canAdmin) {
     return null;
   }
 

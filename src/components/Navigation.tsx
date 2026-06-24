@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 
 export default function Navigation() {
   const pathname = usePathname();
-  const [isOwner, setIsOwner] = useState(false);
+  const [canAdmin, setCanAdmin] = useState(false);
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard" },
@@ -14,18 +14,21 @@ export default function Navigation() {
     { href: "/pipelines", label: "Pipelines" },
     { href: "/community", label: "Community" },
     { href: "/settings", label: "Settings" },
-    ...(isOwner ? [{ href: "/admin", label: "Admin" }] : []),
+    ...(canAdmin ? [{ href: "/admin", label: "Admin" }] : []),
   ];
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetch("/api/access/me");
-        if (!res.ok) return;
+        if (!res.ok) {
+          setCanAdmin(false);
+          return;
+        }
         const data = await res.json();
-        setIsOwner(Boolean(data?.isOwner));
+        setCanAdmin(Boolean(data?.isOwner) || data?.accessLevel === "admin");
       } catch {
-        setIsOwner(false);
+        setCanAdmin(false);
       }
     };
 
