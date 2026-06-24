@@ -21,7 +21,10 @@ export default function Navigation() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("/api/access/me");
+        const res = await fetch("/api/access/me", {
+          cache: "no-store",
+          credentials: "same-origin",
+        });
         if (!res.ok) {
           setCanAdmin(false);
           return;
