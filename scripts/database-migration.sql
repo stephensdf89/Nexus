@@ -371,8 +371,27 @@ CREATE TABLE IF NOT EXISTS public.access_audit_logs (
   target_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   details JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  CHECK (event_type IN ('access_denied', 'access_granted', 'role_change', 'owner_check_failed'))
+  CHECK (event_type IN ('access_denied', 'access_granted', 'role_change', 'owner_check_failed', 'app_settings_change'))
 );
+
+CREATE TABLE IF NOT EXISTS public.app_settings (
+  id INT PRIMARY KEY DEFAULT 1,
+  settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+INSERT INTO public.app_settings (id, settings, updated_at)
+VALUES (
+  1,
+  '{"maintenanceMode":false,"allowSignups":true,"allowPaidModels":true,"defaultAccessLevel":"user","bannerMessage":""}'::jsonb,
+  NOW()
+)
+ON CONFLICT (id) DO NOTHING;
+
+ALTER TABLE IF EXISTS public.access_audit_logs DROP CONSTRAINT IF EXISTS access_audit_logs_event_type_check;
+ALTER TABLE IF EXISTS public.access_audit_logs
+  ADD CONSTRAINT access_audit_logs_event_type_check
+  CHECK (event_type IN ('access_denied', 'access_granted', 'role_change', 'owner_check_failed', 'app_settings_change'));
 
 -- Backfill missing columns for legacy assistant table variants
 ALTER TABLE IF EXISTS public.ai_threads ADD COLUMN IF NOT EXISTS user_id UUID;

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import CreatorToolsPanel from "@/components/CreatorToolsPanel";
 import NotificationsCenter from "@/components/NotificationsCenter";
+import OwnerAppControlsPanel from "@/components/OwnerAppControlsPanel";
 import OwnerMemberAccessPanel from "@/components/OwnerMemberAccessPanel";
 import OwnerAuditLogPanel from "@/components/OwnerAuditLogPanel";
 import { useAnalytics } from "@/hooks/useAnalytics";
@@ -80,6 +81,13 @@ export default function DashboardPage() {
 
         {/* WIDGET GRID */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {isOwner && (
+            <div className="lg:col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <OwnerAppControlsPanel />
+              <OwnerMemberAccessPanel />
+              <OwnerAuditLogPanel />
+            </div>
+          )}
 
           <DashboardWidget title="Analytics Overview" span="lg:col-span-2">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -131,9 +139,6 @@ export default function DashboardPage() {
           <DashboardWidget title="Creator Tools">
             <CreatorToolsPanel />
           </DashboardWidget>
-
-          {isOwner && <OwnerMemberAccessPanel />}
-          {isOwner && <OwnerAuditLogPanel />}
 
           <DashboardWidget title="Notifications">
             <NotificationsCenter />

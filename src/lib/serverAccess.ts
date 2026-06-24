@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getPgClient } from "@/lib/pg";
 
 export type AccessLevel = "user" | "pro" | "admin";
-type AuditEventType = "access_denied" | "access_granted" | "role_change" | "owner_check_failed";
+type AuditEventType = "access_denied" | "access_granted" | "role_change" | "owner_check_failed" | "app_settings_change";
 const ACCESS_RANK: Record<AccessLevel, number> = {
   user: 0,
   pro: 1,

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/contexts/AuthContext";
+import OwnerAppControlsPanel from "@/components/OwnerAppControlsPanel";
 
 function IntegrationCard({ provider, label, onConnect, onDisconnect, integration }) {
   const connected = !!integration;
@@ -49,12 +50,19 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState(null);
   const [integrations, setIntegrations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     if (!user) return;
 
     const load = async () => {
       setLoading(true);
+
+      const accessRes = await fetch("/api/access/me");
+      if (accessRes.ok) {
+        const accessData = await accessRes.json();
+        setIsOwner(Boolean(accessData?.isOwner));
+      }
 
       const { data } = await supabase
         .from("user_settings")
@@ -186,6 +194,8 @@ export default function SettingsPage() {
           <span className="text-sm text-gray-300">Enable notifications</span>
         </label>
       </div>
+
+      {isOwner && <OwnerAppControlsPanel />}
     </div>
   );
 }

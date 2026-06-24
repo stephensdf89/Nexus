@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 type AuditLog = {
   id: string;
   actor_email: string | null;
-  event_type: "access_denied" | "access_granted" | "role_change" | "owner_check_failed";
+  event_type: "access_denied" | "access_granted" | "role_change" | "owner_check_failed" | "app_settings_change";
   resource: string | null;
   required_level: string | null;
   current_level: string | null;
