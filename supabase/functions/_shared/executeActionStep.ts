@@ -1,4 +1,4 @@
-import { executeIntegrationAction } from "./executeIntegrationAction.ts";
+import { executeIntegrationAction } from "./executeIntegrationAction";
 
 type RunRecord = {
   id: string;
@@ -17,15 +17,27 @@ type PipelineStep = {
 export async function executeActionStep(step: PipelineStep, run: RunRecord, supabase: unknown) {
   const config = step.config ?? {};
   const payload = (run.output_data ?? run.input_data ?? {}) as Record<string, unknown>;
+  const runUserId = String(run.user_id ?? "").trim();
 
   switch (step.type) {
-    case "integration":
+    case "integration": {
+      const provider = String(config.provider ?? "").trim();
+      const action = String(config.action ?? "").trim();
+
+      if (!runUserId) {
+        throw new Error("Missing run user_id for integration step");
+      }
+      if (!provider || !action) {
+        throw new Error("Missing provider or action for integration step");
+      }
+
       return await executeIntegrationAction({
-        userId: run.user_id,
-        provider: config.provider,
-        action: config.action,
-        payload: config.payload,
+        userId: runUserId,
+        provider,
+        action,
+        payload: (config.payload ?? payload) as Record<string, unknown>,
       });
+    }
 
     case "delay":
       await new Promise((resolve) =>
@@ -68,15 +80,19 @@ export async function executeActionStep(step: PipelineStep, run: RunRecord, supa
       const action = String(config.action ?? config.handler ?? config.key ?? "").trim();
       const targetPayload = config.payload ?? payload;
 
+      if (!runUserId) {
+        throw new Error("Missing run user_id for action step");
+      }
+
       if (!provider || !action) {
         throw new Error("Missing provider or action for pipeline step");
       }
 
       return await executeIntegrationAction({
-        userId: run.user_id,
+        userId: runUserId,
         provider,
         action,
-        payload: targetPayload,
+        payload: targetPayload as Record<string, unknown>,
       });
     }
 

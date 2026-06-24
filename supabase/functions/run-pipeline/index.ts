@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { executeActionStep } from "../_shared/executeActionStep.ts";
+import { executeActionStep } from "../_shared/executeActionStep";
 
 serve(async (req) => {
   try {

@@ -1,12 +1,12 @@
 import { serve } from "https://deno.land/std/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { getValidToken } from "../_shared/getValidToken.ts";
-import { youtubeUpload } from "../_shared/youtubeUpload.ts";
-import { tiktokUpload } from "../_shared/tiktokUpload.ts";
-import { instagramPublish } from "../_shared/instagramPublish.ts";
-import { twitterPost } from "../_shared/twitterPost.ts";
-import { driveUpload } from "../_shared/driveUpload.ts";
-import { gmailSend } from "../_shared/gmailSend.ts";
+import { getValidToken } from "../_shared/getValidToken";
+import { youtubeUpload } from "../_shared/youtubeUpload";
+import { tiktokUpload } from "../_shared/tiktokUpload";
+import { instagramPublish } from "../_shared/instagramPublish";
+import { twitterPost } from "../_shared/twitterPost";
+import { driveUpload } from "../_shared/driveUpload";
+import { gmailSend } from "../_shared/gmailSend";
 
 serve(async (req) => {
   try {

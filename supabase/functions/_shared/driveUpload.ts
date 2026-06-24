@@ -1,4 +1,17 @@
-export async function driveUpload(token, payload) {
+type DriveUploadPayload = {
+  fileUrl: string;
+  name?: string;
+};
+
+type DriveFileResponse = {
+  id?: string;
+  [key: string]: unknown;
+};
+
+export async function driveUpload(
+  token: string,
+  payload: DriveUploadPayload
+): Promise<DriveFileResponse> {
   const { fileUrl, name } = payload;
 
   const file = await fetch(fileUrl).then((r) => r.arrayBuffer());
@@ -15,17 +28,19 @@ export async function driveUpload(token, payload) {
     }
   );
 
-  const fileData = await res.json();
+  const fileData = (await res.json()) as DriveFileResponse;
 
   // Set metadata
-  await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}`, {
+  if (fileData.id) {
+    await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ name }),
-  });
+    });
+  }
 
   return fileData;
 }

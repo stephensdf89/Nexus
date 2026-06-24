@@ -1,9 +1,16 @@
+type ExecuteIntegrationActionArgs = {
+  userId: string;
+  provider: string;
+  action: string;
+  payload?: Record<string, unknown>;
+};
+
 export async function executeIntegrationAction({
   userId,
   provider,
   action,
   payload,
-}) {
+}: ExecuteIntegrationActionArgs): Promise<unknown> {
   const baseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
