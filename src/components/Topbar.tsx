@@ -9,13 +9,26 @@ import { clearAuthCookies } from "@/lib/auth";
 
 type SessionState = {
   email: string;
+  displayName: string;
   initial: string;
 };
 
 export default function Topbar() {
   const router = useRouter();
-  const [session, setSession] = useState<SessionState>({ email: "", initial: "?" });
+  const [session, setSession] = useState<SessionState>({ email: "", displayName: "", initial: "?" });
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const readAccessToken = () => {
+    if (typeof document === "undefined") {
+      return "";
+    }
+
+    const cookie = document.cookie
+      .split("; ")
+      .find((entry) => entry.startsWith("sb-access-token="));
+
+    return cookie ? decodeURIComponent(cookie.split("=")[1] || "") : "";
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -40,9 +53,34 @@ export default function Topbar() {
         return;
       }
 
+      let displayName = "";
+      try {
+        const headers: Record<string, string> = {};
+        const accessToken = readAccessToken();
+        if (accessToken) {
+          headers["x-supabase-auth"] = accessToken;
+        }
+
+        const response = await fetch("/api/settings", {
+          credentials: "include",
+          cache: "no-store",
+          headers,
+        });
+
+        if (response.ok) {
+          const payload = await response.json();
+          displayName = String(payload?.settings?.displayName || "");
+        }
+      } catch {
+        displayName = "";
+      }
+
+      const label = displayName || authSession.user.email;
+
       setSession({
         email: authSession.user.email,
-        initial: authSession.user.email.slice(0, 1).toUpperCase(),
+        displayName,
+        initial: label.slice(0, 1).toUpperCase(),
       });
     };
 
@@ -56,14 +94,18 @@ export default function Topbar() {
       }
 
       if (!authSession?.user?.email) {
-        setSession({ email: "", initial: "?" });
+        setSession({ email: "", displayName: "", initial: "?" });
         return;
       }
 
       setSession({
         email: authSession.user.email,
+        displayName: "",
         initial: authSession.user.email.slice(0, 1).toUpperCase(),
       });
+
+      // Refresh profile display label on auth changes.
+      void loadSession();
     });
 
     return () => {
@@ -112,7 +154,7 @@ export default function Topbar() {
         <AccessibilityButton />
 
         <div className="hidden text-right md:block">
-          <p className="text-sm">{session.email || "Creator account"}</p>
+          <p className="text-sm">{session.displayName || session.email || "Creator account"}</p>
           <p className="text-xs text-cyan-100/60">Active session</p>
         </div>
 

@@ -353,7 +353,7 @@ function ProfileContent() {
           />
 
           <div>
-            <h1 className="text-3xl font-bold">{profile.name}</h1>
+            <h1 className="text-3xl font-bold">{profile.displayName || "Creator"}</h1>
             <p className="text-gray-400">@{profile.username}</p>
             <p className="mt-2 max-w-xl">{profile.bio}</p>
 
