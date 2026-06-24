@@ -41,6 +41,198 @@ ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS created_at TI
 ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 
 -- ============================================================================
+-- TABLE: integration_triggers
+-- Purpose: Store external integration events that can start pipelines
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.integration_triggers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL,
+  type TEXT NOT NULL,
+  pipeline_id UUID REFERENCES public.pipelines(id) ON DELETE CASCADE,
+  config JSONB DEFAULT '{}'::jsonb,
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS integration_triggers_user_idx ON public.integration_triggers(user_id);
+CREATE INDEX IF NOT EXISTS integration_triggers_pipeline_idx ON public.integration_triggers(pipeline_id);
+
+-- ============================================================================
+-- TABLE: pipeline_templates
+-- Purpose: Store reusable pipeline definitions and presets
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.pipeline_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  category TEXT,
+  icon TEXT,
+  steps JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+INSERT INTO public.pipeline_templates (name, description, category, icon, steps)
+SELECT 'YouTube Upload Pipeline', 'Upload a video, wait briefly, then notify a webhook.', 'publishing', '▶️', '[
+  {"type": "integration", "config": {"provider": "youtube", "action": "upload"}},
+  {"type": "delay", "config": {"ms": 2000}},
+  {"type": "http", "config": {"url": "https://example.com/notify"}}
+]'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM public.pipeline_templates WHERE name = 'YouTube Upload Pipeline');
+
+INSERT INTO public.pipeline_templates (name, description, category, icon, steps)
+SELECT 'TikTok + Instagram Cross-Post', 'Publish the same content to TikTok, Instagram, and X.', 'publishing', '🔁', '[
+  {"type": "integration", "config": {"provider": "tiktok", "action": "upload"}},
+  {"type": "integration", "config": {"provider": "instagram", "action": "upload"}},
+  {"type": "integration", "config": {"provider": "x", "action": "post"}}
+]'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM public.pipeline_templates WHERE name = 'TikTok + Instagram Cross-Post');
+
+INSERT INTO public.pipeline_templates (name, description, category, icon, steps)
+SELECT 'Auto-Reply to Instagram DMs', 'Trigger on a new Instagram DM, generate a reply, and send it back.', 'automation', '💬', '[
+  {"type": "trigger", "config": {"provider": "instagram", "event": "new_dm"}},
+  {"type": "transform", "config": {"action": "generate_reply"}},
+  {"type": "integration", "config": {"provider": "instagram", "action": "send_dm"}}
+]'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM public.pipeline_templates WHERE name = 'Auto-Reply to Instagram DMs');
+
+INSERT INTO public.pipeline_templates (name, description, category, icon, steps)
+SELECT 'Daily Content Summary', 'Fetch analytics, summarize them, and email the result.', 'analytics', '📊', '[
+  {"type": "http", "config": {"action": "fetch_analytics"}},
+  {"type": "transform", "config": {"action": "summarize"}},
+  {"type": "integration", "config": {"provider": "gmail", "action": "send_email"}}
+]'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM public.pipeline_templates WHERE name = 'Daily Content Summary');
+
+INSERT INTO public.pipeline_templates (name, description, category, icon, steps)
+SELECT 'Drive -> YouTube', 'Watch for new Drive files and upload them to YouTube.', 'publishing', '📁', '[
+  {"type": "trigger", "config": {"provider": "google_drive", "event": "new_file"}},
+  {"type": "integration", "config": {"provider": "youtube", "action": "upload"}}
+]'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM public.pipeline_templates WHERE name = 'Drive -> YouTube');
+
+INSERT INTO public.pipeline_templates (name, description, category, icon, steps)
+SELECT 'Multi-Platform Blast', 'Send one piece of content to every major platform.', 'publishing', '🚀', '[
+  {"type": "integration", "config": {"provider": "youtube", "action": "upload"}},
+  {"type": "integration", "config": {"provider": "tiktok", "action": "upload"}},
+  {"type": "integration", "config": {"provider": "instagram", "action": "post"}},
+  {"type": "integration", "config": {"provider": "x", "action": "post"}}
+]'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM public.pipeline_templates WHERE name = 'Multi-Platform Blast');
+
+INSERT INTO public.pipeline_templates (name, description, category, icon, steps)
+SELECT 'Email -> TikTok Script Generator', 'Turn a new email into a TikTok script and save it to Drive.', 'content', '✉️', '[
+  {"type": "trigger", "config": {"provider": "email", "event": "new_email"}},
+  {"type": "transform", "config": {"action": "generate_script"}},
+  {"type": "integration", "config": {"provider": "google_drive", "action": "save_file"}}
+]'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM public.pipeline_templates WHERE name = 'Email -> TikTok Script Generator');
+
+INSERT INTO public.pipeline_templates (name, description, category, icon, steps)
+SELECT 'TikTok Comment Auto-Responder', 'Reply automatically when a new comment appears on TikTok.', 'automation', '💡', '[
+  {"type": "trigger", "config": {"provider": "tiktok", "event": "new_comment"}},
+  {"type": "transform", "config": {"action": "generate_reply"}},
+  {"type": "integration", "config": {"provider": "tiktok", "action": "post_reply"}}
+]'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM public.pipeline_templates WHERE name = 'TikTok Comment Auto-Responder');
+
+INSERT INTO public.pipeline_templates (name, description, category, icon, steps)
+SELECT 'Scheduled Daily Post', 'Wait until 9am and publish to X.', 'scheduling', '⏰', '[
+  {"type": "delay", "config": {"until": "09:00"}},
+  {"type": "integration", "config": {"provider": "x", "action": "post"}}
+]'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM public.pipeline_templates WHERE name = 'Scheduled Daily Post');
+
+INSERT INTO public.pipeline_templates (name, description, category, icon, steps)
+SELECT 'Webhook -> Multi-Platform Publish', 'Start from a webhook and publish everywhere immediately.', 'webhooks', '🌐', '[
+  {"type": "trigger", "config": {"provider": "webhook", "event": "incoming"}},
+  {"type": "integration", "config": {"provider": "youtube", "action": "publish"}},
+  {"type": "integration", "config": {"provider": "tiktok", "action": "publish"}},
+  {"type": "integration", "config": {"provider": "instagram", "action": "publish"}},
+  {"type": "integration", "config": {"provider": "x", "action": "publish"}}
+]'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM public.pipeline_templates WHERE name = 'Webhook -> Multi-Platform Publish');
+
+-- ============================================================================
+-- TABLE: job_queue
+-- Purpose: Track queued pipeline jobs and retry attempts
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.job_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  run_id UUID REFERENCES public.pipeline_runs(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'pending', -- pending, processing, done, failed
+  attempts INT DEFAULT 0,
+  max_attempts INT DEFAULT 3,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Atomically claim the next pending job to avoid duplicate processing across workers
+CREATE OR REPLACE FUNCTION public.claim_next_job()
+RETURNS SETOF public.job_queue
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  WITH next_job AS (
+    SELECT id
+    FROM public.job_queue
+    WHERE status = 'pending'
+    ORDER BY created_at ASC
+    FOR UPDATE SKIP LOCKED
+    LIMIT 1
+  )
+  UPDATE public.job_queue jq
+  SET status = 'processing',
+      updated_at = NOW()
+  FROM next_job
+  WHERE jq.id = next_job.id
+  RETURNING jq.*;
+END;
+$$;
+
+-- ============================================================================
+-- TABLE: worker_heartbeat
+-- Purpose: Track worker liveness by latest heartbeat timestamp
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.worker_heartbeat (
+  worker_id TEXT PRIMARY KEY,
+  last_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- TABLE: subscriptions
+-- Purpose: Store Stripe subscription state mapped to app users
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.subscriptions (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
+  status TEXT,
+  current_period_end TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- TABLE: usage_logs
+-- Purpose: Track daily run usage per user
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.usage_logs (
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  runs_count INT DEFAULT 0,
+  PRIMARY KEY (user_id, date)
+);
+
+-- ============================================================================
 -- TABLE: user_settings
 -- Purpose: Store user preferences (theme, language, region, etc.)
 -- ============================================================================
@@ -239,6 +431,7 @@ ALTER TABLE IF EXISTS public.planner_events ADD COLUMN IF NOT EXISTS updated_at 
 CREATE INDEX IF NOT EXISTS idx_integrations_user_id ON public.integrations(user_id);
 CREATE INDEX IF NOT EXISTS integrations_user_idx ON public.integrations(user_id);
 CREATE INDEX IF NOT EXISTS idx_integrations_email ON public.integrations(user_email);
+CREATE INDEX IF NOT EXISTS job_queue_status_idx ON public.job_queue(status);
 CREATE INDEX IF NOT EXISTS idx_integrations_platform ON public.integrations(platform);
 CREATE INDEX IF NOT EXISTS idx_scheduled_posts_user_id ON public.scheduled_posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_scheduled_posts_email ON public.scheduled_posts(user_email);

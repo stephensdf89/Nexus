@@ -186,6 +186,16 @@ FOR DELETE
 TO authenticated
 USING ((select auth.uid()) = user_id);
 
+-- integration_triggers
+ALTER TABLE IF EXISTS public.integration_triggers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can access their own data" ON public.integration_triggers;
+CREATE POLICY "Users can access their own data"
+ON public.integration_triggers
+FOR ALL
+TO authenticated
+USING ((select auth.uid()) = user_id)
+WITH CHECK ((select auth.uid()) = user_id);
+
 -- billing
 ALTER TABLE IF EXISTS public.billing ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can access their own data" ON public.billing;

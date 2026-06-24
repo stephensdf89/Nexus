@@ -4,6 +4,46 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/contexts/AuthContext";
 
+function IntegrationCard({ provider, label, onConnect, onDisconnect, integration }) {
+  const connected = !!integration;
+
+  return (
+    <div className="bg-black/80 border border-red-600 rounded-xl p-5 shadow-[0_0_20px_rgba(255,0,0,0.3)]">
+      <h3 className="text-lg font-bold text-red-400">{label}</h3>
+
+      {connected ? (
+        <>
+          <p className="text-green-400 text-sm mt-2">Connected</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Last updated: {new Date(integration.updated_at).toLocaleString()}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            Scopes: {integration.scope}
+          </p>
+
+          <button
+            onClick={onDisconnect}
+            className="mt-3 bg-gray-900 border border-red-600 px-3 py-1 rounded-lg text-xs hover:shadow-[0_0_10px_rgba(255,0,0,0.6)]"
+          >
+            Disconnect
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="text-red-400 text-sm mt-2">Not Connected</p>
+
+          <button
+            onClick={onConnect}
+            className="mt-3 bg-red-700 hover:bg-red-800 px-3 py-1 rounded-lg text-xs shadow-[0_0_10px_rgba(255,0,0,0.6)]"
+          >
+            Connect
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const { user } = useUser();
   const [settings, setSettings] = useState(null);
@@ -51,6 +91,8 @@ export default function SettingsPage() {
       .delete()
       .eq("user_id", user.id)
       .eq("provider", provider);
+
+    setIntegrations((prev) => prev.filter((i) => i.provider !== provider));
   };
 
   if (loading || !settings)
@@ -73,25 +115,18 @@ export default function SettingsPage() {
 
         <div className="space-y-3">
           {integrations.map((integration) => (
-            <div key={integration.id} className="rounded-lg border border-red-600 bg-black/80 p-3">
-              <p className="text-sm font-semibold text-red-400 capitalize">{integration.provider}</p>
-              <p className="text-xs text-gray-500">
-                Last updated: {new Date(integration.updated_at).toLocaleString()}
-              </p>
-
-              {integration.refresh_token === null && (
-                <button
-                  onClick={() => {
-                    window.location.assign(
-                      `/api/integrations/${integration.provider}/auth?uid=${user.id}&email=${user.email}`
-                    );
-                  }}
-                  className="mt-3 bg-red-700 hover:bg-red-800 px-4 py-2 rounded-lg text-sm font-bold"
-                >
-                  Reconnect
-                </button>
-              )}
-            </div>
+            <IntegrationCard
+              key={integration.id}
+              provider={integration.provider}
+              label={integration.provider}
+              integration={integration}
+              onConnect={() => {
+                window.location.assign(
+                  `/api/integrations/${integration.provider}/auth?uid=${user.id}&email=${user.email}`
+                );
+              }}
+              onDisconnect={() => disconnect(integration.provider)}
+            />
           ))}
         </div>
       </div>

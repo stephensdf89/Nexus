@@ -13,7 +13,7 @@ export async function executePipelineById(pipelineId: string, payload: Record<st
   const pgClient = await getPgClient();
 
   const pipelineResult = await pgClient.query(
-    "SELECT id, active FROM pipelines WHERE id = $1 LIMIT 1",
+    "SELECT id, active, user_id FROM pipelines WHERE id = $1 LIMIT 1",
     [pipelineId]
   );
 
@@ -34,14 +34,18 @@ export async function executePipelineById(pipelineId: string, payload: Record<st
 
   const steps = stepsResult.rows as PipelineStepRow[];
 
+  const startedAt = new Date().toISOString();
+
   const runInsert = await pgClient.query(
-    `INSERT INTO pipeline_runs (pipeline_id, status, started_at, input_data, output_data)
-     VALUES ($1, 'success', NOW(), $2::jsonb, $3::jsonb)
+    `INSERT INTO pipeline_runs (pipeline_id, user_id, status, started_at, input_data, output_data)
+     VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb)
      RETURNING id`,
-    [pipelineId, JSON.stringify(payload), JSON.stringify({})]
+    [pipelineId, pipelineResult.rows[0].user_id, "pending", startedAt, JSON.stringify(payload), JSON.stringify({})]
   );
 
   const runId = runInsert.rows[0].id as string;
+
+  await pgClient.query(`INSERT INTO job_queue (run_id) VALUES ($1)`, [runId]);
 
   let currentData: Record<string, any> = { ...payload };
 
@@ -109,7 +113,7 @@ export async function executePipelineById(pipelineId: string, payload: Record<st
         );
 
         await pgClient.query(
-          "UPDATE pipeline_runs SET status = 'error', finished_at = NOW(), error_message = $2, output_data = $3::jsonb WHERE id = $1",
+          "UPDATE pipeline_runs SET status = 'failed', finished_at = NOW(), error_message = $2, output_data = $3::jsonb WHERE id = $1",
           [runId, message, JSON.stringify(currentData)]
         );
 
@@ -127,7 +131,7 @@ export async function executePipelineById(pipelineId: string, payload: Record<st
     const message = error instanceof Error ? error.message : "Unknown pipeline execution error";
 
     await pgClient.query(
-      "UPDATE pipeline_runs SET status = 'error', finished_at = NOW(), error_message = $2, output_data = $3::jsonb WHERE id = $1",
+      "UPDATE pipeline_runs SET status = 'failed', finished_at = NOW(), error_message = $2, output_data = $3::jsonb WHERE id = $1",
       [runId, message, JSON.stringify(currentData)]
     );
 
