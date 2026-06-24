@@ -1,14 +1,30 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
-import CreatorToolsPanel from "@/components/CreatorToolsPanel";
-import NotificationsCenter from "@/components/NotificationsCenter";
-import OwnerAppControlsPanel from "@/components/OwnerAppControlsPanel";
-import OwnerMemberAccessPanel from "@/components/OwnerMemberAccessPanel";
-import OwnerAuditLogPanel from "@/components/OwnerAuditLogPanel";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { ViewsOverTimeChart, PlatformBreakdownChart } from "@/components/AnalyticsCharts";
+
+const CreatorToolsPanel = dynamic(() => import("@/components/CreatorToolsPanel"), {
+  ssr: false,
+  loading: () => <p className="text-sm text-gray-400">Loading tools...</p>,
+});
+
+const NotificationsPreview = dynamic(() => import("@/components/NotificationsPreview"), {
+  ssr: false,
+  loading: () => <p className="text-sm text-gray-400">Loading notifications...</p>,
+});
+
+const OwnerAppControlsPanel = dynamic(() => import("@/components/OwnerAppControlsPanel"), {
+  ssr: false,
+});
+const OwnerMemberAccessPanel = dynamic(() => import("@/components/OwnerMemberAccessPanel"), {
+  ssr: false,
+});
+const OwnerAuditLogPanel = dynamic(() => import("@/components/OwnerAuditLogPanel"), {
+  ssr: false,
+});
 
 type AccessLevel = "user" | "pro" | "admin";
 
@@ -141,7 +157,7 @@ export default function DashboardPage() {
           </DashboardWidget>
 
           <DashboardWidget title="Notifications">
-            <NotificationsCenter />
+            <NotificationsPreview />
           </DashboardWidget>
 
           <DashboardWidget title="Pipelines Overview" span="lg:col-span-2">

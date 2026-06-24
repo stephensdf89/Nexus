@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useUser } from "../contexts/AuthContext";
 
+const PAGE_SIZE = 25;
+
 export default function NotificationsCenter() {
   const authContext = useUser();
   const user = authContext?.user;
@@ -14,6 +16,8 @@ export default function NotificationsCenter() {
   const [readNotifications, setReadNotifications] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     if (!user || !supabase) {
@@ -28,9 +32,11 @@ export default function NotificationsCenter() {
         .from("notifications")
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(0, PAGE_SIZE - 1);
 
       if (!error && data) {
+        setHasMore(data.length === PAGE_SIZE);
         if (data.length === 0) {
           setNotifications([]);
           setReadNotifications(new Set());
@@ -49,6 +55,52 @@ export default function NotificationsCenter() {
 
     load();
   }, [user]);
+
+  const handleLoadMore = async () => {
+    if (!supabase || !user || loadingMore || !hasMore) {
+      return;
+    }
+
+    setLoadingMore(true);
+    const from = notifications.length;
+    const to = from + PAGE_SIZE - 1;
+
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      setLoadError("Failed to load more notifications.");
+      setLoadingMore(false);
+      return;
+    }
+
+    const nextRows = Array.isArray(data) ? data : [];
+    setHasMore(nextRows.length === PAGE_SIZE);
+    setNotifications((prev) => {
+      const seen = new Set(prev.map((n) => n.id));
+      const merged = [...prev];
+      for (const row of nextRows) {
+        if (!seen.has(row.id)) {
+          merged.push(row);
+        }
+      }
+      return merged;
+    });
+    setReadNotifications((prev) => {
+      const next = new Set(prev);
+      for (const row of nextRows) {
+        if (row.is_read) {
+          next.add(row.id);
+        }
+      }
+      return next;
+    });
+    setLoadingMore(false);
+  };
 
   useEffect(() => {
     if (!user?.id || !supabase) {
@@ -412,6 +464,18 @@ export default function NotificationsCenter() {
             </div>
           ))
         )}
+
+        {!loading && hasMore ? (
+          <div className="pt-2 text-center">
+            <button
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+              className="rounded-lg border border-cyan-400/45 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-100 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loadingMore ? "Loading..." : "Load More"}
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

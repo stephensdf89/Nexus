@@ -124,32 +124,6 @@ function ProfileContent() {
   const [saveError, setSaveError] = useState("");
   const [autoEnhance, setAutoEnhance] = useState(true);
 
-  async function loadProfile() {
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
-
-    if (!authUser) {
-      return;
-    }
-
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", authUser.id)
-      .single();
-
-    if (data) {
-      setProfile(data);
-    }
-  }
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void loadProfile();
-    });
-  }, []);
-
   useEffect(() => {
     if (!user) {
       return;

@@ -44,7 +44,7 @@ export default function Topbar() {
       return;
     }
 
-    const loadSession = async () => {
+    const loadSession = async (forceRefresh = false) => {
       const {
         data: { session: authSession },
       } = await supabase.auth.getSession();
@@ -53,41 +53,64 @@ export default function Topbar() {
         return;
       }
 
+      const cacheKey = `topbar-display-name-${authSession.user.id}`;
+      const cachedDisplayName =
+        typeof window !== "undefined" ? window.sessionStorage.getItem(cacheKey) || "" : "";
+
+      if (!forceRefresh && cachedDisplayName) {
+        const label = cachedDisplayName || authSession.user.email;
+        setSession({
+          email: authSession.user.email,
+          displayName: cachedDisplayName,
+          initial: label.slice(0, 1).toUpperCase(),
+        });
+        return;
+      }
+
       let displayName = "";
-      if (authSession.user.id) {
-        try {
-          const { data: profileRow } = await supabase
+
+      const profilePromise = authSession.user.id
+        ? supabase
             .from("profiles")
             .select("name")
             .eq("id", authSession.user.id)
-            .maybeSingle();
-          displayName = String(profileRow?.name || "");
-        } catch {
-          displayName = "";
-        }
-      }
+            .maybeSingle()
+        : Promise.resolve({ data: null as { name?: string } | null });
 
-      if (!displayName) {
-      try {
-        const headers: Record<string, string> = {};
-        const accessToken = readAccessToken();
-        if (accessToken) {
-          headers["x-supabase-auth"] = accessToken;
-        }
+      const settingsPromise = (async () => {
+        try {
+          const headers: Record<string, string> = {};
+          const accessToken = readAccessToken();
+          if (accessToken) {
+            headers["x-supabase-auth"] = accessToken;
+          }
 
-        const response = await fetch("/api/settings", {
-          credentials: "include",
-          cache: "no-store",
-          headers,
-        });
+          const response = await fetch("/api/settings", {
+            credentials: "include",
+            headers,
+          });
 
-        if (response.ok) {
+          if (!response.ok) {
+            return "";
+          }
+
           const payload = await response.json();
-          displayName = String(payload?.settings?.displayName || "");
+          return String(payload?.settings?.displayName || "");
+        } catch {
+          return "";
         }
-      } catch {
-        displayName = "";
-      }
+      })();
+
+      const [profileResult, settingsDisplayName] = await Promise.all([profilePromise, settingsPromise]);
+
+      displayName = String(profileResult?.data?.name || settingsDisplayName || "");
+
+      if (typeof window !== "undefined") {
+        if (displayName) {
+          window.sessionStorage.setItem(cacheKey, displayName);
+        } else {
+          window.sessionStorage.removeItem(cacheKey);
+        }
       }
 
       const label = displayName || authSession.user.email;
@@ -124,7 +147,7 @@ export default function Topbar() {
     });
 
     const handleProfileUpdated = () => {
-      void loadSession();
+      void loadSession(true);
     };
 
     if (typeof window !== "undefined") {
