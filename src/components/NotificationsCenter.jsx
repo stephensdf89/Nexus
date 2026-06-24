@@ -390,7 +390,7 @@ export default function NotificationsCenter() {
           filteredNotifications.map((n) => (
             <div
               key={n.id}
-              className={`border border-cyan-400/30 rounded-xl p-4 shadow-[0_0_15px_rgba(0,229,255,0.18)] flex items-center gap-3 transition-all duration-200 ${
+              className={`border border-cyan-400/30 rounded-xl p-4 shadow-[0_0_15px_rgba(0,229,255,0.18)] grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto] transition-all duration-200 ${
                 readNotifications.has(n.id)
                   ? "bg-slate-950/50 opacity-60"
                   : "bg-slate-900/80"
@@ -408,7 +408,7 @@ export default function NotificationsCenter() {
                 </div>
               </div>
 
-              <div className="ml-auto flex shrink-0 items-center gap-2">
+              <div className="flex w-full flex-wrap items-center justify-end gap-2 md:w-auto md:flex-nowrap">
                 <button
                   onClick={() => handleMarkAsRead(n.id)}
                   className="bg-black/80 border border-cyan-400/40 px-3 py-1 rounded-lg text-xs hover:shadow-[0_0_10px_rgba(0,229,255,0.35)] transition-all duration-200 whitespace-nowrap"
