@@ -197,8 +197,8 @@ export default function EditProfileModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-xl border border-red-600 bg-[#111] p-8 shadow-[0_0_25px_rgba(255,0,0,0.4)]">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm md:items-center md:p-6">
+      <div className="my-4 w-full max-w-lg max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-red-600 bg-[#111] p-8 shadow-[0_0_25px_rgba(255,0,0,0.4)] md:max-h-[calc(100vh-3rem)]">
         <h2 className="mb-6 text-2xl font-bold text-white">Edit Profile</h2>
 
         <div className="mb-6">
@@ -430,8 +430,8 @@ export default function EditProfileModal({
       </div>
 
       {showCropper && preview ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80">
-          <div className="w-full max-w-lg rounded-xl border border-red-600 bg-[#111] p-6 shadow-[0_0_25px_rgba(255,0,0,0.4)]">
+        <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/80 p-4 md:items-center md:p-6">
+          <div className="my-4 w-full max-w-lg max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-red-600 bg-[#111] p-6 shadow-[0_0_25px_rgba(255,0,0,0.4)] md:max-h-[calc(100vh-3rem)]">
             <h2 className="mb-4 text-xl font-bold text-white">Adjust Photo</h2>
 
             <div className="relative h-64 w-full overflow-hidden rounded-lg bg-black">
