@@ -13,8 +13,13 @@ type AccessLevel = "user" | "pro" | "admin";
 const UPDATE_MEMBER_SCHEMA: ValidationSchema = {
   userId: {
     type: "string",
-    required: true,
+    required: false,
     minLength: 1,
+  },
+  email: {
+    type: "string",
+    required: false,
+    minLength: 3,
   },
   accessLevel: {
     type: "string",
@@ -77,7 +82,15 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = String(validation.data?.userId || "").trim();
+    const email = String(validation.data?.email || "").trim().toLowerCase();
     const accessLevel = String(validation.data?.accessLevel || "user") as AccessLevel;
+
+    if (!userId && !email) {
+      return NextResponse.json(
+        { error: "Provide either userId or email" },
+        { status: 400 }
+      );
+    }
 
     if (userId === auth.user.id) {
       return NextResponse.json(
@@ -88,16 +101,41 @@ export async function POST(req: NextRequest) {
 
     const db = await getPgClient();
 
+    let resolvedUserId = userId;
+
+    if (!resolvedUserId && email) {
+      const userLookup = await db.query(
+        `SELECT id, email
+         FROM auth.users
+         WHERE lower(email) = lower($1)
+         LIMIT 1`,
+        [email]
+      );
+
+      if (userLookup.rows.length === 0) {
+        return NextResponse.json({ error: "Member not found" }, { status: 404 });
+      }
+
+      resolvedUserId = String(userLookup.rows[0].id);
+    }
+
+    if (resolvedUserId === auth.user.id) {
+      return NextResponse.json(
+        { error: "Owner access is managed by environment settings" },
+        { status: 400 }
+      );
+    }
+
     const currentRoleResult = await db.query(
       `SELECT COALESCE(access_level, 'user') AS access_level
        FROM public.user_access
        WHERE user_id = $1
        LIMIT 1`,
-      [userId]
+      [resolvedUserId]
     );
     const previousAccessLevel = String(currentRoleResult.rows[0]?.access_level || "user");
 
-    const exists = await db.query(`SELECT id FROM auth.users WHERE id = $1 LIMIT 1`, [userId]);
+    const exists = await db.query(`SELECT id FROM auth.users WHERE id = $1 LIMIT 1`, [resolvedUserId]);
     if (exists.rows.length === 0) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 });
     }
@@ -110,7 +148,7 @@ export async function POST(req: NextRequest) {
          access_level = EXCLUDED.access_level,
          granted_by = EXCLUDED.granted_by,
          updated_at = NOW()`,
-      [userId, accessLevel, auth.user.id]
+      [resolvedUserId, accessLevel, auth.user.id]
     );
 
     await writeAccessAuditLog({
@@ -119,14 +157,15 @@ export async function POST(req: NextRequest) {
       eventType: "role_change",
       resource: "/api/admin/members",
       success: true,
-      targetUserId: userId,
+      targetUserId: resolvedUserId,
       details: {
         previousAccessLevel,
         newAccessLevel: accessLevel,
+        lookupEmail: email || null,
       },
     });
 
-    return NextResponse.json({ success: true, userId, accessLevel });
+    return NextResponse.json({ success: true, userId: resolvedUserId, accessLevel });
   } catch (error) {
     console.error("Admin members POST failed:", error);
     return NextResponse.json({ error: "Failed to update member access" }, { status: 500 });
