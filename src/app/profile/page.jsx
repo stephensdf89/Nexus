@@ -10,7 +10,7 @@ import { useUser } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import uploadProfilePhoto from "@/lib/uploadProfilePhoto";
-import { saveProfilePhotoToDB } from "@/lib/uploadProfilePhoto";
+import { saveProfileFields, saveProfilePhotoToDB } from "@/lib/uploadProfilePhoto";
 import enhanceImage from "@/utils/enhanceImage";
 
 const TAB_OPTIONS = ["posts", "drafts", "saved", "analytics"];
@@ -281,11 +281,19 @@ function ProfileContent() {
     setSaveError("");
 
     try {
-      const accessToken = readAccessToken();
+      let accessToken = readAccessToken();
       const headers = { "Content-Type": "application/json" };
       const preview = values.avatarUrl;
       let finalImage = preview;
       let uploadedAvatarUrl = null;
+
+      if (!accessToken) {
+        const supabaseClient = getSupabaseClient();
+        const {
+          data: { session },
+        } = await supabaseClient.auth.getSession();
+        accessToken = session?.access_token || "";
+      }
 
       if (preview && preview.startsWith("data:image")) {
         if (autoEnhance) {
@@ -306,6 +314,16 @@ function ProfileContent() {
         instagram: values.instagram,
         avatarUrl: uploadedAvatarUrl || finalImage || "",
       };
+
+      // Persist to profile table so profile page fields always reflect latest edits.
+      await saveProfileFields(user.id, {
+        name: values.displayName,
+        username: values.username,
+        bio: values.bio,
+        twitter: values.twitter,
+        instagram: values.instagram,
+        avatar_url: uploadedAvatarUrl || finalImage || null,
+      });
 
       if (accessToken) {
         headers["x-supabase-auth"] = accessToken;

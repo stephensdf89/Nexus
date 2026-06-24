@@ -75,6 +75,19 @@ export default function Topbar() {
         displayName = "";
       }
 
+      if (!displayName && authSession.user.id) {
+        try {
+          const { data: profileRow } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("id", authSession.user.id)
+            .maybeSingle();
+          displayName = String(profileRow?.name || "");
+        } catch {
+          displayName = "";
+        }
+      }
+
       const label = displayName || authSession.user.email;
 
       setSession({
