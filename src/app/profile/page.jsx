@@ -350,7 +350,10 @@ function ProfileContent() {
           { onConflict: "id" }
         );
 
-      if (profileError) {
+      const profileTableMissing =
+        profileError && /Could not find the table 'public\.profiles' in the schema cache/i.test(profileError.message || "");
+
+      if (profileError && !profileTableMissing) {
         throw new Error(profileError.message || "Failed to save profile");
       }
 
