@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -17,6 +18,25 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed, setSidebarCollapsed } = useSidebarCollapse();
+  const [isOwner, setIsOwner] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/access/me");
+        if (!res.ok) return;
+
+        const data = await res.json();
+        setIsOwner(Boolean(data?.isOwner));
+      } catch {
+        setIsOwner(false);
+      }
+    };
+
+    load();
+  }, []);
+
+  const items = [...navItems, ...(isOwner ? [{ href: "/admin", label: "Admin" }] : [])];
 
   return (
     <aside className={`flex flex-col border-r border-cyan-400/35 bg-[rgba(10,20,58,0.82)] backdrop-blur-sm transition-all duration-300 ${
@@ -43,7 +63,7 @@ export default function Sidebar() {
       </div>
 
       <nav className={`flex flex-1 flex-col gap-2 ${sidebarCollapsed ? "px-2" : "px-6"} transition-all duration-300`}>
-        {navItems.map((item) => {
+        {items.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
             <Link
