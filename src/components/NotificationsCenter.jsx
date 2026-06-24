@@ -390,15 +390,15 @@ export default function NotificationsCenter() {
           filteredNotifications.map((n) => (
             <div
               key={n.id}
-              className={`border border-cyan-400/30 rounded-xl p-4 shadow-[0_0_15px_rgba(0,229,255,0.18)] flex items-center justify-between gap-3 transition-all duration-200 ${
+              className={`border border-cyan-400/30 rounded-xl p-4 shadow-[0_0_15px_rgba(0,229,255,0.18)] flex items-center gap-3 transition-all duration-200 ${
                 readNotifications.has(n.id)
                   ? "bg-slate-950/50 opacity-60"
                   : "bg-slate-900/80"
               }`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
                 {icons[n.type] ?? icons.default}
-                <div>
+                <div className="min-w-0">
                   <p className={`font-bold ${typeColour[n.type] ?? "text-cyan-300"}`}>
                     {n.message}
                   </p>
@@ -408,19 +408,21 @@ export default function NotificationsCenter() {
                 </div>
               </div>
 
-              <button
-                onClick={() => handleMarkAsRead(n.id)}
-                className="bg-black/80 border border-cyan-400/40 px-3 py-1 rounded-lg text-xs hover:shadow-[0_0_10px_rgba(0,229,255,0.35)] transition-all duration-200 whitespace-nowrap"
-              >
-                {readNotifications.has(n.id) ? "Read" : "View"}
-              </button>
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                <button
+                  onClick={() => handleMarkAsRead(n.id)}
+                  className="bg-black/80 border border-cyan-400/40 px-3 py-1 rounded-lg text-xs hover:shadow-[0_0_10px_rgba(0,229,255,0.35)] transition-all duration-200 whitespace-nowrap"
+                >
+                  {readNotifications.has(n.id) ? "Read" : "View"}
+                </button>
 
-              <button
-                onClick={() => handleDeleteOne(n.id)}
-                className="bg-black/80 border border-violet-400/40 px-3 py-1 rounded-lg text-xs text-violet-200 hover:shadow-[0_0_10px_rgba(168,85,247,0.35)] transition-all duration-200 whitespace-nowrap"
-              >
-                Delete
-              </button>
+                <button
+                  onClick={() => handleDeleteOne(n.id)}
+                  className="bg-black/80 border border-violet-400/40 px-3 py-1 rounded-lg text-xs text-violet-200 hover:shadow-[0_0_10px_rgba(168,85,247,0.35)] transition-all duration-200 whitespace-nowrap"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))
         )}
