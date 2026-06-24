@@ -3,6 +3,13 @@ import type { NextRequest } from "next/server";
 import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from "@/lib/auth";
 
 export function middleware(req: NextRequest) {
+  const host = req.headers.get("host") || "";
+  if (host === "creatornexuspro.com") {
+    const url = req.nextUrl.clone();
+    url.host = "www.creatornexuspro.com";
+    return NextResponse.redirect(url, 308);
+  }
+
   const access = req.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
   const refresh = req.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
   const nextAuthSessionToken =
@@ -40,12 +47,6 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/analytics/:path*",
-    "/assistant/:path*",
-    "/pipelines/:path*",
-    "/community/:path*",
-    "/settings/:path*",
-    "/notifications/:path*",
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
   ],
 };
