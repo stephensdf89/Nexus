@@ -11,14 +11,17 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS public.integrations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL,
-  user_email TEXT NOT NULL,
-  platform TEXT NOT NULL,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL,
+  access_token TEXT,
+  refresh_token TEXT,
+  expires_at TIMESTAMP WITH TIME ZONE,
+  scope TEXT,
+  platform TEXT,
+  user_email TEXT,
   platform_id TEXT,
   channel_name TEXT,
   thumbnail_url TEXT,
-  access_token TEXT,
-  refresh_token TEXT,
   token_expires_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -26,8 +29,14 @@ CREATE TABLE IF NOT EXISTS public.integrations (
 
 -- Backfill missing columns for legacy integrations table variants
 ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS provider TEXT;
+ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS access_token TEXT;
+ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS refresh_token TEXT;
+ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS scope TEXT;
 ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS user_email TEXT;
 ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS platform TEXT;
+ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS token_expires_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 ALTER TABLE IF EXISTS public.integrations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 
@@ -89,6 +98,21 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   category TEXT DEFAULT 'platform',
   is_read BOOLEAN NOT NULL DEFAULT FALSE,
   data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- TABLE: planner_events
+-- Purpose: Store planner events for each authenticated user
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.planner_events (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  date TIMESTAMP WITH TIME ZONE NOT NULL,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -200,11 +224,20 @@ ALTER TABLE IF EXISTS public.notifications ADD COLUMN IF NOT EXISTS data JSONB N
 ALTER TABLE IF EXISTS public.notifications ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 ALTER TABLE IF EXISTS public.notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 
+-- Backfill missing columns for legacy planner_events table variants
+ALTER TABLE IF EXISTS public.planner_events ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE IF EXISTS public.planner_events ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE IF EXISTS public.planner_events ADD COLUMN IF NOT EXISTS date TIMESTAMP WITH TIME ZONE;
+ALTER TABLE IF EXISTS public.planner_events ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE IF EXISTS public.planner_events ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE IF EXISTS public.planner_events ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
 -- ============================================================================
 -- CREATE INDEXES FOR PERFORMANCE
 -- ============================================================================
 
 CREATE INDEX IF NOT EXISTS idx_integrations_user_id ON public.integrations(user_id);
+CREATE INDEX IF NOT EXISTS integrations_user_idx ON public.integrations(user_id);
 CREATE INDEX IF NOT EXISTS idx_integrations_email ON public.integrations(user_email);
 CREATE INDEX IF NOT EXISTS idx_integrations_platform ON public.integrations(platform);
 CREATE INDEX IF NOT EXISTS idx_scheduled_posts_user_id ON public.scheduled_posts(user_id);
@@ -212,6 +245,8 @@ CREATE INDEX IF NOT EXISTS idx_scheduled_posts_email ON public.scheduled_posts(u
 CREATE INDEX IF NOT EXISTS idx_scheduled_posts_time ON public.scheduled_posts(scheduled_time);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON public.notifications(created_at);
+CREATE INDEX IF NOT EXISTS idx_planner_events_user_id ON public.planner_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_planner_events_date ON public.planner_events(date);
 CREATE INDEX IF NOT EXISTS idx_ai_threads_user_id ON public.ai_threads(user_id);
 CREATE INDEX IF NOT EXISTS idx_ai_threads_updated_at ON public.ai_threads(updated_at);
 CREATE INDEX IF NOT EXISTS idx_ai_messages_thread_id ON public.ai_messages(thread_id);
@@ -232,6 +267,7 @@ ALTER TABLE public.integrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.scheduled_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.planner_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_access ENABLE ROW LEVEL SECURITY;
@@ -330,6 +366,31 @@ CREATE POLICY "Users can update their own notifications"
 DROP POLICY IF EXISTS "Users can delete their own notifications" ON public.notifications;
 CREATE POLICY "Users can delete their own notifications"
   ON public.notifications FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- ============================================================================
+-- ROW LEVEL SECURITY POLICIES: planner_events table
+-- ============================================================================
+
+DROP POLICY IF EXISTS "Users can view their own planner events" ON public.planner_events;
+CREATE POLICY "Users can view their own planner events"
+  ON public.planner_events FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert their own planner events" ON public.planner_events;
+CREATE POLICY "Users can insert their own planner events"
+  ON public.planner_events FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update their own planner events" ON public.planner_events;
+CREATE POLICY "Users can update their own planner events"
+  ON public.planner_events FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete their own planner events" ON public.planner_events;
+CREATE POLICY "Users can delete their own planner events"
+  ON public.planner_events FOR DELETE
   USING (auth.uid() = user_id);
 
 -- ============================================================================
@@ -450,7 +511,7 @@ SELECT
   (SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = tables.table_name) as column_count
 FROM information_schema.tables as tables
 WHERE table_schema = 'public' 
-  AND table_name IN ('integrations', 'user_settings', 'scheduled_posts', 'notifications', 'ai_threads', 'ai_messages', 'user_access', 'access_audit_logs')
+  AND table_name IN ('integrations', 'user_settings', 'scheduled_posts', 'notifications', 'planner_events', 'ai_threads', 'ai_messages', 'user_access', 'access_audit_logs')
 ORDER BY table_name;
 
 -- Expected output:
@@ -458,6 +519,7 @@ ORDER BY table_name;
 -- ai_threads         | 5 columns
 -- ai_messages        | 7 columns
 -- notifications      | 9 columns
+-- planner_events     | 7 columns
 -- scheduled_posts    | 9 columns  
 -- user_settings      | 6 columns
 -- user_access        | 7 columns

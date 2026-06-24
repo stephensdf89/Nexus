@@ -157,13 +157,34 @@ WITH CHECK ((select auth.uid()) = user_id);
 
 -- integrations
 ALTER TABLE IF EXISTS public.integrations ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Users can access their own data" ON public.integrations;
-CREATE POLICY "Users can access their own data"
+DROP POLICY IF EXISTS "Users can read their own integrations" ON public.integrations;
+CREATE POLICY "Users can read their own integrations"
 ON public.integrations
-FOR ALL
+FOR SELECT
+TO authenticated
+USING ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can insert their own integrations" ON public.integrations;
+CREATE POLICY "Users can insert their own integrations"
+ON public.integrations
+FOR INSERT
+TO authenticated
+WITH CHECK ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can update their own integrations" ON public.integrations;
+CREATE POLICY "Users can update their own integrations"
+ON public.integrations
+FOR UPDATE
 TO authenticated
 USING ((select auth.uid()) = user_id)
 WITH CHECK ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can delete their own integrations" ON public.integrations;
+CREATE POLICY "Users can delete their own integrations"
+ON public.integrations
+FOR DELETE
+TO authenticated
+USING ((select auth.uid()) = user_id);
 
 -- billing
 ALTER TABLE IF EXISTS public.billing ENABLE ROW LEVEL SECURITY;

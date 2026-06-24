@@ -77,38 +77,16 @@ export default function YouTubeIntegration() {
     checkStatus();
   }, [user]);
 
-  const handleConnect = async () => {
+  const connectYouTube = () => {
     if (!user) return;
 
-    try {
-      setConnecting(true);
-      setError(null);
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const redirect = `${process.env.NEXT_PUBLIC_SITE_URL}/oauth/callback`;
+    const scope = encodeURIComponent("https://www.googleapis.com/auth/youtube.upload");
 
-      // Get auth URL
-      const res = await fetch("/api/integrations/youtube/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          uid: user.id,
-          email: user.email,
-        }),
-      });
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirect}&response_type=code&scope=${scope}&access_type=offline&state=${user.id}&provider=youtube`;
 
-      if (!res.ok) {
-        throw new Error("Failed to initiate YouTube authentication");
-      }
-
-      const data = await res.json();
-
-      if (data.authUrl) {
-        // Redirect to Google OAuth consent
-        window.location.assign(data.authUrl);
-      }
-    } catch (err) {
-      console.error("Error connecting YouTube:", err);
-      setError(err instanceof Error ? err.message : "Connection failed");
-      setConnecting(false);
-    }
+    window.location.href = url;
   };
 
   const handleDisconnect = async () => {
@@ -245,11 +223,11 @@ export default function YouTubeIntegration() {
       <div className="flex flex-col gap-2">
         {!status.connected ? (
           <button
-            onClick={handleConnect}
+            onClick={connectYouTube}
             disabled={connecting}
-            className="w-full rounded bg-cyan-600 px-4 py-2 font-bold hover:bg-cyan-500 disabled:opacity-50 transition-all"
+            className="bg-red-700 hover:bg-red-800 px-4 py-2 rounded-lg text-sm font-bold"
           >
-            {connecting ? "Connecting..." : "Connect"}
+            Connect YouTube
           </button>
         ) : (
           <>
