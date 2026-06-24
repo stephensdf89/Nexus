@@ -168,6 +168,14 @@ function ProfileContent() {
         ? supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle()
         : Promise.resolve({ data: null });
 
+      const profilePromise = supabase
+        ? supabase
+            .from("profiles")
+            .select("name, username, bio, twitter, instagram, avatar_url")
+            .eq("id", user.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null });
+
       const integrationsPromise = supabase
         ? supabase.from("integrations").select("*").eq("user_id", user.id)
         : Promise.resolve({ data: [] });
@@ -199,8 +207,16 @@ function ProfileContent() {
         })
         .catch(() => ({}));
 
-      const [settingsResult, integrationsResult, scheduledResult, analyticsResult, settingsApiResult] = await Promise.all([
+      const [
+        settingsResult,
+        profileResult,
+        integrationsResult,
+        scheduledResult,
+        analyticsResult,
+        settingsApiResult,
+      ] = await Promise.all([
         settingsPromise,
+        profilePromise,
         integrationsPromise,
         scheduledPostsPromise,
         analyticsPromise,
@@ -213,25 +229,28 @@ function ProfileContent() {
 
       const connectedIntegrations = Array.isArray(integrationsResult?.data) ? integrationsResult.data : [];
       const settings = settingsResult?.data || null;
+      const profileRow = profileResult?.data || null;
       const persistedProfileSettings = settingsApiResult && typeof settingsApiResult === "object" ? settingsApiResult : {};
-      const persistedDisplayName = persistedProfileSettings.displayName || authMetadata.display_name;
-      const persistedUsername = persistedProfileSettings.username || authMetadata.username;
+      const persistedDisplayName =
+        profileRow?.name || persistedProfileSettings.displayName || authMetadata.display_name;
+      const persistedUsername =
+        profileRow?.username || persistedProfileSettings.username || authMetadata.username;
       const fallbackBio = connectedIntegrations.length
         ? `Building momentum across ${connectedIntegrations.map((item) => titleCase(item.provider || item.platform)).join(", ")}.`
         : "Creator profile loading. Connect platforms and publish content to make this page yours.";
-      const persistedAvatarUrl = persistedProfileSettings.avatarUrl || null;
+      const persistedAvatarUrl = profileRow?.avatar_url || persistedProfileSettings.avatarUrl || null;
 
       setProfile({
         displayName: persistedDisplayName || displayName,
         username: makeUsername(persistedDisplayName || displayName, user.email, persistedUsername),
         avatar_url: persistedAvatarUrl || authMetadata.avatar_url || authMetadata.picture || null,
-        bio: persistedProfileSettings.bio || settings?.bio || authMetadata.bio || fallbackBio,
+        bio: profileRow?.bio || persistedProfileSettings.bio || settings?.bio || authMetadata.bio || fallbackBio,
         region: settings?.region || "Global",
         language: settings?.language || "en",
       });
       setProfileSettings({
-        twitter: persistedProfileSettings.twitter || "",
-        instagram: persistedProfileSettings.instagram || "",
+        twitter: profileRow?.twitter || persistedProfileSettings.twitter || "",
+        instagram: profileRow?.instagram || persistedProfileSettings.instagram || "",
       });
       setIntegrations(connectedIntegrations);
       setScheduledPosts(Array.isArray(scheduledResult?.scheduled_posts) ? scheduledResult.scheduled_posts : []);

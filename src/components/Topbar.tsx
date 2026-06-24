@@ -54,6 +54,20 @@ export default function Topbar() {
       }
 
       let displayName = "";
+      if (authSession.user.id) {
+        try {
+          const { data: profileRow } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("id", authSession.user.id)
+            .maybeSingle();
+          displayName = String(profileRow?.name || "");
+        } catch {
+          displayName = "";
+        }
+      }
+
+      if (!displayName) {
       try {
         const headers: Record<string, string> = {};
         const accessToken = readAccessToken();
@@ -74,18 +88,6 @@ export default function Topbar() {
       } catch {
         displayName = "";
       }
-
-      if (!displayName && authSession.user.id) {
-        try {
-          const { data: profileRow } = await supabase
-            .from("profiles")
-            .select("name")
-            .eq("id", authSession.user.id)
-            .maybeSingle();
-          displayName = String(profileRow?.name || "");
-        } catch {
-          displayName = "";
-        }
       }
 
       const label = displayName || authSession.user.email;
