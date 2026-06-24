@@ -21,6 +21,7 @@ export default function EditProfileModal({
   isOpen,
   onClose,
   initialValues,
+  onSave,
   isSaving = false,
   error = "",
   autoEnhance = false,
@@ -162,6 +163,21 @@ export default function EditProfileModal({
   };
 
   const saveProfile = async () => {
+    const payload = {
+      displayName: name,
+      username,
+      bio,
+      twitter: extractHandle(twitter, "twitter"),
+      instagram: extractHandle(instagram, "instagram"),
+      avatarUrl: preview,
+    };
+
+    // If parent provides save handler, delegate to it.
+    if (typeof onSave === "function") {
+      await onSave(payload);
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -184,11 +200,11 @@ export default function EditProfileModal({
 
     // Save text fields
     await saveProfileFields(user.id, {
-      name,
-      username,
-      bio,
-      twitter: extractHandle(twitter, "twitter"),
-      instagram: extractHandle(instagram, "instagram"),
+      name: payload.displayName,
+      username: payload.username,
+      bio: payload.bio,
+      twitter: payload.twitter,
+      instagram: payload.instagram,
     });
 
     onClose();
@@ -198,7 +214,7 @@ export default function EditProfileModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm md:items-center md:p-6">
-      <div className="my-4 w-full max-w-lg max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-red-600 bg-[#111] p-8 shadow-[0_0_25px_rgba(255,0,0,0.4)] md:max-h-[calc(100vh-3rem)]">
+      <div className="my-4 w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-scroll overscroll-contain rounded-xl border border-red-600 bg-[#111] p-8 pb-28 shadow-[0_0_25px_rgba(255,0,0,0.4)] md:max-h-[calc(100dvh-3rem)]" style={{ WebkitOverflowScrolling: "touch" }}>
         <h2 className="mb-6 text-2xl font-bold text-white">Edit Profile</h2>
 
         <div className="mb-6">
@@ -406,7 +422,7 @@ export default function EditProfileModal({
 
         {error ? <p className="mb-4 text-sm text-red-300">{error}</p> : null}
 
-        <div className="flex justify-end gap-4">
+        <div className="sticky bottom-0 z-10 -mx-8 mt-6 flex justify-end gap-4 border-t border-red-900/60 bg-[#111] px-8 py-4">
           <button
             onClick={onClose}
             className="rounded bg-gray-700 px-4 py-2 hover:bg-gray-600"
@@ -416,15 +432,15 @@ export default function EditProfileModal({
           </button>
 
           <button
-            disabled={usernameAvailable === false}
+            disabled={usernameAvailable === false || isSaving}
             onClick={saveProfile}
             className={`px-4 py-2 rounded transition ${
-              usernameAvailable === false
+              usernameAvailable === false || isSaving
                 ? "bg-gray-700 cursor-not-allowed"
                 : "bg-red-600 hover:bg-red-700"
             }`}
           >
-            Save Changes
+            {isSaving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
