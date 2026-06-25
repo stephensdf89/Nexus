@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getPgClient } from '@/lib/pg';
 import {
   validateRequestHeaders,
   createValidationErrorResponse,
@@ -49,16 +48,32 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-      const db = await getPgClient();
-      const result = await db.query(
-        `SELECT settings
-         FROM public."UserSettings"
-         WHERE "userId" = $1
-         LIMIT 1`,
-        [user.id]
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !anonKey) {
+        return NextResponse.json({ settings: {} });
+      }
+
+      // Use REST API to fetch settings
+      const response = await fetch(
+        `${supabaseUrl}/rest/v1/UserSettings?userId=eq.${user.id}&select=settings`,
+        {
+          headers: {
+            'Authorization': `Bearer ${anonKey}`,
+            'apikey': anonKey,
+            'Content-Type': 'application/json',
+          },
+        }
       );
 
-      return NextResponse.json({ settings: result.rows[0]?.settings ?? {} });
+      if (!response.ok) {
+        console.error('Settings fetch failed:', response.status);
+        return NextResponse.json({ settings: {} });
+      }
+
+      const data = await response.json();
+      return NextResponse.json({ settings: data[0]?.settings ?? {} });
     } catch (error) {
       console.error('Error fetching settings:', error);
       return NextResponse.json({ settings: {} });
@@ -90,14 +105,72 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid settings payload' }, { status: 400 });
     }
 
-    const db = await getPgClient();
-    await db.query(
-      `INSERT INTO public."UserSettings" ("userId", settings, "updatedAt")
-       VALUES ($1, $2::jsonb, $3)
-       ON CONFLICT ("userId")
-       DO UPDATE SET settings = EXCLUDED.settings, "updatedAt" = EXCLUDED."updatedAt"`,
-      [user.id, JSON.stringify(settings), new Date().toISOString()]
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !anonKey) {
+      return NextResponse.json({ error: 'Supabase config missing' }, { status: 500 });
+    }
+
+    // First, check if record exists
+    const checkResponse = await fetch(
+      `${supabaseUrl}/rest/v1/UserSettings?userId=eq.${user.id}&select=id`,
+      {
+        headers: {
+          'Authorization': `Bearer ${anonKey}`,
+          'apikey': anonKey,
+          'Content-Type': 'application/json',
+        },
+      }
     );
+
+    const existingRecords = await checkResponse.json();
+    const exists = Array.isArray(existingRecords) && existingRecords.length > 0;
+
+    let response;
+    if (exists) {
+      // Update existing record
+      response = await fetch(
+        `${supabaseUrl}/rest/v1/UserSettings?userId=eq.${user.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${anonKey}`,
+            'apikey': anonKey,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation',
+          },
+          body: JSON.stringify({
+            settings: settings,
+            updatedAt: new Date().toISOString(),
+          }),
+        }
+      );
+    } else {
+      // Insert new record
+      response = await fetch(
+        `${supabaseUrl}/rest/v1/UserSettings`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${anonKey}`,
+            'apikey': anonKey,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation',
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            settings: settings,
+            updatedAt: new Date().toISOString(),
+          }),
+        }
+      );
+    }
+
+    if (!response.ok) {
+      console.error('Settings save failed:', response.status, await response.text());
+      return NextResponse.json({ error: 'Failed to save settings' }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true, settings });
   } catch (error) {
