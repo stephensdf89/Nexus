@@ -5,6 +5,13 @@ import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/contexts/AuthContext";
 import OwnerAppControlsPanel from "@/components/OwnerAppControlsPanel";
 
+const DEFAULT_SETTINGS = {
+  theme: "neon",
+  language: "en",
+  region: "US",
+  notifications_enabled: true,
+};
+
 function IntegrationCard({ provider, label, onConnect, onDisconnect, integration }) {
   const connected = !!integration;
 
@@ -47,38 +54,67 @@ function IntegrationCard({ provider, label, onConnect, onDisconnect, integration
 
 export default function SettingsPage() {
   const { user } = useUser();
-  const [settings, setSettings] = useState(null);
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [integrations, setIntegrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const load = async () => {
-      setLoading(true);
+      try {
+        setLoading(true);
 
-      const accessRes = await fetch("/api/access/me");
-      if (accessRes.ok) {
-        const accessData = await accessRes.json();
-        setIsOwner(Boolean(accessData?.isOwner));
+        const accessRes = await fetch("/api/access/me");
+        if (accessRes.ok) {
+          const accessData = await accessRes.json();
+          setIsOwner(Boolean(accessData?.isOwner));
+        }
+
+        const { data, error } = await supabase
+          .from("user_settings")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Failed to load user settings:", error);
+          setSettings(DEFAULT_SETTINGS);
+        } else if (!data) {
+          const defaultRow = { user_id: user.id, ...DEFAULT_SETTINGS };
+          const { error: insertError } = await supabase
+            .from("user_settings")
+            .upsert(defaultRow, { onConflict: "user_id" });
+
+          if (insertError) {
+            console.error("Failed to initialize user settings:", insertError);
+          }
+
+          setSettings(defaultRow);
+        } else {
+          setSettings({ ...DEFAULT_SETTINGS, ...data });
+        }
+
+        const { data: integrations, error: integrationsError } = await supabase
+          .from("integrations")
+          .select("*")
+          .eq("user_id", user.id);
+
+        if (integrationsError) {
+          console.error("Failed to load integrations:", integrationsError);
+          setIntegrations([]);
+        } else {
+          setIntegrations(integrations || []);
+        }
+      } catch (error) {
+        console.error("Settings page load failed:", error);
+      } finally {
+        setLoading(false);
       }
-
-      const { data } = await supabase
-        .from("user_settings")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      setSettings(data);
-
-      const { data: integrations } = await supabase
-        .from("integrations")
-        .select("*")
-        .eq("user_id", user.id);
-
-      setIntegrations(integrations || []);
-      setLoading(false);
     };
 
     load();
@@ -87,10 +123,11 @@ export default function SettingsPage() {
   const updateSetting = async (field, value) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
 
+    if (!user) return;
+
     await supabase
       .from("user_settings")
-      .update({ [field]: value })
-      .eq("user_id", user.id);
+      .upsert({ user_id: user.id, [field]: value }, { onConflict: "user_id" });
   };
 
   const disconnect = async (provider) => {
@@ -103,7 +140,7 @@ export default function SettingsPage() {
     setIntegrations((prev) => prev.filter((i) => i.provider !== provider));
   };
 
-  if (loading || !settings)
+  if (loading)
     return <p className="text-gray-400">Loading settings...</p>;
 
   return (
