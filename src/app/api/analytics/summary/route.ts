@@ -17,6 +17,18 @@ interface AnalyticsSummary {
   timeframe: string;
 }
 
+function calculateTrend(views: number, engagement: number, followers: number): number {
+  if (views <= 0 && engagement <= 0 && followers <= 0) {
+    return 0;
+  }
+
+  const engagementRate = views > 0 ? engagement / views : 0;
+  const followerRate = views > 0 ? followers / views : 0;
+  const score = engagementRate * 100 * 0.75 + followerRate * 100 * 0.25;
+
+  return Math.max(-100, Math.min(100, Math.round(score)));
+}
+
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireAccess(req, "pro");
@@ -48,7 +60,11 @@ export async function GET(req: NextRequest) {
             views: fbData.metrics.impressions || 0,
             engagement: fbData.metrics.engaged_users || 0,
             followers: fbData.metrics.fan_count || 0,
-            trend: 12, // placeholder
+            trend: calculateTrend(
+              fbData.metrics.impressions || 0,
+              fbData.metrics.engaged_users || 0,
+              fbData.metrics.fan_count || 0
+            ),
           };
         }
       }
@@ -77,7 +93,11 @@ export async function GET(req: NextRequest) {
             views: ytData.metrics.views || 0,
             engagement: ytData.metrics.recent_engagement || 0,
             followers: ytData.metrics.subscribers || 0,
-            trend: 18, // placeholder
+            trend: calculateTrend(
+              ytData.metrics.views || 0,
+              ytData.metrics.recent_engagement || 0,
+              ytData.metrics.subscribers || 0
+            ),
           };
         }
       }
@@ -106,7 +126,11 @@ export async function GET(req: NextRequest) {
             views: ttData.metrics.views || 0,
             engagement: ttData.metrics.recent_engagement || 0,
             followers: ttData.metrics.subscribers || 0,
-            trend: 22, // placeholder
+            trend: calculateTrend(
+              ttData.metrics.views || 0,
+              ttData.metrics.recent_engagement || 0,
+              ttData.metrics.subscribers || 0
+            ),
           };
         }
       }
@@ -135,7 +159,11 @@ export async function GET(req: NextRequest) {
             views: igData.metrics.views || 0,
             engagement: igData.metrics.recent_engagement || 0,
             followers: igData.metrics.subscribers || 0,
-            trend: 15, // placeholder
+            trend: calculateTrend(
+              igData.metrics.views || 0,
+              igData.metrics.recent_engagement || 0,
+              igData.metrics.subscribers || 0
+            ),
           };
         }
       }
@@ -164,7 +192,11 @@ export async function GET(req: NextRequest) {
             views: twData.metrics.views || 0,
             engagement: twData.metrics.recent_engagement || 0,
             followers: twData.metrics.subscribers || 0,
-            trend: 12, // placeholder
+            trend: calculateTrend(
+              twData.metrics.views || 0,
+              twData.metrics.recent_engagement || 0,
+              twData.metrics.subscribers || 0
+            ),
           };
         }
       }
@@ -193,7 +225,11 @@ export async function GET(req: NextRequest) {
             views: tcnData.metrics.views || 0,
             engagement: tcnData.metrics.recent_engagement || 0,
             followers: tcnData.metrics.subscribers || 0,
-            trend: 28, // placeholder
+            trend: calculateTrend(
+              tcnData.metrics.views || 0,
+              tcnData.metrics.recent_engagement || 0,
+              tcnData.metrics.subscribers || 0
+            ),
           };
         }
       }
@@ -222,7 +258,11 @@ export async function GET(req: NextRequest) {
             views: liData.metrics.views || 0,
             engagement: liData.metrics.recent_engagement || 0,
             followers: liData.metrics.subscribers || 0,
-            trend: 8, // placeholder
+            trend: calculateTrend(
+              liData.metrics.views || 0,
+              liData.metrics.recent_engagement || 0,
+              liData.metrics.subscribers || 0
+            ),
           };
         }
       }
@@ -251,38 +291,17 @@ export async function GET(req: NextRequest) {
             views: pnData.metrics.views || 0,
             engagement: pnData.metrics.recent_engagement || 0,
             followers: pnData.metrics.subscribers || 0,
-            trend: 19, // placeholder
+            trend: calculateTrend(
+              pnData.metrics.views || 0,
+              pnData.metrics.recent_engagement || 0,
+              pnData.metrics.subscribers || 0
+            ),
           };
         }
       }
     } catch (err) {
       console.error("Error fetching Pinterest analytics:", err);
     }
-
-    // Mock data for other platforms (for now, these are placeholders)
-    const mockPlatforms: PlatformMetrics[] = [
-      {
-        platform: "YouTube",
-        views: 24500,
-        engagement: 1840,
-        followers: 12400,
-        trend: 14,
-      },
-      {
-        platform: "TikTok",
-        views: 18900,
-        engagement: 2340,
-        followers: 8900,
-        trend: 22,
-      },
-      {
-        platform: "Instagram",
-        views: 8400,
-        engagement: 890,
-        followers: 5600,
-        trend: 8,
-      },
-    ];
 
     // Combine platforms
     const allPlatforms = [
@@ -294,7 +313,6 @@ export async function GET(req: NextRequest) {
       ...(twitchMetrics ? [twitchMetrics] : []),
       ...(linkedinMetrics ? [linkedinMetrics] : []),
       ...(pinterestMetrics ? [pinterestMetrics] : []),
-      ...mockPlatforms,
     ];
 
     // Calculate totals

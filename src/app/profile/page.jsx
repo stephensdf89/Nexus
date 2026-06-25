@@ -264,6 +264,10 @@ function ProfileContent() {
   const followersCount = formatNumber(analyticsSummary?.totalFollowers ?? null);
   const followingCount = socialLinks.length ? formatNumber(socialLinks.length) : "--";
   const postsCount = formatNumber(scheduledPosts.length);
+  const topPlatforms = (analyticsSummary?.platforms || [])
+    .slice()
+    .sort((a, b) => (b.views || 0) - (a.views || 0))
+    .slice(0, 4);
 
   const handleSaveProfile = async (values) => {
     if (!user) {
@@ -538,11 +542,26 @@ function ProfileContent() {
             {activeTab === "analytics" ? (
               <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
                 <article className="rounded-2xl border border-red-500/20 bg-black/45 p-5 shadow-[0_0_24px_rgba(255,0,0,0.08)]">
-                  <p className="text-xs uppercase tracking-[0.28em] text-red-300/70">Analytics Placeholder</p>
-                  <h3 className="mt-3 text-2xl font-semibold text-white">Post-level performance will land here</h3>
-                  <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
-                    Use this surface for top-performing posts, saves, click-through rate, and conversion snapshots once the profile analytics model is wired in.
-                  </p>
+                  <p className="text-xs uppercase tracking-[0.28em] text-red-300/70">Analytics Overview</p>
+                  <h3 className="mt-3 text-2xl font-semibold text-white">Top platform performance</h3>
+                  {topPlatforms.length ? (
+                    <div className="mt-4 space-y-3">
+                      {topPlatforms.map((platform) => (
+                        <div key={platform.platform} className="rounded-xl border border-red-500/20 bg-black/40 p-3">
+                          <p className="text-sm font-semibold text-zinc-100">{platform.platform}</p>
+                          <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-zinc-300">
+                            <span>Views: {formatNumber(platform.views ?? null)}</span>
+                            <span>Engagement: {formatNumber(platform.engagement ?? null)}</span>
+                            <span>Followers: {formatNumber(platform.followers ?? null)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
+                      No connected analytics platforms have returned metrics yet.
+                    </p>
+                  )}
                 </article>
 
                 <article className="rounded-2xl border border-red-500/20 bg-black/45 p-5 shadow-[0_0_24px_rgba(255,0,0,0.08)]">

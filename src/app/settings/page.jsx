@@ -379,7 +379,9 @@ export default function SettingsPage() {
           />
         </div>
 
-        <PlaceholderNote text="Dashboard layout options are saved and usable now. If a layout variant is not visibly different yet, this is a placeholder for upcoming UI variants." />
+        <p className="text-xs mt-3" style={{ color: "var(--brand-text)" }}>
+          These preferences now directly control dashboard rendering.
+        </p>
 
         <button
           type="button"
@@ -432,7 +434,9 @@ export default function SettingsPage() {
           />
         </div>
 
-        <PlaceholderNote text="AI mode is saved and available across tools that read shared settings. Additional per-tool mode behavior is a placeholder for future tuning." />
+        <p className="text-xs mt-3" style={{ color: "var(--brand-text)" }}>
+          AI mode is active and used by the assistant workflow.
+        </p>
       </SectionCard>
 
       <SectionCard title="Account Region">
@@ -445,7 +449,9 @@ export default function SettingsPage() {
           />
         </div>
 
-        <PlaceholderNote text="Region is currently stored and usable for profile/account context. Broader geo-personalization is a placeholder until more region-aware modules are connected." />
+        <p className="text-xs mt-3" style={{ color: "var(--brand-text)" }}>
+          Region is persisted and available for account/profile context.
+        </p>
       </SectionCard>
 
       <SectionCard title="Integrations">
@@ -462,7 +468,7 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        <PlaceholderNote text="If a provider does not connect due to missing external credentials, this is expected and serves as a setup placeholder." />
+        <PlaceholderNote text="Some providers require external credentials/config in their respective platforms before connection can complete." />
       </SectionCard>
 
       <SectionCard title="Owner Controls">
@@ -543,7 +549,7 @@ function SelectField({ label, value, options, onChange }) {
 function PlaceholderNote({ text }) {
   return (
     <p className="text-xs mt-3" style={{ color: "var(--brand-text)" }}>
-      Placeholder: {text}
+      Note: {text}
     </p>
   );
 }

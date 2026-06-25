@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { ViewsOverTimeChart, PlatformBreakdownChart } from "@/components/AnalyticsCharts";
+import { useSettingsStore } from "@/lib/settingsStore";
 
 const CreatorToolsPanel = dynamic(() => import("@/components/CreatorToolsPanel"), {
   ssr: false,
@@ -46,6 +47,9 @@ type AccessResponse = {
 export default function DashboardPage() {
   const [canUseAnalytics, setCanUseAnalytics] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const dashboardLayout = useSettingsStore((state) => state.dashboardLayout);
+  const showAnalyticsPreview = useSettingsStore((state) => state.showAnalyticsPreview);
+  const showCreatorToolsPreview = useSettingsStore((state) => state.showCreatorToolsPreview);
 
   useEffect(() => {
     const loadAccess = async () => {
@@ -106,7 +110,7 @@ export default function DashboardPage() {
         </section>
 
         {/* WIDGET GRID */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section className={`grid grid-cols-1 gap-6 ${dashboardLayout === "compact" ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
           {isOwner && (
             <div className="lg:col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-6">
               <OwnerAppControlsPanel />
@@ -115,21 +119,28 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <DashboardWidget title="Analytics Overview" span="lg:col-span-2">
+          <DashboardWidget title="Analytics Overview" span={dashboardLayout === "focus" ? "lg:col-span-3" : "lg:col-span-2"}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <GrowthStat label="Views" value={summary ? formatNumber(summary.totalViews) : "12.4K"} change="+14%" />
               <GrowthStat label="Engagement" value={summary ? formatNumber(summary.totalEngagement) : "1.8K"} change="+9%" />
               <GrowthStat label="Followers" value={summary ? formatNumber(summary.totalFollowers) : "24.5K"} change="+6%" />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {!showAnalyticsPreview ? (
+              <div className="rounded-lg border border-cyan-400/20 bg-slate-950/40 p-4 text-sm text-cyan-100/80">
+                Analytics preview is hidden by your settings. Enable it from the Settings page.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {!loading && timeseries ? (
                 <div className="bg-slate-950/80 border border-cyan-400/30 rounded-lg p-4 shadow-[0_0_12px_rgba(0,229,255,0.15)]">
                   <h3 className="text-sm font-bold text-cyan-400 mb-3">Views Trend</h3>
                   <ViewsOverTimeChart timeseries={timeseries} />
                 </div>
               ) : (
-                <ChartPlaceholder label="Views" />
+                <div className="h-40 bg-slate-950/80 border border-cyan-400/30 rounded-lg flex items-center justify-center text-gray-500 text-xs shadow-[0_0_12px_rgba(0,229,255,0.2)]">
+                  Loading analytics chart...
+                </div>
               )}
 
               {summary && summary.platforms && (
@@ -151,6 +162,7 @@ export default function DashboardPage() {
                 </ul>
               </div>
             </div>
+            )}
           </DashboardWidget>
 
           <DashboardWidget title="Recent Activity">
@@ -162,9 +174,11 @@ export default function DashboardPage() {
             </ul>
           </DashboardWidget>
 
-          <DashboardWidget title="Creator Tools">
-            <CreatorToolsPanel />
-          </DashboardWidget>
+          {showCreatorToolsPreview && (
+            <DashboardWidget title="Creator Tools">
+              <CreatorToolsPanel />
+            </DashboardWidget>
+          )}
 
           <DashboardWidget title="Notifications">
             <NotificationsPreview />
@@ -178,7 +192,7 @@ export default function DashboardPage() {
             <TaskManager />
           </DashboardWidget>
 
-          <DashboardWidget title="Pipelines Overview" span="lg:col-span-2">
+          <DashboardWidget title="Pipelines Overview" span={dashboardLayout === "focus" ? "lg:col-span-3" : "lg:col-span-2"}>
             <ul className="text-sm text-gray-300 space-y-2">
               <li>Welcome New Followers • Active • Last run: 2 hours ago</li>
               <li>Daily Analytics Snapshot • Paused • Last run: Yesterday</li>
@@ -244,29 +258,12 @@ function DashboardWidget({ title, span = "", children }: { title: string; span?:
   );
 }
 
-function PlaceholderBlock({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="bg-slate-950/80 border border-cyan-400/30 rounded-lg p-4 text-sm text-gray-400 
-                    shadow-[0_0_12px_rgba(0,229,255,0.15)]">
-      {children}
-    </div>
-  );
-}
-
 function GrowthStat({ label, value, change }: { label: string; value: string; change: string }) {
   return (
     <div className="bg-slate-900/80 border border-cyan-400/30 rounded-lg p-3 shadow-[0_0_12px_rgba(0,229,255,0.2)]">
       <p className="text-xs text-gray-400">{label}</p>
       <p className="text-xl font-bold text-white">{value}</p>
       <p className="text-xs text-cyan-300">{change} this week</p>
-    </div>
-  );
-}
-
-function ChartPlaceholder({ label }: { label: string }) {
-  return (
-    <div className="h-40 bg-slate-950/80 border border-cyan-400/30 rounded-lg flex items-center justify-center text-gray-500 text-xs shadow-[0_0_12px_rgba(0,229,255,0.2)]">
-      {label} chart coming soon
     </div>
   );
 }
