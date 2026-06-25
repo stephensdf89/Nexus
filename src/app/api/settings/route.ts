@@ -16,11 +16,19 @@ const SETTINGS_SCHEMA: ValidationSchema = {
 async function getUserFromRequest() {
   try {
     const session = await getServerSession(authOptions);
+    console.log('[Settings API] Session check:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+      userKeys: session?.user ? Object.keys(session.user) : []
+    });
+    
     if (!session?.user?.id) {
       return { user: null, error: 'Unauthorized' };
     }
     return { user: { id: session.user.id }, error: null };
   } catch (error) {
+    console.error('[Settings API] getServerSession error:', error);
     return { user: null, error: 'Unauthorized' };
   }
 }
@@ -29,6 +37,7 @@ export async function GET() {
   try {
     const { user, error: authError } = await getUserFromRequest();
     if (!user || authError) {
+      console.log('[Settings API GET] Auth failed:', { user, authError });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -37,6 +46,7 @@ export async function GET() {
       const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
       if (!supabaseUrl || !anonKey) {
+        console.log('[Settings API GET] Missing Supabase config');
         return NextResponse.json({ settings: {} });
       }
 
