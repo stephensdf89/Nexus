@@ -247,9 +247,16 @@ export async function GET(req: NextRequest) {
     }
 
     // Redirect with success and store secure cookie fallback for analytics/status.
+    // Also clear the state cookie so a browser replay of this callback URL fails the state check.
     const response = NextResponse.redirect(
       new URL(`/settings?tab=connected&platform=facebook&status=connected${storageWarning}`, appBaseUrl)
     );
+    response.cookies.set("fb_oauth_state", "", {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 0,
+    });
     withFacebookCookies(response, {
       platformId,
       pageName,
