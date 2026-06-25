@@ -17,20 +17,39 @@ async function getUserFromRequest() {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get('sb-access-token')?.value;
     
+    console.log('[Settings API] Auth check:', {
+      hasToken: !!accessToken,
+      tokenPreview: accessToken ? `${accessToken.substring(0, 20)}...` : 'none'
+    });
+
     if (!accessToken) {
       console.log('[Settings API] No access token found');
       return { user: null, error: 'Unauthorized' };
     }
 
-    // Decode JWT to get user ID
+    // Decode JWT to get user ID (payload is between first and second dots)
     try {
-      const payload = JSON.parse(Buffer.from(accessToken.split('.')[1], 'base64').toString());
-      const userId = payload.sub;
+      const parts = accessToken.split('.');
+      if (parts.length !== 3) {
+        throw new Error('Invalid JWT format');
+      }
+
+      // Add padding if needed for base64
+      const padding = '='.repeat((4 - (parts[1].length % 4)) % 4);
+      const payload = JSON.parse(
+        Buffer.from(parts[1] + padding, 'base64').toString()
+      );
       
+      const userId = payload.sub;
       console.log('[Settings API] User authenticated:', { userId });
+      
+      if (!userId) {
+        return { user: null, error: 'Invalid token' };
+      }
+      
       return { user: { id: userId }, error: null };
     } catch (e) {
-      console.error('[Settings API] Failed to decode token:', e);
+      console.error('[Settings API] Token decode error:', e instanceof Error ? e.message : String(e));
       return { user: null, error: 'Invalid token' };
     }
   } catch (error) {
