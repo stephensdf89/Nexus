@@ -9,19 +9,28 @@ export default function IdeaInbox() {
   const [ideas, setIdeas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newIdea, setNewIdea] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIdeas([]);
+      setLoading(false);
+      return;
+    }
 
     const load = async () => {
       setLoading(true);
+      setError("");
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("ideas")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
+      if (error) {
+        setError("Could not load ideas.");
+      }
       setIdeas(data || []);
       setLoading(false);
     };
@@ -30,9 +39,10 @@ export default function IdeaInbox() {
   }, [user]);
 
   const addIdea = async () => {
+    if (!user) return;
     if (!newIdea.trim()) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("ideas")
       .insert({
         user_id: user.id,
@@ -40,6 +50,11 @@ export default function IdeaInbox() {
       })
       .select()
       .single();
+
+    if (error || !data) {
+      setError("Could not save idea.");
+      return;
+    }
 
     setIdeas((prev) => [data, ...prev]);
     setNewIdea("");
@@ -51,9 +66,11 @@ export default function IdeaInbox() {
   };
 
   if (loading) return <p className="text-gray-400">Loading ideas...</p>;
+  if (!user) return <p className="text-gray-400">Log in to manage ideas.</p>;
 
   return (
     <div className="space-y-3">
+      {error ? <p className="text-xs text-red-400">{error}</p> : null}
       <div className="flex gap-2 mb-4">
         <input
           className="flex-1 bg-black border border-red-600 rounded-lg px-3 py-2 text-sm text-white"

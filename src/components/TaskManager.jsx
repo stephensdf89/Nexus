@@ -9,19 +9,28 @@ export default function TaskManager() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newTask, setNewTask] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
 
     const load = async () => {
       setLoading(true);
+      setError("");
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("tasks")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
+      if (error) {
+        setError("Could not load tasks.");
+      }
       setTasks(data || []);
 
       setLoading(false);
@@ -31,9 +40,10 @@ export default function TaskManager() {
   }, [user]);
 
   const addTask = async () => {
+    if (!user) return;
     if (!newTask.trim()) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("tasks")
       .insert({
         user_id: user.id,
@@ -42,6 +52,11 @@ export default function TaskManager() {
       })
       .select()
       .single();
+
+    if (error || !data) {
+      setError("Could not save task.");
+      return;
+    }
 
     setTasks((prev) => [data, ...prev]);
 
@@ -70,8 +85,13 @@ export default function TaskManager() {
     return <p className="text-gray-400">Loading tasks...</p>;
   }
 
+  if (!user) {
+    return <p className="text-gray-400">Log in to manage tasks.</p>;
+  }
+
   return (
     <div className="space-y-3">
+      {error ? <p className="text-xs text-red-400">{error}</p> : null}
       <div className="mb-4 flex gap-2">
         <input
           className="flex-1 bg-black border border-red-600 rounded-lg px-3 py-2 text-sm text-white"

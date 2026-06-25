@@ -16,6 +16,16 @@ const NotificationsPreview = dynamic(() => import("@/components/NotificationsPre
   loading: () => <p className="text-sm text-gray-400">Loading notifications...</p>,
 });
 
+const IdeaInbox = dynamic(() => import("@/components/IdeaInbox"), {
+  ssr: false,
+  loading: () => <p className="text-sm text-gray-400">Loading ideas...</p>,
+});
+
+const TaskManager = dynamic(() => import("@/components/TaskManager"), {
+  ssr: false,
+  loading: () => <p className="text-sm text-gray-400">Loading tasks...</p>,
+});
+
 const OwnerAppControlsPanel = dynamic(() => import("@/components/OwnerAppControlsPanel"), {
   ssr: false,
 });
@@ -158,6 +168,14 @@ export default function DashboardPage() {
 
           <DashboardWidget title="Notifications">
             <NotificationsPreview />
+          </DashboardWidget>
+
+          <DashboardWidget title="Idea Inbox">
+            <IdeaInbox />
+          </DashboardWidget>
+
+          <DashboardWidget title="Task Manager">
+            <TaskManager />
           </DashboardWidget>
 
           <DashboardWidget title="Pipelines Overview" span="lg:col-span-2">

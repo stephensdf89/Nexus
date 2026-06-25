@@ -1,12 +1,12 @@
 "use client";
 
-export default function ConfirmModal({ open, onConfirm, onCancel, message }) {
+export default function ConfirmModal({ open, onConfirm, onCancel, message, title = "Confirm Action" }) {
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-slate-900/95 border border-cyan-400/60 p-6 rounded w-96 text-white">
-        <h2 className="text-xl font-bold mb-4">Confirm Reset</h2>
+        <h2 className="text-xl font-bold mb-4">{title}</h2>
         <p className="text-cyan-100/85 mb-6">{message}</p>
 
         <div className="flex justify-end gap-4">

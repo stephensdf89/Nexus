@@ -18,6 +18,7 @@ import viralPredictor from "../utils/viralPredictor";
 import viralOptimizer from "../utils/viralOptimizer";
 import multiPlatformRepurposer from "../utils/multiPlatformRepurposer";
 import autoThumbnailGenerator from "../utils/autoThumbnailGenerator";
+import postingHelper from "../utils/postingHelper";
 import type { PipelineCard } from "../hooks/usePipelineData";
 
 type Props = {
@@ -311,6 +312,31 @@ export default function CardDetailsPanel({ card, allCards, close }: Props) {
           </div>
         );
       })}
+
+      <div>
+        <div>Platform Posting Guide</div>
+        {(localCard.platforms || []).map((platform) => {
+          const key = platform.toLowerCase();
+          const helper = (postingHelper as Record<string, { fields?: string[]; limits?: Record<string, number> }>)[key];
+          if (!helper) return null;
+
+          return (
+            <div key={`guide-${platform}`} style={{ marginTop: 10 }}>
+              <div>{platform.toUpperCase()}</div>
+              {helper.fields?.length ? (
+                <div>Fields: {helper.fields.join(", ")}</div>
+              ) : null}
+              {helper.limits ? (
+                <div>
+                  Limits: {Object.entries(helper.limits)
+                    .map(([field, limit]) => `${field} ${limit}`)
+                    .join(" | ")}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
 
       {/* ANALYTICS (if posted) */}
       {localCard.stage_id && (

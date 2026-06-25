@@ -20,6 +20,7 @@ import UpgradeRequired from "./UpgradeRequired";
 import { SortableStepCard } from "./SortableStepCard";
 import TemplateSidebar from "./TemplateSidebar";
 import TemplatePreview from "./TemplatePreview";
+import ConfirmModal from "./ConfirmModal";
 
 const stepTypes = [
   { type: "integration", label: "Integration", icon: "⚡" },
@@ -38,6 +39,8 @@ export default function PipelineSteps({ pipelineId }) {
 
   const [editingId, setEditingId] = useState(null);
   const [editType, setEditType] = useState("");
+  const [pendingDeleteStep, setPendingDeleteStep] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -155,6 +158,15 @@ export default function PipelineSteps({ pipelineId }) {
     await saveOrder(filtered);
   };
 
+  const confirmDeleteStep = async () => {
+    if (!pendingDeleteStep) return;
+
+    setDeleting(true);
+    await deleteStep(pendingDeleteStep.id);
+    setDeleting(false);
+    setPendingDeleteStep(null);
+  };
+
   const handleDragEnd = async (event) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -245,7 +257,28 @@ export default function PipelineSteps({ pipelineId }) {
                   ) : plan === "free" && step.type === "integration" ? (
                     <UpgradeRequired />
                   ) : (
-                    <SortableStepCard step={step} />
+                    <div>
+                      <SortableStepCard step={step} />
+                      <div className="mt-2 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingId(step.id);
+                            setEditType(step.type);
+                          }}
+                          className="text-xs bg-gray-900 border border-red-600 px-3 py-1 rounded-lg"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingDeleteStep(step)}
+                          className="text-xs text-red-400 hover:text-red-300"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               ))}
@@ -257,6 +290,16 @@ export default function PipelineSteps({ pipelineId }) {
         template={selectedTemplate}
         onApply={() => applyTemplate(selectedTemplate)}
         onClose={() => setSelectedTemplate(null)}
+      />
+      <ConfirmModal
+        open={Boolean(pendingDeleteStep)}
+        title="Delete Step"
+        message={`Delete step "${pendingDeleteStep?.type || "unknown"}"? This cannot be undone.`}
+        onCancel={() => {
+          if (deleting) return;
+          setPendingDeleteStep(null);
+        }}
+        onConfirm={confirmDeleteStep}
       />
     </DndContext>
   );
