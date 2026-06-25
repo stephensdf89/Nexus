@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { supabase } from "@/lib/supabaseClient";
 
 let isSyncing = false;
 
@@ -157,6 +158,28 @@ function createDefaults() {
   };
 }
 
+async function getSupabaseAccessToken() {
+  if (typeof window === "undefined") return null;
+
+  const cookieToken = document.cookie
+    .split("; ")
+    .find((c) => c.startsWith("sb-access-token="))
+    ?.split("=")[1];
+
+  if (cookieToken) {
+    return decodeURIComponent(cookieToken);
+  }
+
+  if (!supabase) return null;
+
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.access_token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // Read from localStorage immediately so the store has the correct
 // values on the very first render — no useEffect flash.
 function initializeFromStorage() {
@@ -211,14 +234,15 @@ export const useSettingsStore = create((set) => ({
   syncFromServer: async () => {
     if (typeof window === "undefined") return;
     try {
-      const accessToken = document.cookie
-        .split("; ")
-        .find((c) => c.startsWith("sb-access-token="))
-        ?.split("=")[1];
+      const accessToken = await getSupabaseAccessToken();
+
+      if (!accessToken) {
+        return;
+      }
 
       const headers = {};
       if (accessToken) {
-        headers["x-supabase-auth"] = decodeURIComponent(accessToken);
+        headers["x-supabase-auth"] = accessToken;
       }
 
       const res = await fetch("/api/settings", {
@@ -258,11 +282,7 @@ export const useSettingsStore = create((set) => ({
       const state = useSettingsStore.getState();
       const settings = getPersistedShape(state);
 
-      // Read Supabase access token from cookie for server-side auth
-      const accessToken = document.cookie
-        .split("; ")
-        .find((c) => c.startsWith("sb-access-token="))
-        ?.split("=")[1];
+      const accessToken = await getSupabaseAccessToken();
 
       // Public pages and logged-out sessions should never call protected settings APIs.
       if (!accessToken) {
@@ -271,7 +291,7 @@ export const useSettingsStore = create((set) => ({
 
       const headers = { "Content-Type": "application/json" };
       if (accessToken) {
-        headers["x-supabase-auth"] = decodeURIComponent(accessToken);
+        headers["x-supabase-auth"] = accessToken;
       }
 
       const res = await fetch("/api/settings", {
