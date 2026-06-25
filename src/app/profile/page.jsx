@@ -138,11 +138,6 @@ function ProfileContent() {
       const authMetadata = user.user_metadata || {};
       const displayName = authMetadata.display_name || user.email?.split("@")[0] || "Creator";
 
-      // Fetch settings from API instead of direct Supabase call
-      const settingsPromise = fetch("/api/settings")
-        .then(res => res.ok ? res.json().then(d => ({ data: d.settings || null })) : { data: null })
-        .catch(() => ({ data: null }));
-
       const profilePromise = supabase
         ? supabase
             .from("profiles")
@@ -183,14 +178,12 @@ function ProfileContent() {
         .catch(() => ({}));
 
       const [
-        settingsResult,
         profileResult,
         integrationsResult,
         scheduledResult,
         analyticsResult,
         settingsApiResult,
       ] = await Promise.all([
-        settingsPromise,
         profilePromise,
         integrationsPromise,
         scheduledPostsPromise,
@@ -203,7 +196,6 @@ function ProfileContent() {
       }
 
       const connectedIntegrations = Array.isArray(integrationsResult?.data) ? integrationsResult.data : [];
-      const settings = settingsResult?.data || null;
       const profileRow = profileResult?.data || null;
       const persistedProfileSettings = settingsApiResult && typeof settingsApiResult === "object" ? settingsApiResult : {};
       const persistedDisplayName =

@@ -161,15 +161,6 @@ function createDefaults() {
 async function getSupabaseAccessToken() {
   if (typeof window === "undefined") return null;
 
-  const cookieToken = document.cookie
-    .split("; ")
-    .find((c) => c.startsWith("sb-access-token="))
-    ?.split("=")[1];
-
-  if (cookieToken) {
-    return decodeURIComponent(cookieToken);
-  }
-
   if (!supabase) return null;
 
   try {
@@ -188,9 +179,25 @@ async function getSupabaseAccessToken() {
     }
 
     const { data: refreshed } = await supabase.auth.refreshSession();
-    return refreshed?.session?.access_token ?? session.access_token ?? null;
+    const refreshedToken = refreshed?.session?.access_token ?? session.access_token ?? null;
+    if (refreshedToken) {
+      return refreshedToken;
+    }
   } catch {
-    return null;
+    // Continue to cookie fallback below.
+  }
+
+  const cookieToken = document.cookie
+    .split("; ")
+    .find((c) => c.startsWith("sb-access-token="))
+    ?.split("=")[1];
+
+  if (!cookieToken) return null;
+
+  try {
+    return decodeURIComponent(cookieToken);
+  } catch {
+    return cookieToken;
   }
 }
 

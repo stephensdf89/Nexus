@@ -34,6 +34,18 @@ const INTEGRATION_PROVIDERS = [
 
 const DEFAULT_REGION = "US";
 
+function readAccessToken() {
+  if (typeof document === "undefined") {
+    return "";
+  }
+
+  const cookie = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith("sb-access-token="));
+
+  return cookie ? decodeURIComponent(cookie.split("=")[1] || "") : "";
+}
+
 function IntegrationCard({ provider, label, onConnect, onDisconnect, integration }) {
   const connected = !!integration;
 
@@ -149,7 +161,11 @@ export default function SettingsPage() {
 
         // Fetch settings from API endpoint
         try {
-          const settingsRes = await fetch("/api/settings");
+          const accessToken = readAccessToken();
+          const settingsRes = await fetch("/api/settings", {
+            credentials: "include",
+            headers: accessToken ? { "x-supabase-auth": accessToken } : {},
+          });
           if (settingsRes.ok) {
             const settingsData = await settingsRes.json();
             const settings = settingsData.settings;
