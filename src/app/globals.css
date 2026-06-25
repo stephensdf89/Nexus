@@ -41,6 +41,20 @@ body.theme-neon {
   color: var(--brand-text);
 }
 
+body.theme-vibrant-neon {
+  --brand-bg-start: #06022e;
+  --brand-bg-mid: #1e0f63;
+  --brand-bg-end: #52008a;
+  --brand-primary: #35f3ff;
+  --brand-secondary: #ff4fd8;
+  --brand-text: #f6f2ff;
+  background:
+    radial-gradient(circle at 18% 12%, #00ffe1 0%, transparent 35%),
+    radial-gradient(circle at 78% 18%, #ff2bb8 0%, transparent 33%),
+    linear-gradient(145deg, var(--brand-bg-start) 0%, var(--brand-bg-mid) 52%, var(--brand-bg-end) 100%);
+  color: var(--brand-text);
+}
+
 body.theme-ocean {
   --brand-bg-start: #04293a;
   --brand-bg-mid: #064663;
@@ -76,6 +90,45 @@ body.theme-graphite {
   --brand-text: #edf1f7;
   background:
     radial-gradient(circle at 22% 14%, #364152 0%, var(--brand-bg-start) 44%),
+    linear-gradient(145deg, var(--brand-bg-start) 0%, var(--brand-bg-mid) 55%, var(--brand-bg-end) 100%);
+  color: var(--brand-text);
+}
+
+body.theme-aurora {
+  --brand-bg-start: #07211f;
+  --brand-bg-mid: #0b4b4c;
+  --brand-bg-end: #355f8a;
+  --brand-primary: #7fffd4;
+  --brand-secondary: #9ecbff;
+  --brand-text: #e9fffb;
+  background:
+    radial-gradient(circle at 22% 14%, #43f7c5 0%, transparent 34%),
+    linear-gradient(145deg, var(--brand-bg-start) 0%, var(--brand-bg-mid) 55%, var(--brand-bg-end) 100%);
+  color: var(--brand-text);
+}
+
+body.theme-forest {
+  --brand-bg-start: #0d1e12;
+  --brand-bg-mid: #1c3a24;
+  --brand-bg-end: #2f5c38;
+  --brand-primary: #9ce76d;
+  --brand-secondary: #58c48e;
+  --brand-text: #f0ffe9;
+  background:
+    radial-gradient(circle at 25% 12%, #3f8858 0%, var(--brand-bg-start) 42%),
+    linear-gradient(145deg, var(--brand-bg-start) 0%, var(--brand-bg-mid) 55%, var(--brand-bg-end) 100%);
+  color: var(--brand-text);
+}
+
+body.theme-rose-gold {
+  --brand-bg-start: #351e2f;
+  --brand-bg-mid: #5f2f49;
+  --brand-bg-end: #b06a65;
+  --brand-primary: #ffd1b3;
+  --brand-secondary: #ff91a3;
+  --brand-text: #fff3f2;
+  background:
+    radial-gradient(circle at 24% 16%, #ffb7a2 0%, transparent 36%),
     linear-gradient(145deg, var(--brand-bg-start) 0%, var(--brand-bg-mid) 55%, var(--brand-bg-end) 100%);
   color: var(--brand-text);
 }

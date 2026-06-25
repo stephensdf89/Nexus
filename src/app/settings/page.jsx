@@ -6,7 +6,16 @@ import { useUser } from "@/contexts/AuthContext";
 import OwnerAppControlsPanel from "@/components/OwnerAppControlsPanel";
 import { useSettingsStore } from "@/lib/settingsStore";
 
-const THEME_OPTIONS = ["neon", "ocean", "sunset", "graphite"];
+const THEME_OPTIONS = [
+  "neon",
+  "vibrant-neon",
+  "ocean",
+  "sunset",
+  "graphite",
+  "aurora",
+  "forest",
+  "rose-gold",
+];
 const TEXT_SIZE_OPTIONS = ["small", "medium", "large"];
 const COLOR_BLIND_OPTIONS = ["none", "protanopia", "deuteranopia", "tritanopia"];
 const DASHBOARD_LAYOUT_OPTIONS = ["default", "focus", "compact"];

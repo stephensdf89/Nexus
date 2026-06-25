@@ -33,7 +33,16 @@ const BASE_SETTINGS = {
   aiMode: "standard",
 };
 
-const THEMES = ["neon", "ocean", "sunset", "graphite"];
+const THEMES = [
+  "neon",
+  "vibrant-neon",
+  "ocean",
+  "sunset",
+  "graphite",
+  "aurora",
+  "forest",
+  "rose-gold",
+];
 
 function normalizeTheme(theme) {
   if (THEMES.includes(theme)) return theme;
