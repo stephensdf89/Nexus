@@ -9,6 +9,12 @@ export async function GET(req: NextRequest) {
   const cookiePlatformId = req.cookies.get("fb_platform_id")?.value;
   const cookiePageName = req.cookies.get("fb_page_name")?.value;
 
+  console.log("Facebook status check", {
+    hasCookiePlatformId: !!cookiePlatformId,
+    cookieKeys: Array.from(req.cookies.getSetCookie ? [req.cookies.getSetCookie()] : []),
+    allCookies: req.headers.get("cookie"),
+  });
+
   try {
     const headerEmail = req.headers.get("x-user-email") || undefined;
     const headerUserId = req.headers.get("x-user-id") || undefined;
@@ -16,6 +22,7 @@ export async function GET(req: NextRequest) {
 
     // Cookie fallback: if we have the integration in cookies, return connected
     if (cookiePlatformId) {
+      console.log("Returning connected from cookies");
       return NextResponse.json({
         connected: true,
         pages: [
@@ -28,6 +35,8 @@ export async function GET(req: NextRequest) {
         status: "Connected",
       });
     }
+
+    console.log("No cookies found, trying DB lookup", { headerEmail, headerUserId });
 
     if (!email && !headerUserId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
