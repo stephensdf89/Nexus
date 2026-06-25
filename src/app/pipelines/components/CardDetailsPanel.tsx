@@ -21,12 +21,11 @@ export default function CardDetailsPanel({ card, close }: Props) {
   });
   const [saving, setSaving] = useState(false);
   const suggestions = scriptAnalyzer.analyze(localCard);
-  const primaryPlatform = (localCard.platforms || [])[0] || "";
-  const hookIdeas = hookGenerator.generate({
-    topic: localCard.title || "",
-    niche: localCard.description || localCard.notes || "",
-    platform: primaryPlatform,
-    vibe: "",
+  const hooks = hookGenerator.generate({
+    topic: localCard.title,
+    niche: localCard.niche || localCard.description || localCard.notes || "",
+    platform: localCard.platforms?.[0] || "",
+    vibe: "aggressive", // optional
   });
 
   // -----------------------------
@@ -241,8 +240,8 @@ export default function CardDetailsPanel({ card, close }: Props) {
 
       <div>
         <div>Hook Ideas</div>
-        {hookIdeas.slice(0, 10).map((hook, i) => (
-          <div key={i}>{hook}</div>
+        {hooks.map((h, i) => (
+          <div key={i}>{h}</div>
         ))}
       </div>
     </div>

@@ -20,6 +20,7 @@ export type PipelineCard = {
   title: string;
   stage_id: string;
   description?: string;
+  niche?: string;
   platforms?: string[];
   platform_fields?: Record<string, unknown>;
   notes?: string;
