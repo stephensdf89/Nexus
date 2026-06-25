@@ -150,7 +150,7 @@ export async function GET(req: NextRequest) {
     const pageFieldsRes = await fetch(
       `https://graph.facebook.com/v18.0/${platformId}?fields=id,name,fan_count,followers_count&access_token=${encodeURIComponent(token)}`
     );
-    const pageFields = await pageFieldsRes.json();
+    let pageFields = await pageFieldsRes.json();
 
     let impressions: number | null = null;
     let engagedUsers: number | null = null;
@@ -172,10 +172,24 @@ export async function GET(req: NextRequest) {
     }
 
     if (pageFields?.error) {
-      return NextResponse.json(
-        { connected: true, warning: pageFields.error.message || "Connected, but unable to fetch page fields." },
-        { status: 200 }
+      // Some object/token combinations do not expose fan_count/followers_count.
+      // Retry with minimal fields so connected analytics can still render.
+      const fallbackPageRes = await fetch(
+        `https://graph.facebook.com/v18.0/${platformId}?fields=id,name&access_token=${encodeURIComponent(token)}`
       );
+      const fallbackPage = await fallbackPageRes.json();
+
+      if (!fallbackPage?.error) {
+        pageFields = fallbackPage;
+        warning = warning
+          ? `${warning} Follower counts are unavailable for this connection.`
+          : "Follower counts are unavailable for this connection.";
+      } else {
+        return NextResponse.json(
+          { connected: true, warning: pageFields.error.message || "Connected, but unable to fetch page fields." },
+          { status: 200 }
+        );
+      }
     }
 
     return NextResponse.json({
