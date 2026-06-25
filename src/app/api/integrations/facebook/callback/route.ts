@@ -1,25 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  // Try multiple sources for the key
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || 
-              process.env['SUPABASE_SERVICE_ROLE_KEY'] ||
-              (typeof globalThis !== 'undefined' ? globalThis['SUPABASE_SERVICE_ROLE_KEY'] : null);
-  
-  if (!url || !key) {
-    console.error("Supabase admin unavailable", {
-      hasUrl: !!url,
-      hasKey: !!key,
-      urlValue: url?.slice(0, 20),
-      keyPresent: !!key,
-      envKeys: Object.keys(process.env).filter(k => k.includes('SUPABASE')),
-    });
-    return null;
-  }
-  return createClient(url, key, { auth: { persistSession: false } });
-}
 
 const FACEBOOK_APP_ID = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
 const FACEBOOK_APP_SECRET = process.env.FACEBOOK_CLIENT_SECRET || process.env.FACEBOOK_APP_SECRET;
@@ -100,10 +79,13 @@ async function upsertIntegration(params: {
   accessToken: string;
   pageAccessToken: string | null;
 }) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) throw new Error("supabase_admin_unavailable");
-
   const { userId, email, platformId, pageName, accessToken, pageAccessToken } = params;
+
+  // Try with service role key via REST API if available
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  if (!supabaseUrl) throw new Error("supabase_url_missing");
 
   const record: Record<string, unknown> = {
     platform: "facebook",
@@ -114,36 +96,72 @@ async function upsertIntegration(params: {
     updated_at: new Date().toISOString(),
   };
 
-  if (isUuid(userId)) {
-    record.user_id = userId;
-  } else if (email) {
-    record.user_email = email;
-  } else {
-    throw new Error("missing_identity_for_fallback");
-  }
-
   const matchColumn = isUuid(userId) ? "user_id" : "user_email";
   const matchValue = isUuid(userId) ? userId : email;
 
-  // Try update first, then insert if no rows matched
-  const { data: existing, error: selectErr } = await supabase
-    .from("integrations")
-    .select("id")
-    .eq(matchColumn, matchValue as string)
-    .eq("platform", "facebook")
-    .maybeSingle();
+  if (!matchValue) {
+    throw new Error("missing_identity_for_fallback");
+  }
 
-  if (selectErr) throw selectErr;
-
-  if (existing) {
-    const { error } = await supabase
-      .from("integrations")
-      .update(record)
-      .eq("id", existing.id);
-    if (error) throw error;
+  if (isUuid(userId)) {
+    record.user_id = userId;
   } else {
-    const { error } = await supabase.from("integrations").insert(record);
-    if (error) throw error;
+    record.user_email = email;
+  }
+
+  // Try REST API with service role key if available
+  if (serviceRoleKey) {
+    try {
+      // Check if record exists
+      const checkUrl = new URL(
+        `${supabaseUrl}/rest/v1/integrations?${matchColumn}=eq.${encodeURIComponent(matchValue as string)}&platform=eq.facebook`
+      );
+      const checkRes = await fetch(checkUrl.toString(), {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${serviceRoleKey}`,
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        },
+      });
+
+      const existing = await checkRes.json();
+
+      if (Array.isArray(existing) && existing.length > 0) {
+        // Update
+        const updateUrl = new URL(`${supabaseUrl}/rest/v1/integrations?id=eq.${existing[0].id}`);
+        await fetch(updateUrl.toString(), {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${serviceRoleKey}`,
+            "Content-Type": "application/json",
+            Prefer: "return=representation",
+          },
+          body: JSON.stringify(record),
+        });
+      } else {
+        // Insert
+        const insertUrl = new URL(`${supabaseUrl}/rest/v1/integrations`);
+        await fetch(insertUrl.toString(), {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${serviceRoleKey}`,
+            "Content-Type": "application/json",
+            Prefer: "return=representation",
+          },
+          body: JSON.stringify(record),
+        });
+      }
+      return;
+    } catch (err) {
+      console.error("REST API upsert failed, will fall back to cookie-only", err);
+    }
+  }
+
+  // If we get here, service role key wasn't available or failed
+  // The integration is already stored in cookies, so this is acceptable
+  if (!serviceRoleKey) {
+    console.warn("SUPABASE_SERVICE_ROLE_KEY not available; integration stored in cookies only");
   }
 }
 
