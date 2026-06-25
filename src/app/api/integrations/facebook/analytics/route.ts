@@ -175,14 +175,28 @@ export async function GET(req: NextRequest) {
     // engagement from recent posts if token permissions allow user_posts.
     if (impressions === null && engagedUsers === null) {
       try {
-        const postsRes = await fetch(
-          `https://graph.facebook.com/v18.0/${platformId}/posts?fields=id,created_time,reactions.summary(true),comments.summary(true),shares&limit=25&access_token=${encodeURIComponent(token)}`
-        );
-        const postsData = await postsRes.json();
+        const fallbackEndpoints = [
+          `https://graph.facebook.com/v18.0/${platformId}/posts?fields=id,created_time,reactions.summary(true),comments.summary(true),shares&limit=25&access_token=${encodeURIComponent(token)}`,
+          `https://graph.facebook.com/v18.0/me/posts?fields=id,created_time,reactions.summary(true),comments.summary(true),shares&limit=25&access_token=${encodeURIComponent(token)}`,
+          `https://graph.facebook.com/v18.0/me/feed?fields=id,created_time,reactions.summary(true),comments.summary(true),shares&limit=25&access_token=${encodeURIComponent(token)}`,
+        ];
 
-        if (Array.isArray(postsData?.data) && postsData.data.length > 0) {
+        let fallbackError: string | undefined;
+
+        for (const endpoint of fallbackEndpoints) {
+          const postsRes = await fetch(endpoint);
+          const postsData = await postsRes.json();
+
+          if (!postsRes.ok || postsData?.error) {
+            fallbackError = postsData?.error?.message || `HTTP ${postsRes.status}`;
+            continue;
+          }
+
+          if (!Array.isArray(postsData?.data) || postsData.data.length === 0) {
+            continue;
+          }
+
           let totalEngagement = 0;
-
           for (const post of postsData.data as Array<{
             reactions?: { summary?: { total_count?: number } };
             comments?: { summary?: { total_count?: number } };
@@ -196,11 +210,14 @@ export async function GET(req: NextRequest) {
 
           if (totalEngagement > 0) {
             engagedUsers = totalEngagement;
-            // Graph profile endpoints do not expose reliable impression counters,
-            // so use total engagement as a conservative activity proxy.
             impressions = totalEngagement;
             warning = "Using profile post engagement fallback because Page Insights are unavailable.";
+            break;
           }
+        }
+
+        if (impressions === null && engagedUsers === null && fallbackError) {
+          warning = `${warning || "Connected, but insights are unavailable for current token/scopes."} Profile fallback unavailable: ${fallbackError}`;
         }
       } catch {
         // Ignore fallback failures and keep existing warning.
