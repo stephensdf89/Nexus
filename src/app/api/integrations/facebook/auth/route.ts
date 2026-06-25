@@ -54,6 +54,7 @@ function buildFacebookAuthUrl(req: NextRequest, state: string) {
 
 function withStateCookie(response: NextResponse, state: string) {
   response.cookies.set("fb_oauth_state", state, {
+    path: "/",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -65,6 +66,7 @@ function withStateCookie(response: NextResponse, state: string) {
 function withIdentityCookies(response: NextResponse, userId?: string, email?: string) {
   if (userId) {
     response.cookies.set("fb_user_id", userId, {
+      path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -74,6 +76,7 @@ function withIdentityCookies(response: NextResponse, userId?: string, email?: st
 
   if (email) {
     response.cookies.set("fb_user_email", email, {
+      path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

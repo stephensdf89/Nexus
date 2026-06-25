@@ -42,24 +42,28 @@ function withFacebookCookies(
 ) {
   const secure = process.env.NODE_ENV === "production";
   response.cookies.set("fb_platform_id", payload.platformId, {
+    path: "/",
     httpOnly: true,
     secure,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7,
   });
   response.cookies.set("fb_page_name", payload.pageName, {
+    path: "/",
     httpOnly: true,
     secure,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7,
   });
   response.cookies.set("fb_access_token", payload.accessToken, {
+    path: "/",
     httpOnly: true,
     secure,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7,
   });
   response.cookies.set("fb_page_access_token", payload.pageAccessToken || "", {
+    path: "/",
     httpOnly: true,
     secure,
     sameSite: "lax",
