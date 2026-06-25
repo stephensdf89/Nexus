@@ -11,7 +11,6 @@ export async function GET(req: NextRequest) {
 
   console.log("Facebook status check", {
     hasCookiePlatformId: !!cookiePlatformId,
-    cookieKeys: Array.from(req.cookies.getSetCookie ? [req.cookies.getSetCookie()] : []),
     allCookies: req.headers.get("cookie"),
   });
 
