@@ -109,20 +109,29 @@ export default function Topbar() {
           });
 
           if (!response.ok) {
-            return "";
+            return { displayName: "", avatarUrl: "" };
           }
 
           const payload = await response.json();
-          return String(payload?.settings?.displayName || "");
+          return {
+            displayName: String(payload?.settings?.displayName || ""),
+            avatarUrl: String(payload?.settings?.avatarUrl || ""),
+          };
         } catch {
-          return "";
+          return { displayName: "", avatarUrl: "" };
         }
       })();
 
-      const [profileResult, settingsDisplayName] = await Promise.all([profilePromise, settingsPromise]);
+      const [profileResult, settingsResult] = await Promise.all([profilePromise, settingsPromise]);
 
-      displayName = String(profileResult?.data?.name || settingsDisplayName || "");
-      const avatarUrl = String(profileResult?.data?.avatar_url || "");
+      displayName = String(profileResult?.data?.name || settingsResult?.displayName || "");
+      const avatarUrl = String(
+        profileResult?.data?.avatar_url ||
+          settingsResult?.avatarUrl ||
+          authSession.user.user_metadata?.avatar_url ||
+          authSession.user.user_metadata?.picture ||
+          ""
+      );
 
       if (typeof window !== "undefined") {
         if (displayName || avatarUrl) {
