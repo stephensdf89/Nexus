@@ -222,27 +222,28 @@ export async function GET(req: NextRequest) {
       platformId = String(meData?.id || "");
       pageName = String(meData?.name || "Facebook Account");
     }
-    // Store integration in database
-    const pg = await ensureIntegrationsTable();
+    // Store integration in database when available.
+    // If DATABASE_URL/DNS is broken, continue with cookie-backed connection state.
     const userId = isUuid(cookieUserId) ? cookieUserId : undefined;
-
-    if (!userId && !email) {
-      return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_identity", appBaseUrl));
-    }
-
     let storageWarning = "";
     try {
-      await upsertIntegration(pg, {
-        userId,
-        email,
-        platformId,
-        pageName,
-        accessToken: tokenData.access_token,
-        pageAccessToken,
-      });
+      if (!userId && !email) {
+        storageWarning = "&warning=missing_identity";
+      } else {
+        const pg = await ensureIntegrationsTable();
+        await upsertIntegration(pg, {
+          userId,
+          email,
+          platformId,
+          pageName,
+          accessToken: tokenData.access_token,
+          pageAccessToken,
+        });
+      }
     } catch (storageError) {
       console.error("Facebook callback storage warning:", storageError);
-      storageWarning = "&warning=storage_fallback";
+      const message = (storageError as { message?: string }).message || "storage_fallback";
+      storageWarning = `&warning=${encodeURIComponent(message)}`;
     }
 
     // Redirect with success and store secure cookie fallback for analytics/status.
