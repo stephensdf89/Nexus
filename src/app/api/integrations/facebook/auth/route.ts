@@ -5,6 +5,8 @@ const FACEBOOK_APP_ID = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_A
 const SAFE_FACEBOOK_SCOPES = new Set([
   "public_profile",
   "email",
+  "user_posts",
+  "user_friends",
   "pages_show_list",
   "pages_read_engagement",
   "read_insights",
