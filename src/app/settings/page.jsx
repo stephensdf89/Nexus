@@ -46,7 +46,15 @@ function readAccessToken() {
   return cookie ? decodeURIComponent(cookie.split("=")[1] || "") : "";
 }
 
-function IntegrationCard({ provider, label, onConnect, onDisconnect, integration }) {
+function IntegrationCard({
+  provider,
+  label,
+  onConnect,
+  onDisconnect,
+  onPullAnalytics,
+  pullingAnalytics,
+  integration,
+}) {
   const connected = !!integration;
 
   return (
@@ -77,6 +85,20 @@ function IntegrationCard({ provider, label, onConnect, onDisconnect, integration
           >
             Disconnect
           </button>
+
+          {provider === "facebook" && onPullAnalytics ? (
+            <button
+              onClick={onPullAnalytics}
+              disabled={pullingAnalytics}
+              className="mt-2 ml-2 border px-3 py-1 rounded-lg text-xs disabled:opacity-60"
+              style={{
+                borderColor: "var(--brand-border)",
+                background: "rgba(10, 20, 58, 0.6)",
+              }}
+            >
+              {pullingAnalytics ? "Pulling..." : "Pull Analytics"}
+            </button>
+          ) : null}
         </>
       ) : (
         <>
@@ -141,6 +163,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isPullingFacebookAnalytics, setIsPullingFacebookAnalytics] = useState(false);
   const [saveNotice, setSaveNotice] = useState("");
   const [saveError, setSaveError] = useState("");
 
@@ -380,6 +403,44 @@ export default function SettingsPage() {
 
   const connectProvider = (provider) => {
     window.location.assign(`/api/integrations/${provider}/auth?uid=${user.id}&email=${user.email}`);
+  };
+
+  const pullFacebookAnalytics = async () => {
+    if (!user) return;
+
+    setSaveNotice("");
+    setSaveError("");
+    setIsPullingFacebookAnalytics(true);
+
+    try {
+      const accessToken = readAccessToken();
+      const response = await fetch("/api/integrations/facebook/analytics", {
+        credentials: "include",
+        headers: {
+          "x-user-id": user.id || "",
+          "x-user-email": user.email || "",
+          ...(accessToken ? { "x-supabase-auth": accessToken } : {}),
+        },
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok || payload?.connected === false) {
+        setSaveError(payload?.error || "Facebook analytics not available yet.");
+        return;
+      }
+
+      if (payload?.warning) {
+        setSaveNotice(`Facebook connected. ${payload.warning}`);
+      } else {
+        setSaveNotice("Facebook analytics pulled successfully.");
+      }
+    } catch (error) {
+      console.error("Failed to pull Facebook analytics:", error);
+      setSaveError("Failed to pull Facebook analytics. Please try again.");
+    } finally {
+      setIsPullingFacebookAnalytics(false);
+    }
   };
 
   const integrationByProvider = integrations.reduce((acc, item) => {
@@ -634,6 +695,8 @@ export default function SettingsPage() {
               integration={integrationByProvider[provider]}
               onConnect={() => connectProvider(provider)}
               onDisconnect={() => disconnect(provider)}
+              onPullAnalytics={provider === "facebook" ? pullFacebookAnalytics : undefined}
+              pullingAnalytics={provider === "facebook" ? isPullingFacebookAnalytics : false}
             />
           ))}
         </div>
