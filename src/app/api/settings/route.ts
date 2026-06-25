@@ -85,7 +85,8 @@ export async function GET(req: NextRequest) {
   try {
     const { user, error: authError } = await getUserFromRequest(req);
     if (!user || authError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      // Settings bootstrap runs early in app mount; return defaults instead of 401 noise.
+      return NextResponse.json({ settings: {} });
     }
 
     try {
