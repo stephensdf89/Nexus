@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPgClient } from "@/lib/pg";
+import { createClient } from "@supabase/supabase-js";
+
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 const FACEBOOK_APP_ID = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
 const FACEBOOK_APP_SECRET = process.env.FACEBOOK_CLIENT_SECRET || process.env.FACEBOOK_APP_SECRET;
@@ -72,81 +79,58 @@ function withFacebookCookies(
   return response;
 }
 
-async function ensureIntegrationsTable() {
-  const pg = await getPgClient();
-  await pg.query(`
-    CREATE TABLE IF NOT EXISTS integrations (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id UUID,
-      user_email VARCHAR,
-      platform VARCHAR NOT NULL,
-      platform_id VARCHAR NOT NULL,
-      page_name VARCHAR,
-      access_token TEXT NOT NULL,
-      page_access_token TEXT,
-      created_at TIMESTAMP DEFAULT NOW(),
-      updated_at TIMESTAMP DEFAULT NOW()
-    )
-  `);
+async function upsertIntegration(params: {
+  userId?: string;
+  email?: string;
+  platformId: string;
+  pageName: string;
+  accessToken: string;
+  pageAccessToken: string | null;
+}) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new Error("supabase_admin_unavailable");
 
-  return pg;
-}
-
-async function upsertIntegration(
-  pg: Awaited<ReturnType<typeof getPgClient>>,
-  params: {
-    userId?: string;
-    email?: string;
-    platformId: string;
-    pageName: string;
-    accessToken: string;
-    pageAccessToken: string | null;
-  }
-) {
   const { userId, email, platformId, pageName, accessToken, pageAccessToken } = params;
 
+  const record: Record<string, unknown> = {
+    platform: "facebook",
+    platform_id: platformId,
+    page_name: pageName,
+    access_token: accessToken,
+    page_access_token: pageAccessToken,
+    updated_at: new Date().toISOString(),
+  };
+
   if (isUuid(userId)) {
-    try {
-      const updateByUserId = await pg.query(
-        `UPDATE integrations
-         SET page_name = $4, access_token = $5, page_access_token = $6, updated_at = NOW()
-         WHERE user_id = $1 AND platform = $2 AND platform_id = $3`,
-        [userId, "facebook", platformId, pageName, accessToken, pageAccessToken]
-      );
-
-      if (updateByUserId.rowCount === 0) {
-        await pg.query(
-          `INSERT INTO integrations (user_id, platform, platform_id, page_name, access_token, page_access_token, created_at)
-           VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-          [userId, "facebook", platformId, pageName, accessToken, pageAccessToken]
-        );
-      }
-      return;
-    } catch (error) {
-      const code = (error as { code?: string }).code;
-      if (code !== "42703") {
-        throw error;
-      }
-    }
-  }
-
-  if (!email) {
+    record.user_id = userId;
+  } else if (email) {
+    record.user_email = email;
+  } else {
     throw new Error("missing_identity_for_fallback");
   }
 
-  const updateByEmail = await pg.query(
-    `UPDATE integrations
-     SET page_name = $4, access_token = $5, page_access_token = $6, updated_at = NOW()
-     WHERE user_email = $1 AND platform = $2 AND platform_id = $3`,
-    [email, "facebook", platformId, pageName, accessToken, pageAccessToken]
-  );
+  const matchColumn = isUuid(userId) ? "user_id" : "user_email";
+  const matchValue = isUuid(userId) ? userId : email;
 
-  if (updateByEmail.rowCount === 0) {
-    await pg.query(
-      `INSERT INTO integrations (user_email, platform, platform_id, page_name, access_token, page_access_token, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-      [email, "facebook", platformId, pageName, accessToken, pageAccessToken]
-    );
+  // Try update first, then insert if no rows matched
+  const { data: existing, error: selectErr } = await supabase
+    .from("integrations")
+    .select("id")
+    .eq(matchColumn, matchValue as string)
+    .eq("platform", "facebook")
+    .maybeSingle();
+
+  if (selectErr) throw selectErr;
+
+  if (existing) {
+    const { error } = await supabase
+      .from("integrations")
+      .update(record)
+      .eq("id", existing.id);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from("integrations").insert(record);
+    if (error) throw error;
   }
 }
 
@@ -230,8 +214,7 @@ export async function GET(req: NextRequest) {
       if (!userId && !email) {
         storageWarning = "&warning=missing_identity";
       } else {
-        const pg = await ensureIntegrationsTable();
-        await upsertIntegration(pg, {
+        await upsertIntegration({
           userId,
           email,
           platformId,
@@ -268,14 +251,10 @@ export async function GET(req: NextRequest) {
     console.error("Facebook callback error:", error);
     const code = (error as { code?: string }).code;
     const message = (error as { message?: string }).message || "callback_failed";
-    const reason = code === "42P01"
-      ? "table_missing"
-      : code === "42703"
-        ? "schema_mismatch"
-        : /missing_identity/i.test(message)
-          ? "missing_identity"
-          : code === "42501"
-            ? "db_permission"
+    const reason = /missing_identity/i.test(message)
+      ? "missing_identity"
+      : /supabase_admin_unavailable/i.test(message)
+        ? "db_config_missing"
         : "callback_failed";
     return NextResponse.redirect(
       new URL(
