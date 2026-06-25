@@ -4,7 +4,15 @@ import { createClient } from "@supabase/supabase-js";
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
+  if (!url || !key) {
+    console.error("Supabase admin unavailable", {
+      hasUrl: !!url,
+      hasKey: !!key,
+      urlValue: url?.slice(0, 20),
+      keyPresent: !!key,
+    });
+    return null;
+  }
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
