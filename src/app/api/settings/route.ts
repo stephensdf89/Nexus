@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth-options';
+import { cookies } from 'next/headers';
 import {
   validateRequestBody,
   type ValidationSchema,
@@ -15,20 +14,27 @@ const SETTINGS_SCHEMA: ValidationSchema = {
 
 async function getUserFromRequest() {
   try {
-    const session = await getServerSession(authOptions);
-    console.log('[Settings API] Session check:', {
-      hasSession: !!session,
-      hasUser: !!session?.user,
-      userId: session?.user?.id,
-      userKeys: session?.user ? Object.keys(session.user) : []
-    });
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get('sb-access-token')?.value;
     
-    if (!session?.user?.id) {
+    if (!accessToken) {
+      console.log('[Settings API] No access token found');
       return { user: null, error: 'Unauthorized' };
     }
-    return { user: { id: session.user.id }, error: null };
+
+    // Decode JWT to get user ID
+    try {
+      const payload = JSON.parse(Buffer.from(accessToken.split('.')[1], 'base64').toString());
+      const userId = payload.sub;
+      
+      console.log('[Settings API] User authenticated:', { userId });
+      return { user: { id: userId }, error: null };
+    } catch (e) {
+      console.error('[Settings API] Failed to decode token:', e);
+      return { user: null, error: 'Invalid token' };
+    }
   } catch (error) {
-    console.error('[Settings API] getServerSession error:', error);
+    console.error('[Settings API] getUserFromRequest error:', error);
     return { user: null, error: 'Unauthorized' };
   }
 }
