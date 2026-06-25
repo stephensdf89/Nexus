@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import platformFieldTemplates from "../utils/platformFieldTemplates";
-import thumbnailAnalyzer from "../utils/thumbnailAnalyzer";
+import scriptAnalyzer from "../utils/scriptAnalyzer";
+import hookGenerator from "../utils/hookGenerator";
 import type { PipelineCard } from "../hooks/usePipelineData";
 
 type Props = {
@@ -19,7 +20,14 @@ export default function CardDetailsPanel({ card, close }: Props) {
     analytics: card.analytics || {},
   });
   const [saving, setSaving] = useState(false);
-  const suggestions = thumbnailAnalyzer.analyze(localCard, [localCard]);
+  const suggestions = scriptAnalyzer.analyze(localCard);
+  const primaryPlatform = (localCard.platforms || [])[0] || "";
+  const hookIdeas = hookGenerator.generate({
+    topic: localCard.title || "",
+    niche: localCard.description || localCard.notes || "",
+    platform: primaryPlatform,
+    vibe: "",
+  });
 
   // -----------------------------
   // AUTO-SAVE
@@ -225,9 +233,16 @@ export default function CardDetailsPanel({ card, close }: Props) {
       )}
 
       <div>
-        <div>Thumbnail Optimization</div>
+        <div>Script Optimization</div>
         {suggestions.map((s, i) => (
           <div key={i}>{s}</div>
+        ))}
+      </div>
+
+      <div>
+        <div>Hook Ideas</div>
+        {hookIdeas.slice(0, 10).map((hook, i) => (
+          <div key={i}>{hook}</div>
         ))}
       </div>
     </div>
