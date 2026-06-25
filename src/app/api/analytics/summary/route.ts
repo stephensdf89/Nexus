@@ -54,17 +54,17 @@ export async function GET(req: NextRequest) {
 
       if (fbAnalyticsRes.ok) {
         const fbData = await fbAnalyticsRes.json();
-        if (fbData.success && fbData.metrics) {
+        if (fbData.connected) {
+          const views = fbData?.insights?.pageImpressions || 0;
+          const engagement = fbData?.insights?.pageEngagedUsers || 0;
+          const followers = fbData?.page?.followersCount ?? fbData?.page?.fanCount ?? 0;
+
           facebookMetrics = {
             platform: "Facebook",
-            views: fbData.metrics.impressions || 0,
-            engagement: fbData.metrics.engaged_users || 0,
-            followers: fbData.metrics.fan_count || 0,
-            trend: calculateTrend(
-              fbData.metrics.impressions || 0,
-              fbData.metrics.engaged_users || 0,
-              fbData.metrics.fan_count || 0
-            ),
+            views,
+            engagement,
+            followers,
+            trend: calculateTrend(views, engagement, followers),
           };
         }
       }

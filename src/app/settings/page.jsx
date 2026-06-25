@@ -317,9 +317,11 @@ export default function SettingsPage() {
       .from("integrations")
       .delete()
       .eq("user_id", user.id)
-      .eq("provider", provider);
+      .or(`provider.eq.${provider},platform.eq.${provider}`);
 
-    setIntegrations((prev) => prev.filter((i) => i.provider !== provider));
+    setIntegrations((prev) =>
+      prev.filter((i) => (i.provider || i.platform) !== provider)
+    );
   };
 
   const connectProvider = (provider) => {
@@ -327,7 +329,10 @@ export default function SettingsPage() {
   };
 
   const integrationByProvider = integrations.reduce((acc, item) => {
-    acc[item.provider] = item;
+    const key = item.provider || item.platform;
+    if (key) {
+      acc[key] = item;
+    }
     return acc;
   }, {});
 
