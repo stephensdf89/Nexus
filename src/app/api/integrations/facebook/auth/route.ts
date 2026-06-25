@@ -18,13 +18,13 @@ const SAFE_FACEBOOK_SCOPES = new Set([
 function getSanitizedScopes() {
   const configured =
     process.env.FACEBOOK_OAUTH_SCOPES ||
-    "public_profile,email,pages_show_list,pages_read_engagement,read_insights,business_management,user_posts";
+    "public_profile,email,user_posts";
   const sanitized = configured
     .split(",")
     .map((scope) => scope.trim())
     .filter((scope) => SAFE_FACEBOOK_SCOPES.has(scope));
 
-  return sanitized.length > 0 ? sanitized.join(",") : "public_profile,email,pages_show_list,pages_read_engagement,read_insights,user_posts";
+  return sanitized.length > 0 ? sanitized.join(",") : "public_profile,email,user_posts";
 }
 
 function getFacebookRedirectUri(req: NextRequest) {
