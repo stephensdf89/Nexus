@@ -3,13 +3,18 @@ import { createClient } from "@supabase/supabase-js";
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Try multiple sources for the key
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || 
+              process.env['SUPABASE_SERVICE_ROLE_KEY'] ||
+              (typeof globalThis !== 'undefined' ? globalThis['SUPABASE_SERVICE_ROLE_KEY'] : null);
+  
   if (!url || !key) {
     console.error("Supabase admin unavailable", {
       hasUrl: !!url,
       hasKey: !!key,
       urlValue: url?.slice(0, 20),
       keyPresent: !!key,
+      envKeys: Object.keys(process.env).filter(k => k.includes('SUPABASE')),
     });
     return null;
   }
