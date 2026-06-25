@@ -224,21 +224,9 @@ export async function GET(req: NextRequest) {
     }
     // Store integration in database
     const pg = await ensureIntegrationsTable();
-    let userId = cookieUserId;
+    const userId = isUuid(cookieUserId) ? cookieUserId : undefined;
 
-    if (!isUuid(userId)) {
-      if (!email) {
-        return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_identity", appBaseUrl));
-      }
-
-      const userLookup = await pg.query(
-        "SELECT id FROM auth.users WHERE email = $1 LIMIT 1",
-        [email]
-      );
-      userId = userLookup.rows[0]?.id;
-    }
-
-    if (!isUuid(userId) && !email) {
+    if (!userId && !email) {
       return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_identity", appBaseUrl));
     }
 
@@ -271,11 +259,21 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("Facebook callback error:", error);
     const code = (error as { code?: string }).code;
+    const message = (error as { message?: string }).message || "callback_failed";
     const reason = code === "42P01"
       ? "table_missing"
       : code === "42703"
         ? "schema_mismatch"
+        : /missing_identity/i.test(message)
+          ? "missing_identity"
+          : code === "42501"
+            ? "db_permission"
         : "callback_failed";
-    return NextResponse.redirect(new URL(`/settings?tab=connected&error=server_error&reason=${reason}`, getAppBaseUrl(req)));
+    return NextResponse.redirect(
+      new URL(
+        `/settings?tab=connected&error=server_error&reason=${reason}&message=${encodeURIComponent(message)}`,
+        getAppBaseUrl(req)
+      )
+    );
   }
 }
