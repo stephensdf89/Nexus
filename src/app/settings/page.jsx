@@ -147,51 +147,36 @@ export default function SettingsPage() {
           setIsOwner(Boolean(accessData?.isOwner));
         }
 
-        const { data, error } = await supabase
-          .from("user_settings")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
+        // Fetch settings from API endpoint
+        try {
+          const settingsRes = await fetch("/api/settings");
+          if (settingsRes.ok) {
+            const settingsData = await settingsRes.json();
+            const settings = settingsData.settings;
+            
+            // Sync retrieved settings to store if local settings don't exist
+            const hasLocalSettings =
+              typeof window !== "undefined" && Boolean(localStorage.getItem("global-settings"));
 
-        if (error) {
+            if (!hasLocalSettings && settings && Object.keys(settings).length > 0) {
+              if (settings.theme && settings.theme !== theme) {
+                updateAppSetting("theme", settings.theme);
+              }
+              if (settings.language && settings.language !== language) {
+                updateAppSetting("language", settings.language);
+              }
+              if (typeof settings.notificationsEnabled === "boolean" && 
+                  settings.notificationsEnabled !== notificationsEnabled) {
+                updateAppSetting("notificationsEnabled", settings.notificationsEnabled);
+              }
+            }
+            
+            if (settings.region) {
+              setRegion(settings.region);
+            }
+          }
+        } catch (error) {
           console.error("Failed to load user settings:", error);
-        } else if (!data) {
-          const defaultRow = {
-            user_id: user.id,
-            theme,
-            language,
-            region,
-            notifications_enabled: notificationsEnabled,
-          };
-          const { error: insertError } = await supabase
-            .from("user_settings")
-            .upsert(defaultRow, { onConflict: "user_id" });
-
-          if (insertError) {
-            console.error("Failed to initialize user settings:", insertError);
-          }
-        } else {
-          const hasLocalSettings =
-            typeof window !== "undefined" && Boolean(localStorage.getItem("global-settings"));
-
-          // Legacy settings are migration fallback only.
-          // If local settings already exist, never overwrite the active store.
-          if (!hasLocalSettings) {
-            if (data.theme && data.theme !== theme) {
-              updateAppSetting("theme", data.theme);
-            }
-            if (data.language && data.language !== language) {
-              updateAppSetting("language", data.language);
-            }
-            if (
-              typeof data.notifications_enabled === "boolean" &&
-              data.notifications_enabled !== notificationsEnabled
-            ) {
-              updateAppSetting("notificationsEnabled", data.notifications_enabled);
-            }
-          }
-
-          setRegion(data.region || DEFAULT_REGION);
         }
 
         await syncFromServer();
@@ -236,14 +221,21 @@ export default function SettingsPage() {
     if (!user) return;
 
     const payload = {
-      user_id: user.id,
       theme,
       language,
       region,
-      notifications_enabled: notificationsEnabled,
+      notificationsEnabled,
     };
 
-    await supabase.from("user_settings").upsert(payload, { onConflict: "user_id" });
+    try {
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: payload }),
+      });
+    } catch (error) {
+      console.error("Failed to persist settings snapshot:", error);
+    }
   };
 
   const saveSettings = async () => {
@@ -254,9 +246,26 @@ export default function SettingsPage() {
     setSaveNotice("");
 
     try {
+    // Use API endpoint to sync settings
+    try {
       await syncToServer();
-      await persistLegacySnapshot();
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          settings: {
+            theme,
+            language,
+            region,
+            notificationsEnabled,
+          },
+        }),
+      });
       setSaveNotice("Settings saved.");
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      setSaveError("Failed to save settings. Please try again.");
+    }
     } catch (error) {
       console.error("Failed to save settings:", error);
       setSaveError("Failed to save settings. Please try again.");
@@ -268,16 +277,23 @@ export default function SettingsPage() {
   const persistLegacySettings = async (field, value) => {
     if (!user) return;
 
+    // Use API endpoint to persist settings
     const payload = {
-      user_id: user.id,
       theme: field === "theme" ? value : theme,
       language: field === "language" ? value : language,
       region: field === "region" ? value : region,
-      notifications_enabled:
-        field === "notificationsEnabled" ? value : notificationsEnabled,
+      notificationsEnabled: field === "notificationsEnabled" ? value : notificationsEnabled,
     };
 
-    await supabase.from("user_settings").upsert(payload, { onConflict: "user_id" });
+    try {
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: payload }),
+      });
+    } catch (error) {
+      console.error("Failed to persist settings:", error);
+    }
   };
 
   const disconnect = async (provider) => {
