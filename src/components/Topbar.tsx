@@ -11,11 +11,17 @@ type SessionState = {
   email: string;
   displayName: string;
   initial: string;
+  avatarUrl: string;
 };
 
 export default function Topbar() {
   const router = useRouter();
-  const [session, setSession] = useState<SessionState>({ email: "", displayName: "", initial: "?" });
+  const [session, setSession] = useState<SessionState>({
+    email: "",
+    displayName: "",
+    initial: "?",
+    avatarUrl: "",
+  });
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const readAccessToken = () => {
@@ -54,15 +60,28 @@ export default function Topbar() {
       }
 
       const cacheKey = `topbar-display-name-${authSession.user.id}`;
-      const cachedDisplayName =
+      const cachedRaw =
         typeof window !== "undefined" ? window.sessionStorage.getItem(cacheKey) || "" : "";
 
-      if (!forceRefresh && cachedDisplayName) {
+      let cachedDisplayName = "";
+      let cachedAvatarUrl = "";
+      if (cachedRaw) {
+        try {
+          const parsed = JSON.parse(cachedRaw) as { displayName?: string; avatarUrl?: string };
+          cachedDisplayName = String(parsed?.displayName || "");
+          cachedAvatarUrl = String(parsed?.avatarUrl || "");
+        } catch {
+          cachedDisplayName = cachedRaw;
+        }
+      }
+
+      if (!forceRefresh && (cachedDisplayName || cachedAvatarUrl)) {
         const label = cachedDisplayName || authSession.user.email;
         setSession({
           email: authSession.user.email,
           displayName: cachedDisplayName,
           initial: label.slice(0, 1).toUpperCase(),
+          avatarUrl: cachedAvatarUrl,
         });
         return;
       }
@@ -72,10 +91,10 @@ export default function Topbar() {
       const profilePromise = authSession.user.id
         ? supabase
             .from("profiles")
-            .select("name")
+            .select("name, avatar_url")
             .eq("id", authSession.user.id)
             .maybeSingle()
-        : Promise.resolve({ data: null as { name?: string } | null });
+        : Promise.resolve({ data: null as { name?: string; avatar_url?: string } | null });
 
       const settingsPromise = (async () => {
         try {
@@ -104,10 +123,17 @@ export default function Topbar() {
       const [profileResult, settingsDisplayName] = await Promise.all([profilePromise, settingsPromise]);
 
       displayName = String(profileResult?.data?.name || settingsDisplayName || "");
+      const avatarUrl = String(profileResult?.data?.avatar_url || "");
 
       if (typeof window !== "undefined") {
-        if (displayName) {
-          window.sessionStorage.setItem(cacheKey, displayName);
+        if (displayName || avatarUrl) {
+          window.sessionStorage.setItem(
+            cacheKey,
+            JSON.stringify({
+              displayName,
+              avatarUrl,
+            })
+          );
         } else {
           window.sessionStorage.removeItem(cacheKey);
         }
@@ -119,6 +145,7 @@ export default function Topbar() {
         email: authSession.user.email,
         displayName,
         initial: label.slice(0, 1).toUpperCase(),
+        avatarUrl,
       });
     };
 
@@ -132,7 +159,7 @@ export default function Topbar() {
       }
 
       if (!authSession?.user?.email) {
-        setSession({ email: "", displayName: "", initial: "?" });
+        setSession({ email: "", displayName: "", initial: "?", avatarUrl: "" });
         return;
       }
 
@@ -140,6 +167,7 @@ export default function Topbar() {
         email: authSession.user.email,
         displayName: "",
         initial: authSession.user.email.slice(0, 1).toUpperCase(),
+        avatarUrl: "",
       });
 
       // Refresh profile display label on auth changes.
@@ -207,9 +235,18 @@ export default function Topbar() {
           <p className="text-xs text-cyan-100/60">Active session</p>
         </div>
 
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-violet-600 text-sm font-bold text-[#05163b]">
-          {session.initial}
-        </div>
+        {session.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={session.avatarUrl}
+            alt="Profile"
+            className="h-9 w-9 rounded-full border border-cyan-300/50 object-cover"
+          />
+        ) : (
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-violet-600 text-sm font-bold text-[#05163b]">
+            {session.initial}
+          </div>
+        )}
 
         <button
           type="button"
