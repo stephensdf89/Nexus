@@ -34,6 +34,14 @@ async function getAccessTokenFromRequest(req: NextRequest) {
     }
   }
 
+  if (accessToken) {
+    try {
+      accessToken = decodeURIComponent(accessToken);
+    } catch {
+      // keep original token if it is not URI-encoded
+    }
+  }
+
   return accessToken;
 }
 
