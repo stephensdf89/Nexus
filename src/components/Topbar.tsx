@@ -83,7 +83,6 @@ export default function Topbar() {
           initial: label.slice(0, 1).toUpperCase(),
           avatarUrl: cachedAvatarUrl,
         });
-        return;
       }
 
       let displayName = "";
