@@ -171,18 +171,26 @@ export default function SettingsPage() {
             console.error("Failed to initialize user settings:", insertError);
           }
         } else {
-          if (data.theme && data.theme !== theme) {
-            updateAppSetting("theme", data.theme);
+          const hasLocalSettings =
+            typeof window !== "undefined" && Boolean(localStorage.getItem("global-settings"));
+
+          // Legacy settings are migration fallback only.
+          // If local settings already exist, never overwrite the active store.
+          if (!hasLocalSettings) {
+            if (data.theme && data.theme !== theme) {
+              updateAppSetting("theme", data.theme);
+            }
+            if (data.language && data.language !== language) {
+              updateAppSetting("language", data.language);
+            }
+            if (
+              typeof data.notifications_enabled === "boolean" &&
+              data.notifications_enabled !== notificationsEnabled
+            ) {
+              updateAppSetting("notificationsEnabled", data.notifications_enabled);
+            }
           }
-          if (data.language && data.language !== language) {
-            updateAppSetting("language", data.language);
-          }
-          if (
-            typeof data.notifications_enabled === "boolean" &&
-            data.notifications_enabled !== notificationsEnabled
-          ) {
-            updateAppSetting("notificationsEnabled", data.notifications_enabled);
-          }
+
           setRegion(data.region || DEFAULT_REGION);
         }
 

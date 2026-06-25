@@ -278,7 +278,7 @@ export const useSettingsStore = create((set) => ({
         method: "POST",
         credentials: "include",
         headers,
-        body: JSON.stringify(settings),
+        body: JSON.stringify({ settings }),
       });
 
       if (!res.ok) return;
