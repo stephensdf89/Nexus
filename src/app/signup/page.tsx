@@ -123,21 +123,7 @@ export default function SignUpPage() {
         return;
       }
 
-      // Create user_settings record
-      if (data.user) {
-        const { error: settingsError } = await supabase
-          .from("user_settings")
-          .insert({
-            user_id: data.user.id,
-            theme: "neon",
-            language: "en",
-            region: "US",
-          });
-
-        if (settingsError) {
-          console.error("Failed to create user settings:", settingsError);
-        }
-      }
+      // Note: user_settings will be initialized on first settings page load via API
 
       const hasSession = Boolean(data.session);
 

@@ -138,9 +138,10 @@ function ProfileContent() {
       const authMetadata = user.user_metadata || {};
       const displayName = authMetadata.display_name || user.email?.split("@")[0] || "Creator";
 
-      const settingsPromise = supabase
-        ? supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle()
-        : Promise.resolve({ data: null });
+      // Fetch settings from API instead of direct Supabase call
+      const settingsPromise = fetch("/api/settings")
+        .then(res => res.ok ? res.json().then(d => ({ data: d.settings || null })) : { data: null })
+        .catch(() => ({ data: null }));
 
       const profilePromise = supabase
         ? supabase
