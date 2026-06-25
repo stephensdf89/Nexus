@@ -430,6 +430,12 @@ export default function SettingsPage() {
         return;
       }
 
+      // Force dashboard analytics to refresh after manual pull.
+      if (typeof window !== "undefined" && user?.id) {
+        window.sessionStorage.removeItem(`analytics-cache-${user.id}`);
+        window.dispatchEvent(new Event("analytics-refresh"));
+      }
+
       if (payload?.warning) {
         setSaveNotice(`Facebook connected. ${payload.warning}`);
       } else {

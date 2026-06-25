@@ -4,6 +4,7 @@ import HistoryNavigation from "@/components/HistoryNavigation";
 import Providers from "@/components/Providers";
 import SettingsLoader from "@/components/SettingsLoader";
 import AppStatusBanner from "@/components/AppStatusBanner";
+import BackToDashboardButton from "@/components/BackToDashboardButton";
 
 export const metadata = {
   title: "Content Creator Nexus",
@@ -17,6 +18,7 @@ export default function RootLayout({ children }) {
         <Providers>
           <SettingsLoader />
           <AppStatusBanner />
+          <BackToDashboardButton />
           <Suspense fallback={null}>
             <HistoryNavigation />
           </Suspense>
