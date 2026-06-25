@@ -112,11 +112,15 @@ export default function SettingsPage() {
   const resetTheme = useSettingsStore((state) => state.resetTheme);
   const resetAll = useSettingsStore((state) => state.resetAll);
   const syncFromServer = useSettingsStore((state) => state.syncFromServer);
+  const syncToServer = useSettingsStore((state) => state.syncToServer);
 
   const [region, setRegion] = useState(DEFAULT_REGION);
   const [integrations, setIntegrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [saveNotice, setSaveNotice] = useState("");
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     if (!user) {
@@ -199,6 +203,9 @@ export default function SettingsPage() {
   const updateSetting = async (field, value) => {
     if (!user) return;
 
+    setSaveNotice("");
+    setSaveError("");
+
     if (field === "region") {
       setRegion(value);
     } else {
@@ -206,6 +213,39 @@ export default function SettingsPage() {
     }
 
     await persistLegacySettings(field, value);
+  };
+
+  const persistLegacySnapshot = async () => {
+    if (!user) return;
+
+    const payload = {
+      user_id: user.id,
+      theme,
+      language,
+      region,
+      notifications_enabled: notificationsEnabled,
+    };
+
+    await supabase.from("user_settings").upsert(payload, { onConflict: "user_id" });
+  };
+
+  const saveSettings = async () => {
+    if (!user || isSavingSettings) return;
+
+    setIsSavingSettings(true);
+    setSaveError("");
+    setSaveNotice("");
+
+    try {
+      await syncToServer();
+      await persistLegacySnapshot();
+      setSaveNotice("Settings saved.");
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      setSaveError("Failed to save settings. Please try again.");
+    } finally {
+      setIsSavingSettings(false);
+    }
   };
 
   const persistLegacySettings = async (field, value) => {
@@ -259,9 +299,27 @@ export default function SettingsPage() {
         color: "var(--brand-text)",
       }}
     >
-      <h1 className="text-3xl font-bold" style={{ color: "var(--brand-primary)" }}>
-        Settings
-      </h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold" style={{ color: "var(--brand-primary)" }}>
+          Settings
+        </h1>
+
+        <button
+          type="button"
+          onClick={saveSettings}
+          disabled={isSavingSettings}
+          className="px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-60"
+          style={{
+            background: "linear-gradient(90deg, var(--brand-primary), var(--brand-secondary))",
+            color: "#041329",
+          }}
+        >
+          {isSavingSettings ? "Saving..." : "Save Settings"}
+        </button>
+      </div>
+
+      {saveNotice ? <p className="text-sm text-emerald-300">{saveNotice}</p> : null}
+      {saveError ? <p className="text-sm text-red-300">{saveError}</p> : null}
 
       <p className="text-sm" style={{ color: "var(--brand-text)" }}>
         Active theme: <strong>{theme}</strong> | Device profile: <strong>{device}</strong>
