@@ -5,14 +5,28 @@ import { supabase } from "@/lib/supabase";
 import platformFieldTemplates from "../utils/platformFieldTemplates";
 import scriptAnalyzer from "../utils/scriptAnalyzer";
 import hookGenerator from "../utils/hookGenerator";
+import scriptRewriter from "../utils/scriptRewriter";
+import captionGenerator from "../utils/captionGenerator";
+import titleGenerator from "../utils/titleGenerator";
+import hashtagGenerator from "../utils/hashtagGenerator";
+import contentAngleGenerator from "../utils/contentAngleGenerator";
+import contentIdeaGenerator from "../utils/contentIdeaGenerator";
+import contentCalendarGenerator from "../utils/contentCalendarGenerator";
+import seoKeywordExtractor from "../utils/seoKeywordExtractor";
+import trendScanner from "../utils/trendScanner";
+import viralPredictor from "../utils/viralPredictor";
+import viralOptimizer from "../utils/viralOptimizer";
+import multiPlatformRepurposer from "../utils/multiPlatformRepurposer";
+import autoThumbnailGenerator from "../utils/autoThumbnailGenerator";
 import type { PipelineCard } from "../hooks/usePipelineData";
 
 type Props = {
   card: PipelineCard;
+  allCards: PipelineCard[];
   close: () => void;
 };
 
-export default function CardDetailsPanel({ card, close }: Props) {
+export default function CardDetailsPanel({ card, allCards, close }: Props) {
   const [localCard, setLocalCard] = useState<PipelineCard>({
     ...card,
     platforms: card.platforms || [],
@@ -26,6 +40,81 @@ export default function CardDetailsPanel({ card, close }: Props) {
     niche: localCard.niche || localCard.description || localCard.notes || "",
     platform: localCard.platforms?.[0] || "",
     vibe: "aggressive", // optional
+  });
+  const sourceScript =
+    localCard.script ||
+    (localCard.platform_fields as Record<string, Record<string, string>>)?.youtube?.youtube_script ||
+    localCard.description ||
+    localCard.notes ||
+    "";
+  const rewritten = scriptRewriter.rewrite({
+    script: card.script || sourceScript,
+    topic: card.title,
+    platform: card.platforms?.[0] || localCard.platforms?.[0] || "",
+    niche: card.niche || localCard.niche || "",
+    vibe: "aggressive", // optional
+  });
+  const caption = captionGenerator.generate({
+    topic: card.title,
+    niche: card.niche,
+    platform: card.platforms?.[0] || "",
+    vibe: "soft", // optional
+  });
+  const titles = titleGenerator.generate({
+    topic: card.title,
+    niche: card.niche,
+    platform: card.platforms?.[0] || "",
+    vibe: "aggressive", // optional
+  });
+  const hashtags = hashtagGenerator.generate({
+    topic: card.title,
+    niche: card.niche,
+    platform: card.platforms?.[0],
+    vibe: "aggressive", // optional
+  });
+  const angles = contentAngleGenerator.generate({
+    topic: card.title,
+    niche: card.niche,
+    platform: card.platforms?.[0],
+    vibe: "funny", // optional
+  });
+  const ideas = contentIdeaGenerator.generate({
+    topic: card.title,
+    niche: card.niche,
+    platform: card.platforms![0],
+    vibe: "funny", // optional
+  });
+  const calendar = contentCalendarGenerator.generate({
+    topic: card.title,
+    niche: card.niche,
+    platforms: card.platforms,
+    frequency: 1, // posts per day
+    vibe: "aggressive", // optional
+  });
+  const keywords = seoKeywordExtractor.extract({
+    topic: card.title,
+    niche: card.niche,
+    script: card.script,
+    platform: card.platforms![0],
+  });
+  const trends = trendScanner.scan({
+    niche: card.niche,
+    platform: card.platforms![0],
+  });
+  const prediction = viralPredictor.predict(card, allCards);
+  const optimized = viralOptimizer.optimize(card, allCards);
+  const repurposed = multiPlatformRepurposer.repurpose({
+    script: card.script,
+    topic: card.title,
+    niche: card.niche,
+    vibe: "aggressive",
+  });
+  const thumbnails = autoThumbnailGenerator.generate({
+    title: card.title,
+    topic: card.topic,
+    niche: card.niche,
+    vibe: "aggressive",
+    bestPatterns: card.bestThumbnailPatterns,
   });
 
   // -----------------------------
@@ -243,6 +332,103 @@ export default function CardDetailsPanel({ card, close }: Props) {
         {hooks.map((h, i) => (
           <div key={i}>{h}</div>
         ))}
+      </div>
+
+      <div>
+        <div>Rewritten Script</div>
+        <pre>{rewritten}</pre>
+      </div>
+
+      <div>
+        <div>Generated Caption</div>
+        <pre>{caption}</pre>
+      </div>
+
+      <div>
+        <div>Generated Titles</div>
+        {titles.map((t, i) => (
+          <div key={i}>{t}</div>
+        ))}
+      </div>
+
+      <div>
+        <div>Generated Hashtags</div>
+        <pre>{hashtags}</pre>
+      </div>
+
+      <div>
+        <div>Content Angles</div>
+        {angles.map((a, i) => (
+          <div key={i}>{a}</div>
+        ))}
+      </div>
+
+      <div>
+        <div>Content Ideas</div>
+        {ideas.map((i, idx) => (
+          <div key={idx}>{i}</div>
+        ))}
+      </div>
+
+      <div>
+        <div>30-Day Content Calendar</div>
+        {calendar.map((day) => (
+          <div key={day.day}>
+            <strong>Day {day.day}</strong>
+            {day.ideas.map((idea, idx) => (
+              <div key={idx}>{idea}</div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <div>SEO Keywords</div>
+        <pre>{JSON.stringify(keywords, null, 2)}</pre>
+      </div>
+
+      <div>
+        <div>Trend Insights</div>
+        <pre>{JSON.stringify(trends, null, 2)}</pre>
+      </div>
+
+      <div>
+        <div>Viral Prediction</div>
+        <pre>{JSON.stringify(prediction, null, 2)}</pre>
+      </div>
+
+      <div>
+        <div>Viral Optimization</div>
+
+        <h4>Hook</h4>
+        <pre>{optimized.hook}</pre>
+
+        <h4>Script</h4>
+        <pre>{optimized.script}</pre>
+
+        <h4>Caption</h4>
+        <pre>{optimized.caption}</pre>
+
+        <h4>Title</h4>
+        <pre>{optimized.title}</pre>
+
+        <h4>Thumbnail Suggestions</h4>
+        {optimized.thumbnailSuggestions.map((s, i) => (
+          <div key={i}>{s}</div>
+        ))}
+
+        <h4>New Viral Score</h4>
+        <pre>{JSON.stringify(optimized.viralPrediction, null, 2)}</pre>
+      </div>
+
+      <div>
+        <div>Multi‑Platform Repurposing</div>
+        <pre>{JSON.stringify(repurposed, null, 2)}</pre>
+      </div>
+
+      <div>
+        <div>Auto Thumbnail Variations</div>
+        <pre>{JSON.stringify(thumbnails, null, 2)}</pre>
       </div>
     </div>
   );

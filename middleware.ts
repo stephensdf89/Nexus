@@ -3,8 +3,9 @@ import type { NextRequest } from "next/server";
 import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from "@/lib/auth";
 
 export function middleware(req: NextRequest) {
-  const host = req.headers.get("host") || "";
-  if (host === "creatornexuspro.com") {
+  const forwardedHost = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const host = (forwardedHost || req.headers.get("host") || req.nextUrl.host || "").toLowerCase();
+  if (host === "creatornexuspro.com" && req.nextUrl.host.toLowerCase() !== "www.creatornexuspro.com") {
     const url = req.nextUrl.clone();
     url.host = "www.creatornexuspro.com";
     return NextResponse.redirect(url, 308);

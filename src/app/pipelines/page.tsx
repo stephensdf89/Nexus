@@ -53,6 +53,7 @@ export default function PipelinePage() {
         <CardDetailsPanel
           key={selectedCard.id}
           card={selectedCard}
+          allCards={cards}
           close={() => setSelectedCard(null)}
         />
       )}

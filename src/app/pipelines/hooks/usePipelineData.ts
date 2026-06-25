@@ -18,9 +18,12 @@ export type PipelineCard = {
   id: string;
   user_id: string;
   title: string;
+  topic?: string;
   stage_id: string;
+  script?: string;
   description?: string;
   niche?: string;
+  bestThumbnailPatterns?: Record<string, unknown>;
   platforms?: string[];
   platform_fields?: Record<string, unknown>;
   notes?: string;
