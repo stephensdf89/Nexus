@@ -28,11 +28,22 @@ function getFacebookRedirectUri(req: NextRequest) {
     return process.env.FACEBOOK_REDIRECT_URI;
   }
 
-  if (process.env.NEXTAUTH_URL) {
-    return `${process.env.NEXTAUTH_URL}/api/integrations/facebook/callback`;
+  const baseUrl = getAppBaseUrl(req);
+  return `${baseUrl}/api/integrations/facebook/callback`;
+}
+
+function getAppBaseUrl(req: NextRequest) {
+  const configuredBase =
+    process.env.FACEBOOK_APP_BASE_URL ||
+    process.env.NEXTAUTH_URL ||
+    process.env.SITE_URL ||
+    process.env.URL;
+
+  if (configuredBase) {
+    return configuredBase.replace(/\/+$/, "");
   }
 
-  return `${req.nextUrl.origin}/api/integrations/facebook/callback`;
+  return req.nextUrl.origin;
 }
 
 function buildFacebookAuthUrl(req: NextRequest, state: string) {
@@ -75,15 +86,17 @@ function withIdentityCookies(response: NextResponse, userId?: string, email?: st
 
 export async function GET(req: NextRequest) {
   try {
+    const appBaseUrl = getAppBaseUrl(req);
+
     if (!FACEBOOK_APP_ID) {
-      return NextResponse.redirect(new URL("/settings?tab=connected&error=facebook_config_missing", req.url));
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=facebook_config_missing", appBaseUrl));
     }
 
     const userId = req.nextUrl.searchParams.get("uid") || undefined;
     const email = req.nextUrl.searchParams.get("email") || undefined;
 
     if (!userId && !email) {
-      return NextResponse.redirect(new URL("/settings?tab=connected&error=unauthorized", req.url));
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=unauthorized", appBaseUrl));
     }
 
     const state = Math.random().toString(36).substring(7);
@@ -94,7 +107,7 @@ export async function GET(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("Facebook auth GET error:", error);
-    return NextResponse.redirect(new URL("/settings?tab=connected&error=auth_init_failed", req.url));
+    return NextResponse.redirect(new URL("/settings?tab=connected&error=auth_init_failed", getAppBaseUrl(req)));
   }
 }
 

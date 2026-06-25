@@ -4,6 +4,20 @@ import { getPgClient } from "@/lib/pg";
 const FACEBOOK_APP_ID = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
 const FACEBOOK_APP_SECRET = process.env.FACEBOOK_CLIENT_SECRET || process.env.FACEBOOK_APP_SECRET;
 
+function getAppBaseUrl(req: NextRequest) {
+  const configuredBase =
+    process.env.FACEBOOK_APP_BASE_URL ||
+    process.env.NEXTAUTH_URL ||
+    process.env.SITE_URL ||
+    process.env.URL;
+
+  if (configuredBase) {
+    return configuredBase.replace(/\/+$/, "");
+  }
+
+  return req.nextUrl.origin;
+}
+
 function isUuid(value?: string) {
   if (!value) return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -14,11 +28,7 @@ function getFacebookRedirectUri(req: NextRequest) {
     return process.env.FACEBOOK_REDIRECT_URI;
   }
 
-  if (process.env.NEXTAUTH_URL) {
-    return `${process.env.NEXTAUTH_URL}/api/integrations/facebook/callback`;
-  }
-
-  return `${req.nextUrl.origin}/api/integrations/facebook/callback`;
+  return `${getAppBaseUrl(req)}/api/integrations/facebook/callback`;
 }
 
 function withFacebookCookies(
@@ -138,8 +148,10 @@ async function upsertIntegration(
 
 export async function GET(req: NextRequest) {
   try {
+    const appBaseUrl = getAppBaseUrl(req);
+
     if (!FACEBOOK_APP_ID || !FACEBOOK_APP_SECRET) {
-      return NextResponse.redirect(new URL("/settings?tab=connected&error=facebook_config_missing", req.url));
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=facebook_config_missing", appBaseUrl));
     }
 
     const cookieUserId = req.cookies.get("fb_user_id")?.value;
@@ -154,11 +166,11 @@ export async function GET(req: NextRequest) {
     // Verify state matches cookie
     const storedState = req.cookies.get("fb_oauth_state")?.value;
     if (!state || state !== storedState) {
-      return NextResponse.redirect(new URL("/settings?tab=connected&error=state_mismatch", req.url));
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=state_mismatch", appBaseUrl));
     }
 
     if (!code) {
-      return NextResponse.redirect(new URL("/settings?tab=connected&error=no_code", req.url));
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=no_code", appBaseUrl));
     }
 
     const redirectUri = getFacebookRedirectUri(req);
@@ -179,7 +191,7 @@ export async function GET(req: NextRequest) {
       const reason = tokenData?.error?.code || tokenResponse.status || "unknown";
       const message = encodeURIComponent(String(tokenData?.error?.message || tokenResponse.statusText || "token_exchange_failed"));
       return NextResponse.redirect(
-        new URL(`/settings?tab=connected&error=token_failed&reason=${reason}&message=${message}`, req.url)
+        new URL(`/settings?tab=connected&error=token_failed&reason=${reason}&message=${message}`, appBaseUrl)
       );
     }
 
@@ -212,7 +224,7 @@ export async function GET(req: NextRequest) {
 
     if (!isUuid(userId)) {
       if (!email) {
-        return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_identity", req.url));
+        return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_identity", appBaseUrl));
       }
 
       const userLookup = await pg.query(
@@ -223,7 +235,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (!isUuid(userId) && !email) {
-      return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_identity", req.url));
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=missing_identity", appBaseUrl));
     }
 
     let storageWarning = "";
@@ -243,7 +255,7 @@ export async function GET(req: NextRequest) {
 
     // Redirect with success and store secure cookie fallback for analytics/status.
     const response = NextResponse.redirect(
-      new URL(`/settings?tab=connected&platform=facebook&status=connected${storageWarning}`, req.url)
+      new URL(`/settings?tab=connected&platform=facebook&status=connected${storageWarning}`, appBaseUrl)
     );
     withFacebookCookies(response, {
       platformId,
@@ -260,6 +272,6 @@ export async function GET(req: NextRequest) {
       : code === "42703"
         ? "schema_mismatch"
         : "callback_failed";
-    return NextResponse.redirect(new URL(`/settings?tab=connected&error=server_error&reason=${reason}`, req.url));
+    return NextResponse.redirect(new URL(`/settings?tab=connected&error=server_error&reason=${reason}`, getAppBaseUrl(req)));
   }
 }
