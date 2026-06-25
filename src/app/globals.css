@@ -5,7 +5,6 @@
   --electric-cyan: #00E5FF;
   --pulse-purple: #A45CFF;
   --nexus-blue: #3A7BFF;
-  --neon-red: #FF0033;
   --brand-bg-start: #10235f;
   --brand-bg-mid: #173b8f;
   --brand-bg-end: #4a1b9b;
@@ -136,6 +135,38 @@ body.theme-rose-gold {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/*
+  Keep legacy red/black utility classes from forcing a red/black look in non-red themes.
+  They only activate when SettingsLoader adds .allow-danger-theme to <body>.
+*/
+body:not(.allow-danger-theme) [class*="text-red-"] {
+  color: var(--brand-primary) !important;
+}
+
+body:not(.allow-danger-theme) [class*="bg-red-"] {
+  background-color: color-mix(in srgb, var(--brand-primary) 18%, transparent) !important;
+}
+
+body:not(.allow-danger-theme) [class*="border-red-"] {
+  border-color: var(--brand-border) !important;
+}
+
+body:not(.allow-danger-theme) [class*="bg-black"] {
+  background-color: var(--brand-surface) !important;
+}
+
+body:not(.allow-danger-theme) [class*="text-black"] {
+  color: var(--brand-text) !important;
+}
+
+body:not(.allow-danger-theme) [style*="255,0,0"],
+body:not(.allow-danger-theme) [style*="#FF0033"],
+body:not(.allow-danger-theme) [style*="#ff0033"],
+body:not(.allow-danger-theme) [style*="#000000"],
+body:not(.allow-danger-theme) [style*="#111"] {
+  filter: hue-rotate(130deg) saturate(0.7);
 }
 
 /* Fade-in page */

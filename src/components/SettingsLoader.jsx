@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useSettingsStore } from "@/lib/settingsStore";
 import { supabase } from "@/lib/supabaseClient";
 
+const DANGER_THEMES = new Set(["sunset", "graphite"]);
+
 export default function SettingsLoader() {
   const { detectDevice, getActiveSettings, setDevice, syncFromServer } = useSettingsStore();
   const {
@@ -39,6 +41,7 @@ export default function SettingsLoader() {
 
     const classes = [
       `theme-${active.theme || "neon"}`,
+      DANGER_THEMES.has(active.theme) ? "allow-danger-theme" : "",
       active.highContrast ? "hc-mode" : "",
       active.textSize === "large"
         ? "text-lg"
