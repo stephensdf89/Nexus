@@ -137,6 +137,7 @@ export default function SettingsPage() {
 
   const [region, setRegion] = useState(DEFAULT_REGION);
   const [integrations, setIntegrations] = useState([]);
+  const [facebookStatusFallback, setFacebookStatusFallback] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
@@ -207,6 +208,38 @@ export default function SettingsPage() {
           setIntegrations([]);
         } else {
           setIntegrations(integrations || []);
+        }
+
+        // Facebook can be connected via cookie fallback even when DB persistence is unavailable.
+        try {
+          const accessToken = readAccessToken();
+          const fbStatusRes = await fetch("/api/integrations/facebook/status", {
+            credentials: "include",
+            headers: {
+              "x-user-id": user.id || "",
+              "x-user-email": user.email || "",
+              ...(accessToken ? { "x-supabase-auth": accessToken } : {}),
+            },
+          });
+
+          if (fbStatusRes.ok) {
+            const fbStatus = await fbStatusRes.json();
+            if (fbStatus?.connected) {
+              const fbPage = Array.isArray(fbStatus.pages) ? fbStatus.pages[0] : null;
+              setFacebookStatusFallback({
+                provider: "facebook",
+                platform: "facebook",
+                platform_id: fbPage?.platform_id || "",
+                page_name: fbPage?.page_name || "Facebook Account",
+                updated_at: fbPage?.created_at || new Date().toISOString(),
+                scope: "cookie-fallback",
+              });
+            } else {
+              setFacebookStatusFallback(null);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load Facebook fallback status:", error);
         }
       } catch (error) {
         console.error("Settings page load failed:", error);
@@ -313,6 +346,27 @@ export default function SettingsPage() {
   };
 
   const disconnect = async (provider) => {
+    if (provider === "facebook") {
+      try {
+        const accessToken = readAccessToken();
+        await fetch("/api/integrations/facebook/disconnect", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-id": user.id || "",
+            "x-user-email": user.email || "",
+            ...(accessToken ? { "x-supabase-auth": accessToken } : {}),
+          },
+          body: JSON.stringify({
+            platformId: integrationByProvider.facebook?.platform_id || "",
+          }),
+        });
+      } catch (error) {
+        console.error("Failed to disconnect Facebook:", error);
+      }
+      setFacebookStatusFallback(null);
+    }
+
     await supabase
       .from("integrations")
       .delete()
@@ -335,6 +389,10 @@ export default function SettingsPage() {
     }
     return acc;
   }, {});
+
+  if (facebookStatusFallback && !integrationByProvider.facebook) {
+    integrationByProvider.facebook = facebookStatusFallback;
+  }
 
   if (loading) {
     return <p className="text-gray-300 p-6">Loading settings...</p>;
