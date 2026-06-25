@@ -2,7 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { serverErrorResponse } from "@/lib/apiAuth";
 
 const FACEBOOK_APP_ID = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
-const SAFE_FACEBOOK_SCOPES = new Set(["public_profile", "email"]);
+const SAFE_FACEBOOK_SCOPES = new Set([
+  "public_profile",
+  "email",
+  "pages_show_list",
+  "pages_read_engagement",
+  "read_insights",
+  "business_management",
+  "instagram_basic",
+  "instagram_manage_insights",
+]);
 
 function getSanitizedScopes() {
   const configured = process.env.FACEBOOK_OAUTH_SCOPES || "public_profile,email";
@@ -66,6 +75,10 @@ function withIdentityCookies(response: NextResponse, userId?: string, email?: st
 
 export async function GET(req: NextRequest) {
   try {
+    if (!FACEBOOK_APP_ID) {
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=facebook_config_missing", req.url));
+    }
+
     const userId = req.nextUrl.searchParams.get("uid") || undefined;
     const email = req.nextUrl.searchParams.get("email") || undefined;
 
@@ -87,6 +100,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    if (!FACEBOOK_APP_ID) {
+      return NextResponse.json({ error: "Facebook app id is not configured" }, { status: 500 });
+    }
+
     const userId = (req.headers.get("x-user-id") || "").trim() || undefined;
     const email = (req.headers.get("x-user-email") || "").trim() || undefined;
 

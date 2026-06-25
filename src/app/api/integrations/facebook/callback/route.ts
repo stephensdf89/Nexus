@@ -138,6 +138,10 @@ async function upsertIntegration(
 
 export async function GET(req: NextRequest) {
   try {
+    if (!FACEBOOK_APP_ID || !FACEBOOK_APP_SECRET) {
+      return NextResponse.redirect(new URL("/settings?tab=connected&error=facebook_config_missing", req.url));
+    }
+
     const cookieUserId = req.cookies.get("fb_user_id")?.value;
     const cookieEmail = req.cookies.get("fb_user_email")?.value;
     const email = cookieEmail;
@@ -160,15 +164,23 @@ export async function GET(req: NextRequest) {
     const redirectUri = getFacebookRedirectUri(req);
 
     // Exchange code for access token
-    const tokenResponse = await fetch(
-      `https://graph.facebook.com/v18.0/oauth/access_token?client_id=${FACEBOOK_APP_ID}&client_secret=${FACEBOOK_APP_SECRET}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
-    );
+    const tokenUrl = new URL("https://graph.facebook.com/v18.0/oauth/access_token");
+    tokenUrl.searchParams.set("client_id", FACEBOOK_APP_ID);
+    tokenUrl.searchParams.set("client_secret", FACEBOOK_APP_SECRET);
+    tokenUrl.searchParams.set("redirect_uri", redirectUri);
+    tokenUrl.searchParams.set("code", code);
+
+    const tokenResponse = await fetch(tokenUrl.toString());
 
     const tokenData = await tokenResponse.json();
 
-    if (tokenData.error) {
+    if (!tokenResponse.ok || tokenData.error || !tokenData.access_token) {
       console.error("Facebook token error:", tokenData.error);
-      return NextResponse.redirect(new URL("/settings?tab=connected&error=token_failed", req.url));
+      const reason = tokenData?.error?.code || tokenResponse.status || "unknown";
+      const message = encodeURIComponent(String(tokenData?.error?.message || tokenResponse.statusText || "token_exchange_failed"));
+      return NextResponse.redirect(
+        new URL(`/settings?tab=connected&error=token_failed&reason=${reason}&message=${message}`, req.url)
+      );
     }
 
     // Try to fetch pages when page scopes are granted.
@@ -181,6 +193,19 @@ export async function GET(req: NextRequest) {
       `https://graph.facebook.com/me/accounts?access_token=${tokenData.access_token}`
     );
     const pagesData = await pagesResponse.json();
+
+    if (Array.isArray(pagesData?.data) && pagesData.data.length > 0) {
+      platformId = String(pagesData.data[0]?.id || "");
+      pageName = String(pagesData.data[0]?.name || "Facebook Page");
+      pageAccessToken = pagesData.data[0]?.access_token ? String(pagesData.data[0].access_token) : null;
+    } else {
+      const meResponse = await fetch(
+        `https://graph.facebook.com/me?fields=id,name&access_token=${encodeURIComponent(tokenData.access_token)}`
+      );
+      const meData = await meResponse.json();
+      platformId = String(meData?.id || "");
+      pageName = String(meData?.name || "Facebook Account");
+    }
     // Store integration in database
     const pg = await ensureIntegrationsTable();
     let userId = cookieUserId;
