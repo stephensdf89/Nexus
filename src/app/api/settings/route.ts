@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const SETTINGS_SCHEMA = {
   settings: {
     type: 'object',
     required: true,
   },
 };
+
+function defaultSettingsResponse() {
+  return NextResponse.json(
+    { settings: {} },
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      },
+    }
+  );
+}
 
 function getSupabaseConfig() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -86,13 +100,13 @@ export async function GET(req: NextRequest) {
     const { user, error: authError } = await getUserFromRequest(req);
     if (!user || authError) {
       // Settings bootstrap runs early in app mount; return defaults instead of 401 noise.
-      return NextResponse.json({ settings: {} });
+      return defaultSettingsResponse();
     }
 
     try {
       const config = getSupabaseConfig();
       if (!config) {
-        return NextResponse.json({ settings: {} });
+        return defaultSettingsResponse();
       }
 
       // Use REST API to fetch settings
@@ -109,16 +123,16 @@ export async function GET(req: NextRequest) {
       );
 
       if (!response.ok) {
-        return NextResponse.json({ settings: {} });
+        return defaultSettingsResponse();
       }
 
       const data = await response.json();
       return NextResponse.json({ settings: data[0]?.settings ?? {} });
     } catch (error) {
-      return NextResponse.json({ settings: {} });
+      return defaultSettingsResponse();
     }
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
+    return defaultSettingsResponse();
   }
 }
 
