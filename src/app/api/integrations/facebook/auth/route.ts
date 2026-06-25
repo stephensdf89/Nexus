@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { serverErrorResponse } from "@/lib/apiAuth";
 
 const FACEBOOK_APP_ID = process.env.FACEBOOK_CLIENT_ID || process.env.FACEBOOK_APP_ID;
-const SAFE_FACEBOOK_SCOPES = new Set([
+const CORE_FACEBOOK_SCOPES = new Set([
   "public_profile",
   "email",
   "user_posts",
+]);
+
+const PAGE_FACEBOOK_SCOPES = new Set([
   "user_friends",
   "pages_show_list",
   "pages_read_engagement",
@@ -15,14 +18,29 @@ const SAFE_FACEBOOK_SCOPES = new Set([
   "instagram_manage_insights",
 ]);
 
+function getAllowedScopes() {
+  const allowPageScopes = process.env.FACEBOOK_ENABLE_PAGE_SCOPES === "true";
+  const allowed = new Set(CORE_FACEBOOK_SCOPES);
+
+  if (allowPageScopes) {
+    for (const scope of PAGE_FACEBOOK_SCOPES) {
+      allowed.add(scope);
+    }
+  }
+
+  return allowed;
+}
+
 function getSanitizedScopes() {
   const configured =
     process.env.FACEBOOK_OAUTH_SCOPES ||
     "public_profile,email,user_posts";
+  const allowedScopes = getAllowedScopes();
+
   const sanitized = configured
     .split(",")
     .map((scope) => scope.trim())
-    .filter((scope) => SAFE_FACEBOOK_SCOPES.has(scope));
+    .filter((scope) => allowedScopes.has(scope));
 
   return sanitized.length > 0 ? sanitized.join(",") : "public_profile,email,user_posts";
 }
