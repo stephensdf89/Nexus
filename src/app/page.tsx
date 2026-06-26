@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import AutoGenerateCard from "./dashboard/components/AutoGenerateCard";
 import BatchGenerateCards from "./dashboard/components/BatchGenerateCards";
 import Generate30DayCalendar from "./dashboard/components/Generate30DayCalendar";
@@ -15,7 +16,17 @@ import PostForm from "./dashboard/components/PostForm";
 import CardPoster from "./dashboard/components/CardPoster";
 import ScheduledPosts from "./dashboard/components/ScheduledPosts";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const cookieStore = await cookies();
+  const isLoggedIn = Boolean(
+    cookieStore.get("sb-access-token")?.value ||
+    cookieStore.get("sb-refresh-token")?.value ||
+    cookieStore.get("__Secure-next-auth.session-token")?.value ||
+    cookieStore.get("next-auth.session-token")?.value ||
+    cookieStore.get("__Secure-authjs.session-token")?.value ||
+    cookieStore.get("authjs.session-token")?.value
+  );
+
   return (
     <main className="min-h-screen bg-transparent px-6 py-10 text-white">
       <section className="mx-auto w-full max-w-4xl rounded-2xl border border-cyan-400/40 bg-[rgba(9,25,66,0.82)] p-10 shadow-[0_20px_60px_rgba(0,194,255,0.22)] backdrop-blur-sm">
@@ -58,7 +69,7 @@ export default function HomePage() {
         <ConnectPlatforms />
         <PlatformStatus />
         <PostForm />
-        <CardPoster />
+        {isLoggedIn ? <CardPoster /> : <div>Sign in to load personalized card posting tools.</div>}
         <ScheduledPosts />
       </section>
     </main>
