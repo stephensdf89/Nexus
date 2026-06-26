@@ -19,3 +19,4 @@ export async function GET(req: NextRequest) {
   const url = getConnectUrl(platform);
   return NextResponse.redirect(url);
 }
+

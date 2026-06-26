@@ -37,12 +37,3 @@ export function getFacebookAuthConfig() {
 
   return { clientId, clientSecret };
 }
-
-export async function getCurrentUser() {
-  if (typeof window !== "undefined") {
-    return null;
-  }
-
-  const { getCurrentUser: getServerCurrentUser } = await import("@/src/lib/auth-server");
-  return getServerCurrentUser();
-}

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/src/lib/db";
-import { getCurrentUser } from "@/src/lib/auth";
+import { getCurrentUser } from "@/src/lib/auth-server";
 import viralOptimizer from "@/src/lib/viralOptimizer";
 
-export async function POST(req) {
+export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -46,3 +46,6 @@ export async function POST(req) {
     thumbnailSuggestions: optimized.thumbnailSuggestions
   });
 }
+
+
+

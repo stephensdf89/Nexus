@@ -13,8 +13,14 @@ import AutoDoubleDownWinners from "./components/AutoDoubleDownWinners";
 import AutoSeriesBuilder from "./components/AutoSeriesBuilder";
 import AutoClusterThemes from "./components/AutoClusterThemes";
 import ContentUniverseMap from "./components/ContentUniverseMap";
+import UniverseMap from "./components/UniverseMap";
+import ContentGenomeEditor from "./components/ContentGenomeEditor";
+import RecalculateGrowthButton from "./components/RecalculateGrowthButton";
 
 export default function DashboardPage() {
+  // however you select a cardId in your UI
+  const selectedCardId = "some-card-id"; // replace with real state
+
   return (
     <div>
       <h1>Creator OS Dashboard</h1>
@@ -28,7 +34,13 @@ export default function DashboardPage() {
       <AutoDoubleDownWinners />
       <AutoSeriesBuilder />
       <AutoClusterThemes />
+      <RecalculateGrowthButton />
+      <UniverseMap />
       <ContentUniverseMap />
+
+      {selectedCardId && (
+        <ContentGenomeEditor cardId={selectedCardId} />
+      )}
 
       <ConnectPlatforms />
       <PlatformStatus />

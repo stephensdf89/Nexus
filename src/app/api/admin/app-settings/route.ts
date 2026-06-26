@@ -99,3 +99,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to save app settings" }, { status: 500 });
   }
 }
+

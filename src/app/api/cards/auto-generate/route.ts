@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/src/lib/db";
-import { getCurrentUser } from "@/src/lib/auth";
+import { getCurrentUser } from "@/src/lib/auth-server";
 
 import hookGenerator from "@/src/lib/hookGenerator";
 import scriptRewriter from "@/src/lib/scriptRewriter";
@@ -10,7 +10,7 @@ import hashtagGenerator from "@/src/lib/hashtagGenerator";
 import autoThumbnailGenerator from "@/src/lib/autoThumbnailGenerator";
 import viralPredictor from "@/src/lib/viralPredictor";
 
-export async function POST(req) {
+export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -105,3 +105,6 @@ export async function POST(req) {
     calendar: createdCards
   });
 }
+
+
+

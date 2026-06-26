@@ -78,3 +78,4 @@ export async function GET(
     return NextResponse.json({ error: "Failed to fetch logs" }, { status: 500 });
   }
 }
+

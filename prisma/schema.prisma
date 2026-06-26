@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model PlatformToken {
@@ -28,6 +27,7 @@ model Card {
   mediaUrl  String?
   platforms String[] // e.g. ["instagram", "tiktok"]
   createdAt DateTime @default(now())
+  genome    ContentGenome?
 }
 
 model PostPerformance {
@@ -53,4 +53,46 @@ model BestTimeModel {
   updatedAt DateTime @default(now())
 
   @@unique([userId, platform, hour], name: "userId_platform_hour")
+}
+
+model ContentGenome {
+  id                String   @id @default(cuid())
+  cardId            String   @unique
+  card              Card     @relation(fields: [cardId], references: [id])
+
+  formatType        String?
+  contentType       String?
+  platformSuitability String?
+  lengthCategory    String?
+  tone              String?
+  ctaType           String?
+  topicCategory     String?
+  subTopicCategory  String?
+  seriesId          String?
+  clusterId         String?
+
+  engagementScore   Float?
+  retentionScore    Float?
+  viralityScore     Float?
+  platformPerformance Json?
+  audienceSegmentPerformance Json?
+  postingTimePerformance Json?
+  formatPerformance Json?
+
+  hookType          String?
+  openingPattern    String?
+  pacingPattern     String?
+  valueType         String?
+  emotionProfile    String?
+
+  growthPotentialScore      Float?
+  seriesPotentialScore      Float?
+  clusterExpansionScore     Float?
+  repostPotentialScore      Float?
+  doubleDownPotentialScore  Float?
+  trendAlignmentScore       Float?
+  audienceFitScore          Float?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

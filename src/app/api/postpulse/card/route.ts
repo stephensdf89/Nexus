@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     vibe: "aggressive",
   });
 
-  const platformVersion = repurposed[platform] || {
+  const platformVersion = (repurposed as Record<string, any>)[platform] || {
     caption: card.caption || card.title,
     hook: card.title,
     script: card.script || "",
@@ -72,3 +72,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(result);
 }
+
+

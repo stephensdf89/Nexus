@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/src/lib/db";
-import { getCurrentUser } from "@/src/lib/auth";
+import { getCurrentUser } from "@/src/lib/auth-server";
 
 import { isUnderperforming } from "@/src/lib/underperformanceDetector";
 import multiPlatformRepurposer from "@/src/lib/multiPlatformRepurposer";
@@ -8,7 +8,7 @@ import viralOptimizer from "@/src/lib/viralOptimizer";
 import { getBestTimeForPlatform } from "@/src/lib/bestTimeEngine";
 import { postContent } from "@/src/lib/postpulse";
 
-export async function POST(req) {
+export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -32,15 +32,15 @@ export async function POST(req) {
 
   // Compute averages
   const averages = {
-    likes: posts.reduce((a, p) => a + (p.likes || 0), 0) / posts.length,
-    comments: posts.reduce((a, p) => a + (p.comments || 0), 0) / posts.length,
-    shares: posts.reduce((a, p) => a + (p.shares || 0), 0) / posts.length,
-    views: posts.reduce((a, p) => a + (p.views || 0), 0) / posts.length,
-    watchTime: posts.reduce((a, p) => a + (p.watchTime || 0), 0) / posts.length
+    likes: posts.reduce((a: number, p: any) => a + (p.likes || 0), 0) / posts.length,
+    comments: posts.reduce((a: number, p: any) => a + (p.comments || 0), 0) / posts.length,
+    shares: posts.reduce((a: number, p: any) => a + (p.shares || 0), 0) / posts.length,
+    views: posts.reduce((a: number, p: any) => a + (p.views || 0), 0) / posts.length,
+    watchTime: posts.reduce((a: number, p: any) => a + (p.watchTime || 0), 0) / posts.length
   };
 
   // Find underperformers
-  const underperformers = posts.filter((p) => isUnderperforming(p, averages));
+  const underperformers = posts.filter((p: any) => isUnderperforming(p, averages));
 
   if (underperformers.length === 0) {
     return NextResponse.json({ message: "No underperforming posts" });
@@ -58,6 +58,8 @@ export async function POST(req) {
   const reposts = [];
 
   for (const perf of underperformers) {
+    if (!perf.cardId) continue;
+
     // Find the original card
     const card = await prisma.card.findFirst({
       where: { id: perf.cardId }
@@ -72,11 +74,11 @@ export async function POST(req) {
     const repurposed = multiPlatformRepurposer.repurpose({
       script: optimized.script,
       topic: optimized.title,
-      niche: card.niche,
+      niche: card.niche ?? undefined,
       vibe: "aggressive"
     });
 
-    const version = repurposed[platform];
+    const version = (repurposed as Record<string, any>)[platform];
     const content = version.caption || optimized.caption || optimized.title;
     const media = card.mediaUrl || null;
 
@@ -105,3 +107,6 @@ export async function POST(req) {
 
   return NextResponse.json({ reposts });
 }
+
+
+

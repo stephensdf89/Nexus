@@ -235,9 +235,9 @@ export default function DashboardPage() {
           <DashboardWidget title="PostPulse Center" span={dashboardLayout === "focus" ? "lg:col-span-3" : "lg:col-span-2"}>
             <div className="grid gap-4">
               <ConnectPlatforms />
-              <PlatformStatus integrations={postPulseIntegrations as any} />
-              <PostForm userId={userId} onPublished={() => setPostPulseRefreshNonce((n) => n + 1)} />
-              <ScheduledPosts items={scheduledPosts as any} />
+              <PlatformStatus />
+              <PostForm />
+              <ScheduledPosts />
             </div>
           </DashboardWidget>
 

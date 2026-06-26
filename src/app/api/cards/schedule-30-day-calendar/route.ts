@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/src/lib/db";
-import { getCurrentUser } from "@/src/lib/auth";
+import { getCurrentUser } from "@/src/lib/auth-server";
 import multiPlatformRepurposer from "@/src/lib/multiPlatformRepurposer";
 import { postContent } from "@/src/lib/postpulse";
 import { getBestTimeForPlatform } from "@/src/lib/bestTimeEngine";
 
-export async function POST(req) {
+export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -48,13 +48,13 @@ export async function POST(req) {
 
     // Repurpose card
     const repurposed = multiPlatformRepurposer.repurpose({
-      script: card.script,
+      script: card.script ?? undefined,
       topic: card.title,
-      niche: card.niche,
+      niche: card.niche ?? undefined,
       vibe: "aggressive"
     });
 
-    const version = repurposed[platform];
+    const version = (repurposed as Record<string, any>)[platform];
     const content = version.caption || card.caption || card.title;
     const media = card.mediaUrl || null;
 
@@ -88,3 +88,6 @@ export async function POST(req) {
 
   return NextResponse.json({ schedule });
 }
+
+
+

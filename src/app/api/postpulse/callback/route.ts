@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/src/lib/db";
-import { exchangeCodeForToken } from "@/src/lib/postpulse";
-import { getCurrentUser } from "@/src/lib/auth";
+import { exchangeCodeForToken } from "@/src/lib/postpulse-server";
+import { getCurrentUser } from "@/src/lib/auth-server";
 
-export async function GET(req) {
+export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
 
@@ -18,28 +18,35 @@ export async function GET(req) {
 
   const data = await exchangeCodeForToken(code);
 
-  await prisma.platformToken.upsert({
-    where: {
-      userId_platform: {
-        userId: user.id,
-        platform: data.platform
-      }
-    },
-    update: {
-      postpulseAccountId: data.account_id,
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token,
-      expiresAt: new Date(Date.now() + data.expires_in * 1000)
-    },
-    create: {
-      userId: user.id,
-      platform: data.platform,
-      postpulseAccountId: data.account_id,
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token,
-      expiresAt: new Date(Date.now() + data.expires_in * 1000)
-    }
+  const existing = await prisma.platformToken.findFirst({
+    where: { userId: user.id, platform: data.platform }
   });
+
+  if (existing) {
+    await prisma.platformToken.update({
+      where: { id: existing.id },
+      data: {
+        postpulseAccountId: data.account_id,
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresAt: new Date(Date.now() + data.expires_in * 1000)
+      }
+    });
+  } else {
+    await prisma.platformToken.create({
+      data: {
+        userId: user.id,
+        platform: data.platform,
+        postpulseAccountId: data.account_id,
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresAt: new Date(Date.now() + data.expires_in * 1000)
+      }
+    });
+  }
 
   return NextResponse.redirect("/dashboard?connected=1");
 }
+
+
+

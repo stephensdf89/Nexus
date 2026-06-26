@@ -59,7 +59,7 @@ describe("requestValidation", () => {
 
   it("returns detailed validation errors in development", async () => {
     const originalNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "development";
+    (process.env as Record<string, string | undefined>).NODE_ENV = "development";
 
     const response = createValidationErrorResponse([
       { field: "name", message: "name is required" },
@@ -71,12 +71,12 @@ describe("requestValidation", () => {
     expect(json.error).toBe("Request validation failed");
     expect(json.details).toContain("name: name is required");
 
-    process.env.NODE_ENV = originalNodeEnv;
+    (process.env as Record<string, string | undefined>).NODE_ENV = originalNodeEnv;
   });
 
   it("returns generic validation errors in production", async () => {
     const originalNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
+    (process.env as Record<string, string | undefined>).NODE_ENV = "production";
 
     const response = createValidationErrorResponse([
       { field: "name", message: "name is required" },
@@ -87,6 +87,6 @@ describe("requestValidation", () => {
     expect(response.status).toBe(400);
     expect(json).toEqual({ error: "Request validation failed" });
 
-    process.env.NODE_ENV = originalNodeEnv;
+    (process.env as Record<string, string | undefined>).NODE_ENV = originalNodeEnv;
   });
 });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/src/lib/db";
-import { getCurrentUser } from "@/src/lib/auth";
+import { getCurrentUser } from "@/src/lib/auth-server";
 
 import { clusterCards, findMissingPieces } from "@/src/lib/themeClusterEngine";
 
@@ -13,7 +13,7 @@ import autoThumbnailGenerator from "@/src/lib/autoThumbnailGenerator";
 import viralOptimizer from "@/src/lib/viralOptimizer";
 import viralPredictor from "@/src/lib/viralPredictor";
 
-export async function POST(req) {
+export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -26,9 +26,9 @@ export async function POST(req) {
   }
 
   // 1. Cluster cards by theme/niche
-  const clusters = clusterCards(cards);
+  const clusters = clusterCards(cards) as Record<string, any[]>;
 
-  const clusterResults = {};
+  const clusterResults: Record<string, any> = {};
 
   for (const niche in clusters) {
     const cluster = clusters[niche];
@@ -132,3 +132,6 @@ export async function POST(req) {
 
   return NextResponse.json({ clusters: clusterResults });
 }
+
+
+

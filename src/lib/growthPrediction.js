@@ -1,0 +1,1 @@
+export { calculateGrowthPrediction } from "./calculateGrowthPrediction";
