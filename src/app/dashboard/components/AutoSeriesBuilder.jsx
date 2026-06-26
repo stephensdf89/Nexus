@@ -4,7 +4,10 @@ import { useState } from "react";
 
 export default function AutoSeriesBuilder() {
   const [platform, setPlatform] = useState("instagram");
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState({
+    demo: true,
+    series: [{ newCard: { title: "Demo Series Part 1" } }, { newCard: { title: "Demo Series Part 2" } }]
+  });
 
   async function handleSeries(e) {
     e.preventDefault();

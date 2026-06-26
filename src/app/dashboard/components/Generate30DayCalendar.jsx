@@ -5,7 +5,10 @@ import { useState } from "react";
 export default function Generate30DayCalendar() {
   const [niche, setNiche] = useState("");
   const [theme, setTheme] = useState("");
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState({
+    demo: true,
+    calendar: [{ day: 1, title: "Demo Day 1" }, { day: 2, title: "Demo Day 2" }]
+  });
 
   async function handleGenerate(e) {
     e.preventDefault();

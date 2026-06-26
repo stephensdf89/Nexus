@@ -5,7 +5,10 @@ import { useState } from "react";
 export default function BatchGenerateCards() {
   const [topics, setTopics] = useState("");
   const [niche, setNiche] = useState("");
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState({
+    demo: true,
+    createdCards: [{ card: { title: "Demo Batch Card 1" } }, { card: { title: "Demo Batch Card 2" } }]
+  });
 
   async function handleGenerate(e) {
     e.preventDefault();

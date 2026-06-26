@@ -3,7 +3,15 @@
 import { useState } from "react";
 
 export default function AutoClusterThemes() {
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState({
+    demo: true,
+    clusters: {
+      general: {
+        missingPieces: ["Biggest Mistakes People Make"],
+        generatedCards: [{ newCard: { title: "Demo Cluster Gap Card" } }]
+      }
+    }
+  });
 
   async function handleCluster(e) {
     e.preventDefault();

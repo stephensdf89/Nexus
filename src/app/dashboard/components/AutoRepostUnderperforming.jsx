@@ -4,7 +4,10 @@ import { useState } from "react";
 
 export default function AutoRepostUnderperforming() {
   const [platform, setPlatform] = useState("instagram");
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState({
+    demo: true,
+    reposts: [{ originalPost: "demo-post", repostScheduledFor: new Date().toISOString() }]
+  });
 
   async function handleRepost(e) {
     e.preventDefault();

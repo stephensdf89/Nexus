@@ -4,7 +4,10 @@ import { useState } from "react";
 
 export default function AutoDoubleDownWinners() {
   const [platform, setPlatform] = useState("instagram");
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState({
+    demo: true,
+    newCards: [{ newCard: { title: "Demo Winner Follow-Up" } }]
+  });
 
   async function handleDoubleDown(e) {
     e.preventDefault();

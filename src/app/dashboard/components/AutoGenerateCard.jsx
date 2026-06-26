@@ -5,7 +5,11 @@ import { useState } from "react";
 export default function AutoGenerateCard() {
   const [topic, setTopic] = useState("");
   const [niche, setNiche] = useState("");
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState({
+    demo: true,
+    card: { title: "Demo Card", niche: "content creation" },
+    viral: { score: 72 }
+  });
 
   async function handleGenerate(e) {
     e.preventDefault();

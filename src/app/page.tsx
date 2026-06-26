@@ -1,9 +1,24 @@
 import Link from "next/link";
+import AutoGenerateCard from "./dashboard/components/AutoGenerateCard";
+import BatchGenerateCards from "./dashboard/components/BatchGenerateCards";
+import Generate30DayCalendar from "./dashboard/components/Generate30DayCalendar";
+import AutoSchedule30Day from "./dashboard/components/AutoSchedule30Day";
+import AutoScheduleBestTimes from "./dashboard/components/AutoScheduleBestTimes";
+import AutoRepostUnderperforming from "./dashboard/components/AutoRepostUnderperforming";
+import AutoDoubleDownWinners from "./dashboard/components/AutoDoubleDownWinners";
+import AutoSeriesBuilder from "./dashboard/components/AutoSeriesBuilder";
+import AutoClusterThemes from "./dashboard/components/AutoClusterThemes";
+import ContentUniverseMap from "./dashboard/components/ContentUniverseMap";
+import ConnectPlatforms from "./dashboard/components/ConnectPlatforms";
+import PlatformStatus from "./dashboard/components/PlatformStatus";
+import PostForm from "./dashboard/components/PostForm";
+import CardPoster from "./dashboard/components/CardPoster";
+import ScheduledPosts from "./dashboard/components/ScheduledPosts";
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-transparent px-6 text-white">
-      <section className="w-full max-w-4xl rounded-2xl border border-cyan-400/40 bg-[rgba(9,25,66,0.82)] p-10 shadow-[0_20px_60px_rgba(0,194,255,0.22)] backdrop-blur-sm">
+    <main className="min-h-screen bg-transparent px-6 py-10 text-white">
+      <section className="mx-auto w-full max-w-4xl rounded-2xl border border-cyan-400/40 bg-[rgba(9,25,66,0.82)] p-10 shadow-[0_20px_60px_rgba(0,194,255,0.22)] backdrop-blur-sm">
         <p className="text-sm uppercase tracking-[0.28em] text-cyan-300">Content Creator Nexus</p>
         <h1 className="mt-4 text-4xl font-bold leading-tight md:text-5xl">
           Creator productivity platform for planning, publishing, and growth.
@@ -27,6 +42,24 @@ export default function HomePage() {
           <Link href="/terms" className="hover:text-cyan-200">Terms</Link>
           <Link href="/privacy" className="hover:text-cyan-200">Privacy</Link>
         </div>
+      </section>
+
+      <section className="mx-auto mt-10 w-full max-w-4xl space-y-8 rounded-2xl border border-cyan-400/25 bg-[rgba(4,14,38,0.8)] p-8 shadow-[0_20px_60px_rgba(0,194,255,0.12)] backdrop-blur-sm">
+        <AutoGenerateCard />
+        <BatchGenerateCards />
+        <Generate30DayCalendar />
+        <AutoSchedule30Day />
+        <AutoScheduleBestTimes />
+        <AutoRepostUnderperforming />
+        <AutoDoubleDownWinners />
+        <AutoSeriesBuilder />
+        <AutoClusterThemes />
+        <ContentUniverseMap />
+        <ConnectPlatforms />
+        <PlatformStatus />
+        <PostForm />
+        <CardPoster />
+        <ScheduledPosts />
       </section>
     </main>
   );
