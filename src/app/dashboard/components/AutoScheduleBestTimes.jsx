@@ -7,7 +7,7 @@ export default function AutoScheduleBestTimes() {
   const [startDate, setStartDate] = useState("");
   const [result, setResult] = useState({
     demo: true,
-    schedule: [{ day: 1, date: new Date().toISOString(), bestTime: "15:00" }]
+    schedule: [{ day: 1, date: "2026-01-01T15:00:00.000Z", bestTime: "15:00" }]
   });
 
   async function handleSchedule(e) {

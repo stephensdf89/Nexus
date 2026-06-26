@@ -6,7 +6,7 @@ export default function AutoRepostUnderperforming() {
   const [platform, setPlatform] = useState("instagram");
   const [result, setResult] = useState({
     demo: true,
-    reposts: [{ originalPost: "demo-post", repostScheduledFor: new Date().toISOString() }]
+    reposts: [{ originalPost: "demo-post", repostScheduledFor: "2026-01-01T12:00:00.000Z" }]
   });
 
   async function handleRepost(e) {

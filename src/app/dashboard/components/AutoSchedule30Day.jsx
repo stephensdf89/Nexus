@@ -7,7 +7,7 @@ export default function AutoSchedule30Day() {
   const [startDate, setStartDate] = useState("");
   const [result, setResult] = useState({
     demo: true,
-    schedule: [{ day: 1, date: new Date().toISOString(), bestTime: "12:00" }]
+    schedule: [{ day: 1, date: "2026-01-01T12:00:00.000Z", bestTime: "12:00" }]
   });
 
   async function handleSchedule(e) {
