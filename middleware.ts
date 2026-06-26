@@ -13,15 +13,7 @@ export function middleware(req: NextRequest) {
 
   const isLoggedIn = Boolean(access || refresh || nextAuthSessionToken);
 
-  const protectedRoutes = [
-    "/dashboard",
-    "/analytics",
-    "/assistant",
-    "/pipelines",
-    "/community",
-    "/settings",
-    "/notifications",
-  ];
+  const protectedRoutes = ["/admin"];
 
   const { pathname } = req.nextUrl;
 
