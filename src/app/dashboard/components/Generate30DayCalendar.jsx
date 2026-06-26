@@ -5,6 +5,8 @@ import { useState } from "react";
 export default function Generate30DayCalendar() {
   const [niche, setNiche] = useState("");
   const [theme, setTheme] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [result, setResult] = useState({
     demo: true,
     calendar: [{ day: 1, title: "Demo Day 1" }, { day: 2, title: "Demo Day 2" }]
@@ -12,15 +14,27 @@ export default function Generate30DayCalendar() {
 
   async function handleGenerate(e) {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    const res = await fetch("/api/cards/generate-30-day-calendar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ niche, theme })
-    });
+    try {
+      const res = await fetch("/api/cards/generate-30-day-calendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ niche, theme })
+      });
 
-    const data = await res.json();
-    setResult(data);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error || "Unable to generate calendar.");
+        return;
+      }
+      setResult(data);
+    } catch {
+      setError("Network error while generating calendar.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -46,15 +60,19 @@ export default function Generate30DayCalendar() {
           />
         </div>
 
-        <button type="submit">Generate 30 Days</button>
+        <button type="submit" disabled={loading}>{loading ? "Generating..." : "Generate 30 Days"}</button>
       </form>
+
+      {error && <div style={{ marginTop: "10px", color: "#ff9b9b" }}>{error}</div>}
 
       {result && (
         <div style={{ marginTop: "20px" }}>
           <h3>Generated 30‑Day Calendar</h3>
-          <ul>
+          <ul style={{ display: "grid", gap: "8px", paddingLeft: 0, listStyle: "none" }}>
             {(result?.calendar || []).slice(0, 7).map((entry, idx) => (
-              <li key={idx}>Day {entry?.day ?? idx + 1}: {entry?.title || "Untitled"}</li>
+              <li key={idx} style={{ border: "1px solid #2b3f66", borderRadius: "8px", padding: "8px", background: "rgba(14,32,66,0.6)" }}>
+                Day {entry?.day ?? idx + 1}: {entry?.title || "Untitled"}
+              </li>
             ))}
           </ul>
         </div>
