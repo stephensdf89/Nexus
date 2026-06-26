@@ -9,9 +9,13 @@ export default function CardPoster() {
 
   useEffect(() => {
     async function fetchCards() {
-      const res = await fetch("/api/cards"); // you should have this or add it
-      const data = await res.json();
-      setCards(data || []);
+      try {
+        const res = await fetch("/api/cards"); // you should have this or add it
+        const data = await res.json();
+        setCards(Array.isArray(data) ? data : []);
+      } catch {
+        setCards([]);
+      }
     }
     fetchCards();
   }, []);
@@ -39,7 +43,8 @@ export default function CardPoster() {
 
     // Refresh cards after optimization
     const refreshed = await fetch("/api/cards");
-    setCards(await refreshed.json());
+    const refreshedData = await refreshed.json();
+    setCards(Array.isArray(refreshedData) ? refreshedData : []);
   }
 
   return (
