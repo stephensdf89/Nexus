@@ -15,3 +15,12 @@ export async function getAuthHeaders() {
     "x-supabase-auth": session.access_token || "",
   };
 }
+
+export async function getCurrentUser() {
+  if (typeof window !== "undefined") {
+    return null;
+  }
+
+  const { getCurrentUser: getServerCurrentUser } = await import("@/src/lib/auth-server");
+  return getServerCurrentUser();
+}

@@ -17,3 +17,40 @@ model PlatformToken {
   expiresAt          DateTime
   connectedAt        DateTime @default(now())
 }
+
+model Card {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  niche     String?
+  script    String?
+  caption   String?
+  mediaUrl  String?
+  platforms String[] // e.g. ["instagram", "tiktok"]
+  createdAt DateTime @default(now())
+}
+
+model PostPerformance {
+  id        String   @id @default(cuid())
+  userId    String
+  cardId    String?
+  platform  String
+  postedAt  DateTime
+  likes     Int?
+  comments  Int?
+  shares    Int?
+  views     Int?
+  watchTime Int?
+  createdAt DateTime @default(now())
+}
+
+model BestTimeModel {
+  id        String   @id @default(cuid())
+  userId    String
+  platform  String
+  hour      Int      // 0-23
+  score     Float    // learned performance weight
+  updatedAt DateTime @default(now())
+
+  @@unique([userId, platform, hour], name: "userId_platform_hour")
+}
