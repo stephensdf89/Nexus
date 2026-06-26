@@ -5,13 +5,28 @@ import { Network } from "vis-network";
 
 export default function UniverseMap() {
   const containerRef = useRef(null);
-  const [mapData, setMapData] = useState(null);
+  const [mapData, setMapData] = useState({
+    nodes: [
+      { id: "demo-1", label: "Demo Content Node", type: "card" },
+      { id: "demo-cluster", label: "Demo Cluster", type: "cluster" }
+    ],
+    edges: [{ from: "demo-cluster", to: "demo-1", type: "cluster-member" }]
+  });
 
   useEffect(() => {
     async function load() {
-      const res = await fetch("/api/universe/map");
-      const data = await res.json();
-      setMapData(data);
+      try {
+        const res = await fetch("/api/universe/map");
+        const data = await res.json();
+        const safeNodes = Array.isArray(data?.nodes) ? data.nodes : [];
+        const safeEdges = Array.isArray(data?.edges) ? data.edges : [];
+
+        if (res.ok && (safeNodes.length > 0 || safeEdges.length > 0)) {
+          setMapData({ nodes: safeNodes, edges: safeEdges });
+        }
+      } catch {
+        // Keep demo graph for auth-protected or unavailable API cases.
+      }
     }
     load();
   }, []);
@@ -19,7 +34,10 @@ export default function UniverseMap() {
   useEffect(() => {
     if (!mapData || !containerRef.current) return;
 
-    const nodes = mapData.nodes.map((n) => ({
+    const safeNodes = Array.isArray(mapData?.nodes) ? mapData.nodes : [];
+    const safeEdges = Array.isArray(mapData?.edges) ? mapData.edges : [];
+
+    const nodes = safeNodes.map((n) => ({
       id: n.id,
       label: n.label,
       shape: n.type === "card" ? "box" : "ellipse",
@@ -32,7 +50,7 @@ export default function UniverseMap() {
       font: { color: "#fff" }
     }));
 
-    const edges = mapData.edges.map((e) => ({
+    const edges = safeEdges.map((e) => ({
       from: e.from,
       to: e.to,
       color: e.type === "cluster-member" ? "#ff4d4d" : "#4d79ff"
