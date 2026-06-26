@@ -19,7 +19,7 @@ import RecalculateGrowthButton from "./components/RecalculateGrowthButton";
 
 export default function DashboardPage() {
   // however you select a cardId in your UI
-  const selectedCardId = "some-card-id"; // replace with real state
+  const selectedCardId = null; // replace with real state
 
   return (
     <main className="min-h-screen bg-transparent px-6 py-8 text-white">
