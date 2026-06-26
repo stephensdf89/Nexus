@@ -1,4 +1,5 @@
 import ConnectPlatforms from "./components/ConnectPlatforms";
+import Link from "next/link";
 import PlatformStatus from "./components/PlatformStatus";
 import PostForm from "./components/PostForm";
 import ScheduledPosts from "./components/ScheduledPosts";
@@ -24,7 +25,15 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-transparent px-6 py-8 text-white">
       <section className="mx-auto w-full max-w-6xl rounded-2xl border border-cyan-400/40 bg-[rgba(9,25,66,0.82)] p-8 shadow-[0_20px_60px_rgba(0,194,255,0.22)] backdrop-blur-sm">
-        <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">Creator OS</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">Creator OS</p>
+          <Link
+            href="/"
+            className="rounded-lg border border-cyan-300/50 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-100 transition hover:bg-cyan-400/20"
+          >
+            Go To Homepage
+          </Link>
+        </div>
         <h1 className="mt-2 text-3xl font-bold leading-tight md:text-4xl">Dashboard</h1>
         <p className="mt-3 max-w-3xl text-cyan-100/85">
           Generate, schedule, optimize, and distribute content from one control center.
