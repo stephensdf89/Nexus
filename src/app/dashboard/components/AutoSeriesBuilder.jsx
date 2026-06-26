@@ -45,7 +45,12 @@ export default function AutoSeriesBuilder() {
       {result && (
         <div style={{ marginTop: "20px" }}>
           <h3>Generated Series</h3>
-          <pre>{JSON.stringify(result, null, 2)}</pre>
+          <div><strong>Total Parts:</strong> {(result?.series || []).length}</div>
+          <ul>
+            {(result?.series || []).slice(0, 5).map((item, idx) => (
+              <li key={idx}>{item?.newCard?.title || `Part ${idx + 1}`}</li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

@@ -58,7 +58,11 @@ export default function BatchGenerateCards() {
       {result && (
         <div style={{ marginTop: "20px" }}>
           <h3>Generated {(result.createdCards || result.calendar || []).length} Cards</h3>
-          <pre>{JSON.stringify(result, null, 2)}</pre>
+          <ul>
+            {(result?.createdCards || [])
+              .slice(0, 5)
+              .map((item, idx) => <li key={idx}>{item?.card?.title || `Card ${idx + 1}`}</li>)}
+          </ul>
         </div>
       )}
     </div>

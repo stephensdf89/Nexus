@@ -55,7 +55,12 @@ export default function AutoSchedule30Day() {
       {result && (
         <div style={{ marginTop: "20px" }}>
           <h3>Scheduled Posts</h3>
-          <pre>{JSON.stringify(result, null, 2)}</pre>
+          <div><strong>Total Scheduled:</strong> {(result?.schedule || []).length}</div>
+          <ul>
+            {(result?.schedule || []).slice(0, 5).map((item, idx) => (
+              <li key={idx}>Day {item?.day ?? idx + 1} at {item?.bestTime || "--:--"}</li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

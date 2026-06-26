@@ -45,7 +45,12 @@ export default function AutoDoubleDownWinners() {
       {result && (
         <div style={{ marginTop: "20px" }}>
           <h3>Generated Follow‑Up Cards</h3>
-          <pre>{JSON.stringify(result, null, 2)}</pre>
+          <div><strong>Total Cards:</strong> {(result?.newCards || []).length}</div>
+          <ul>
+            {(result?.newCards || []).slice(0, 5).map((item, idx) => (
+              <li key={idx}>{item?.newCard?.title || `Follow-up ${idx + 1}`}</li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

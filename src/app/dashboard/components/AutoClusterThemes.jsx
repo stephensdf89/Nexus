@@ -35,7 +35,16 @@ export default function AutoClusterThemes() {
       {result && (
         <div style={{ marginTop: "20px" }}>
           <h3>Content Clusters</h3>
-          <pre>{JSON.stringify(result, null, 2)}</pre>
+          <div>
+            <strong>Clusters Found:</strong> {Object.keys(result?.clusters || {}).length}
+          </div>
+          <ul>
+            {Object.entries(result?.clusters || {}).slice(0, 5).map(([name, cluster]) => (
+              <li key={name}>
+                {name}: {(cluster?.missingPieces || []).length} gaps, {(cluster?.generatedCards || []).length} generated cards
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

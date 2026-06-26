@@ -53,7 +53,9 @@ export default function AutoGenerateCard() {
       {result && (
         <div style={{ marginTop: "20px" }}>
           <h3>Generated Card</h3>
-          <pre>{JSON.stringify(result, null, 2)}</pre>
+          <div><strong>Title:</strong> {result?.card?.title || "Untitled"}</div>
+          <div><strong>Niche:</strong> {result?.card?.niche || "General"}</div>
+          <div><strong>Viral Score:</strong> {result?.viral?.score ?? "N/A"}</div>
         </div>
       )}
     </div>

@@ -45,7 +45,12 @@ export default function AutoRepostUnderperforming() {
       {result && (
         <div style={{ marginTop: "20px" }}>
           <h3>Repost Results</h3>
-          <pre>{JSON.stringify(result, null, 2)}</pre>
+          <div><strong>Total Reposts:</strong> {(result?.reposts || []).length}</div>
+          <ul>
+            {(result?.reposts || []).slice(0, 5).map((item, idx) => (
+              <li key={idx}>Post {item?.originalPost || `#${idx + 1}`} scheduled for {item?.repostScheduledFor || "N/A"}</li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

@@ -32,14 +32,13 @@ export default function ContentUniverseMap() {
   return (
     <div style={{ marginTop: "20px" }}>
       <h2>Content Universe Map</h2>
-
-      <pre style={{ maxHeight: "400px", overflow: "auto" }}>
-        {JSON.stringify(graph, null, 2)}
-      </pre>
-
-      <p>
-        (You can replace this JSON with a real force-graph visualization later.)
-      </p>
+      <div><strong>Nodes:</strong> {(graph?.nodes || []).length}</div>
+      <div><strong>Edges:</strong> {(graph?.edges || []).length}</div>
+      <ul>
+        {(graph?.nodes || []).slice(0, 5).map((node) => (
+          <li key={node.id}>{node.label || node.id}</li>
+        ))}
+      </ul>
     </div>
   );
 }

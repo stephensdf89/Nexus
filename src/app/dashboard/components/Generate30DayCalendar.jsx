@@ -52,7 +52,11 @@ export default function Generate30DayCalendar() {
       {result && (
         <div style={{ marginTop: "20px" }}>
           <h3>Generated 30‑Day Calendar</h3>
-          <pre>{JSON.stringify(result, null, 2)}</pre>
+          <ul>
+            {(result?.calendar || []).slice(0, 7).map((entry, idx) => (
+              <li key={idx}>Day {entry?.day ?? idx + 1}: {entry?.title || "Untitled"}</li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
