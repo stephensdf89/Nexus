@@ -22,31 +22,51 @@ export default function DashboardPage() {
   const selectedCardId = "some-card-id"; // replace with real state
 
   return (
-    <div>
-      <h1>Creator OS Dashboard</h1>
+    <main className="min-h-screen bg-transparent px-6 py-8 text-white">
+      <section className="mx-auto w-full max-w-6xl rounded-2xl border border-cyan-400/40 bg-[rgba(9,25,66,0.82)] p-8 shadow-[0_20px_60px_rgba(0,194,255,0.22)] backdrop-blur-sm">
+        <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">Creator OS</p>
+        <h1 className="mt-2 text-3xl font-bold leading-tight md:text-4xl">Dashboard</h1>
+        <p className="mt-3 max-w-3xl text-cyan-100/85">
+          Generate, schedule, optimize, and distribute content from one control center.
+        </p>
+      </section>
 
-      <AutoGenerateCard />
-      <BatchGenerateCards />
-      <Generate30DayCalendar />
-      <AutoSchedule30Day />
-      <AutoScheduleBestTimes />
-      <AutoRepostUnderperforming />
-      <AutoDoubleDownWinners />
-      <AutoSeriesBuilder />
-      <AutoClusterThemes />
-      <RecalculateGrowthButton />
-      <UniverseMap />
-      <ContentUniverseMap />
+      <section className="mx-auto mt-8 grid w-full max-w-6xl gap-5 lg:grid-cols-2">
+        <WidgetCard><AutoGenerateCard /></WidgetCard>
+        <WidgetCard><BatchGenerateCards /></WidgetCard>
+        <WidgetCard><Generate30DayCalendar /></WidgetCard>
+        <WidgetCard><AutoSchedule30Day /></WidgetCard>
+        <WidgetCard><AutoScheduleBestTimes /></WidgetCard>
+        <WidgetCard><AutoRepostUnderperforming /></WidgetCard>
+        <WidgetCard><AutoDoubleDownWinners /></WidgetCard>
+        <WidgetCard><AutoSeriesBuilder /></WidgetCard>
+        <WidgetCard><AutoClusterThemes /></WidgetCard>
+        <WidgetCard><RecalculateGrowthButton /></WidgetCard>
+      </section>
 
-      {selectedCardId && (
-        <ContentGenomeEditor cardId={selectedCardId} />
-      )}
+      <section className="mx-auto mt-8 w-full max-w-6xl space-y-5">
+        <WidgetCard><UniverseMap /></WidgetCard>
+        <WidgetCard><ContentUniverseMap /></WidgetCard>
+        {selectedCardId && (
+          <WidgetCard><ContentGenomeEditor cardId={selectedCardId} /></WidgetCard>
+        )}
+      </section>
 
-      <ConnectPlatforms />
-      <PlatformStatus />
-      <PostForm />
-      <CardPoster />
-      <ScheduledPosts />
+      <section className="mx-auto mt-8 grid w-full max-w-6xl gap-5 lg:grid-cols-2">
+        <WidgetCard><ConnectPlatforms /></WidgetCard>
+        <WidgetCard><PlatformStatus /></WidgetCard>
+        <WidgetCard><PostForm /></WidgetCard>
+        <WidgetCard><CardPoster /></WidgetCard>
+        <WidgetCard><ScheduledPosts /></WidgetCard>
+      </section>
+    </main>
+  );
+}
+
+function WidgetCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-cyan-400/25 bg-[rgba(4,14,38,0.8)] p-5 shadow-[0_20px_60px_rgba(0,194,255,0.12)] backdrop-blur-sm">
+      {children}
     </div>
   );
 }
