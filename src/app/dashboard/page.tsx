@@ -1,12 +1,16 @@
-"use client";
+import ConnectPlatforms from "./components/ConnectPlatforms";
+import PlatformStatus from "./components/PlatformStatus";
+import PostForm from "./components/PostForm";
+import ScheduledPosts from "./components/ScheduledPosts";
 
-import { AuthGuard } from "@/components/AuthGuard";
-import DashboardPage from "@/components/DashboardPage";
-
-export default function DashboardRoute() {
+export default function DashboardPage() {
   return (
-    <AuthGuard>
-      <DashboardPage />
-    </AuthGuard>
+    <div>
+      <h1>Creator OS Dashboard</h1>
+      <ConnectPlatforms />
+      <PlatformStatus />
+      <PostForm />
+      <ScheduledPosts />
+    </div>
   );
 }

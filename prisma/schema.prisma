@@ -4,11 +4,16 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model UserSettings {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  settings  Json
-  updatedAt DateTime @updatedAt
+model PlatformToken {
+  id                 String   @id @default(cuid())
+  userId             String
+  platform           String
+  postpulseAccountId String
+  accessToken        String
+  refreshToken       String?
+  expiresAt          DateTime
+  connectedAt        DateTime @default(now())
 }

@@ -6,6 +6,10 @@ import AppShell from "@/components/AppShell";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { ViewsOverTimeChart, PlatformBreakdownChart } from "@/components/AnalyticsCharts";
 import { useSettingsStore } from "@/lib/settingsStore";
+import ConnectPlatforms from "@/app/dashboard/components/ConnectPlatforms";
+import PlatformStatus from "@/app/dashboard/components/PlatformStatus";
+import PostForm from "@/app/dashboard/components/PostForm";
+import ScheduledPosts from "@/app/dashboard/components/ScheduledPosts";
 
 const CreatorToolsPanel = dynamic(() => import("@/components/CreatorToolsPanel"), {
   ssr: false,
@@ -40,13 +44,26 @@ const OwnerAuditLogPanel = dynamic(() => import("@/components/OwnerAuditLogPanel
 type AccessLevel = "user" | "pro" | "admin";
 
 type AccessResponse = {
+  userId?: string | null;
+  email?: string | null;
   isOwner: boolean;
   accessLevel: AccessLevel;
+};
+
+type ScheduledItem = {
+  id?: string;
+  platform?: string;
+  content?: string;
+  schedule_for?: string;
 };
 
 export default function DashboardPage() {
   const [canUseAnalytics, setCanUseAnalytics] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [userId, setUserId] = useState("");
+  const [postPulseRefreshNonce, setPostPulseRefreshNonce] = useState(0);
+  const [postPulseIntegrations, setPostPulseIntegrations] = useState<Array<{ platform?: string }>>([]);
+  const [scheduledPosts, setScheduledPosts] = useState<ScheduledItem[]>([]);
   const dashboardLayout = useSettingsStore((state) => state.dashboardLayout);
   const showAnalyticsPreview = useSettingsStore((state) => state.showAnalyticsPreview);
   const showCreatorToolsPreview = useSettingsStore((state) => state.showCreatorToolsPreview);
@@ -67,14 +84,55 @@ export default function DashboardPage() {
 
         setCanUseAnalytics(analyticsAllowed);
         setIsOwner(Boolean(data.isOwner));
+        setUserId(String(data.userId || ""));
       } catch {
         setCanUseAnalytics(false);
         setIsOwner(false);
+        setUserId("");
       }
     };
 
     loadAccess();
   }, []);
+
+  useEffect(() => {
+    const loadPostPulseData = async () => {
+      const headers: HeadersInit = userId ? { "x-user-id": userId } : {};
+
+      try {
+        const [statusRes, scheduledRes] = await Promise.all([
+          fetch("/api/postpulse/status", { headers, cache: "no-store" }),
+          fetch("/api/content/scheduled", { headers, cache: "no-store" }),
+        ]);
+
+        if (statusRes.ok) {
+          const statusData = await statusRes.json();
+          setPostPulseIntegrations(Array.isArray(statusData?.integrations) ? statusData.integrations : []);
+        } else {
+          setPostPulseIntegrations([]);
+        }
+
+        if (scheduledRes.ok) {
+          const scheduledData = await scheduledRes.json();
+          const rows = Array.isArray(scheduledData?.scheduled_posts) ? scheduledData.scheduled_posts : [];
+          const mapped = rows.map((row: { id?: string; platforms?: string[]; content?: string; scheduled_time?: string }) => ({
+            id: row.id,
+            platform: Array.isArray(row.platforms) ? row.platforms[0] : "",
+            content: row.content,
+            schedule_for: row.scheduled_time,
+          }));
+          setScheduledPosts(mapped);
+        } else {
+          setScheduledPosts([]);
+        }
+      } catch {
+        setPostPulseIntegrations([]);
+        setScheduledPosts([]);
+      }
+    };
+
+    loadPostPulseData();
+  }, [userId, postPulseRefreshNonce]);
 
   const { summary, timeseries, loading } = useAnalytics({ enabled: canUseAnalytics });
 
@@ -172,6 +230,15 @@ export default function DashboardPage() {
               <li>Pipeline "Welcome New Followers" ran • 1 hour ago</li>
               <li>New Discord member joined • 3 hours ago</li>
             </ul>
+          </DashboardWidget>
+
+          <DashboardWidget title="PostPulse Center" span={dashboardLayout === "focus" ? "lg:col-span-3" : "lg:col-span-2"}>
+            <div className="grid gap-4">
+              <ConnectPlatforms />
+              <PlatformStatus integrations={postPulseIntegrations as any} />
+              <PostForm userId={userId} onPublished={() => setPostPulseRefreshNonce((n) => n + 1)} />
+              <ScheduledPosts items={scheduledPosts as any} />
+            </div>
           </DashboardWidget>
 
           {showCreatorToolsPreview && (
